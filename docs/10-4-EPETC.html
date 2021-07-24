@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>10.4 Ejemplo: Puntajes de exámenes y tamaño de la clase | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="10.4 Ejemplo: Puntajes de exámenes y tamaño de la clase | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="10.4 Ejemplo: Puntajes de exámenes y tamaño de la clase | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-30" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"/>
+<link rel="next" href="10-5-Ejercicios-9.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="EPETC" class="section level2" number="10.4">
+<h2><span class="header-section-number">10.4</span> Ejemplo: Puntajes de exámenes y tamaño de la clase</h2>
+<p>Esta sección analiza la validez interna y externa de los resultados obtenidos del análisis de los datos de las calificaciones de las pruebas de California utilizando modelos de regresión múltiple.</p>
+<div id="validez-externa-del-estudio" class="section level4 unnumbered">
+<h4>Validez externa del estudio</h4>
+<p>La validez externa del análisis de puntaje de la prueba de California significa que sus resultados se pueden generalizar. Que esto sea posible depende de la población y el entorno. Se realiza el mismo análisis utilizando datos para estudiantes de cuarto grado en distritos escolares públicos de <span class="math inline">\(220\)</span> en Massachusetts en 1998. Al igual que <strong>CASchools</strong>, el conjunto de datos <strong>MASchools</strong> es parte del paquete <strong>AER</strong> <span class="citation">(<a href="#ref-R-AER" role="doc-biblioref">Kleiber and Zeileis 2020</a>)</span>. Se puede utilizar la función de ayuda (<code>?MASchools</code>) para obtener información sobre las definiciones de todas las variables contenidas.</p>
+<p>Se debe comenzar cargando el conjunto de datos y procediendo a calcular algunas estadísticas resumidas.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="10-4-EPETC.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;AER&quot;</span>)</span>
+<span id="cb13-2"><a href="10-4-EPETC.html#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="10-4-EPETC.html#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># adjuntar el conjunto de datos &#39;MASchools&#39;</span></span>
+<span id="cb13-4"><a href="10-4-EPETC.html#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;MASchools&quot;</span>)</span>
+<span id="cb13-5"><a href="10-4-EPETC.html#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(MASchools)</span>
+<span id="cb13-6"><a href="10-4-EPETC.html#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    district         municipality           expreg       expspecial   </span></span>
+<span id="cb13-7"><a href="10-4-EPETC.html#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Length:220         Length:220         Min.   :2905   Min.   : 3832  </span></span>
+<span id="cb13-8"><a href="10-4-EPETC.html#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Class :character   Class :character   1st Qu.:4065   1st Qu.: 7442  </span></span>
+<span id="cb13-9"><a href="10-4-EPETC.html#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mode  :character   Mode  :character   Median :4488   Median : 8354  </span></span>
+<span id="cb13-10"><a href="10-4-EPETC.html#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                        Mean   :4605   Mean   : 8901  </span></span>
+<span id="cb13-11"><a href="10-4-EPETC.html#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                        3rd Qu.:4972   3rd Qu.: 9722  </span></span>
+<span id="cb13-12"><a href="10-4-EPETC.html#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                        Max.   :8759   Max.   :53569  </span></span>
+<span id="cb13-13"><a href="10-4-EPETC.html#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                                      </span></span>
+<span id="cb13-14"><a href="10-4-EPETC.html#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      expbil           expocc          exptot        scratio      </span></span>
+<span id="cb13-15"><a href="10-4-EPETC.html#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :     0   Min.   :    0   Min.   :3465   Min.   : 2.300  </span></span>
+<span id="cb13-16"><a href="10-4-EPETC.html#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:     0   1st Qu.:    0   1st Qu.:4730   1st Qu.: 6.100  </span></span>
+<span id="cb13-17"><a href="10-4-EPETC.html#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :     0   Median :    0   Median :5155   Median : 7.800  </span></span>
+<span id="cb13-18"><a href="10-4-EPETC.html#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :  3037   Mean   : 1104   Mean   :5370   Mean   : 8.107  </span></span>
+<span id="cb13-19"><a href="10-4-EPETC.html#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:     0   3rd Qu.:    0   3rd Qu.:5789   3rd Qu.: 9.800  </span></span>
+<span id="cb13-20"><a href="10-4-EPETC.html#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :295140   Max.   :15088   Max.   :9868   Max.   :18.400  </span></span>
+<span id="cb13-21"><a href="10-4-EPETC.html#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                  NA&#39;s   :9       </span></span>
+<span id="cb13-22"><a href="10-4-EPETC.html#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     special          lunch          stratio          income      </span></span>
+<span id="cb13-23"><a href="10-4-EPETC.html#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   : 8.10   Min.   : 0.40   Min.   :11.40   Min.   : 9.686  </span></span>
+<span id="cb13-24"><a href="10-4-EPETC.html#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:13.38   1st Qu.: 5.30   1st Qu.:15.80   1st Qu.:15.223  </span></span>
+<span id="cb13-25"><a href="10-4-EPETC.html#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :15.45   Median :10.55   Median :17.10   Median :17.128  </span></span>
+<span id="cb13-26"><a href="10-4-EPETC.html#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :15.97   Mean   :15.32   Mean   :17.34   Mean   :18.747  </span></span>
+<span id="cb13-27"><a href="10-4-EPETC.html#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:17.93   3rd Qu.:20.02   3rd Qu.:19.02   3rd Qu.:20.376  </span></span>
+<span id="cb13-28"><a href="10-4-EPETC.html#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :34.30   Max.   :76.20   Max.   :27.00   Max.   :46.855  </span></span>
+<span id="cb13-29"><a href="10-4-EPETC.html#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                                  </span></span>
+<span id="cb13-30"><a href="10-4-EPETC.html#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      score4          score8          salary         english       </span></span>
+<span id="cb13-31"><a href="10-4-EPETC.html#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :658.0   Min.   :641.0   Min.   :24.96   Min.   : 0.0000  </span></span>
+<span id="cb13-32"><a href="10-4-EPETC.html#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:701.0   1st Qu.:685.0   1st Qu.:33.80   1st Qu.: 0.0000  </span></span>
+<span id="cb13-33"><a href="10-4-EPETC.html#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :711.0   Median :698.0   Median :35.88   Median : 0.0000  </span></span>
+<span id="cb13-34"><a href="10-4-EPETC.html#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :709.8   Mean   :698.4   Mean   :35.99   Mean   : 1.1177  </span></span>
+<span id="cb13-35"><a href="10-4-EPETC.html#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:720.0   3rd Qu.:712.0   3rd Qu.:37.96   3rd Qu.: 0.8859  </span></span>
+<span id="cb13-36"><a href="10-4-EPETC.html#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :740.0   Max.   :747.0   Max.   :44.49   Max.   :24.4939  </span></span>
+<span id="cb13-37"><a href="10-4-EPETC.html#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  NA&#39;s   :40      NA&#39;s   :25</span></span></code></pre></div>
+<p>Es bastante fácil replicar los componentes clave en una tabla usando <strong>R</strong>. Para ser coherentes con los nombres de las variables utilizadas en el conjunto de datos <strong>CASchools</strong>, se aplican algunos formatos de antemano.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="10-4-EPETC.html#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># variables personalizadas en MASchools</span></span>
+<span id="cb14-2"><a href="10-4-EPETC.html#cb14-2" aria-hidden="true" tabindex="-1"></a>MASchools<span class="sc">$</span>score <span class="ot">&lt;-</span> MASchools<span class="sc">$</span>score4 </span>
+<span id="cb14-3"><a href="10-4-EPETC.html#cb14-3" aria-hidden="true" tabindex="-1"></a>MASchools<span class="sc">$</span>STR <span class="ot">&lt;-</span> MASchools<span class="sc">$</span>stratio</span>
+<span id="cb14-4"><a href="10-4-EPETC.html#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="10-4-EPETC.html#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># crear la tabla</span></span>
+<span id="cb14-6"><a href="10-4-EPETC.html#cb14-6" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;score&quot;</span>, <span class="st">&quot;STR&quot;</span>, <span class="st">&quot;english&quot;</span>, <span class="st">&quot;lunch&quot;</span>, <span class="st">&quot;income&quot;</span>)</span>
+<span id="cb14-7"><a href="10-4-EPETC.html#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="10-4-EPETC.html#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="at">CA_mean =</span> <span class="fu">sapply</span>(CASchools[, vars], mean),</span>
+<span id="cb14-9"><a href="10-4-EPETC.html#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">CA_sd   =</span> <span class="fu">sapply</span>(CASchools[, vars], sd),</span>
+<span id="cb14-10"><a href="10-4-EPETC.html#cb14-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">MA_mean =</span> <span class="fu">sapply</span>(MASchools[, vars], mean),</span>
+<span id="cb14-11"><a href="10-4-EPETC.html#cb14-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">MA_sd   =</span> <span class="fu">sapply</span>(MASchools[, vars], sd))</span>
+<span id="cb14-12"><a href="10-4-EPETC.html#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           CA_mean     CA_sd    MA_mean     MA_sd</span></span>
+<span id="cb14-13"><a href="10-4-EPETC.html#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; score   654.15655 19.053347 709.827273 15.126474</span></span>
+<span id="cb14-14"><a href="10-4-EPETC.html#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; STR      19.64043  1.891812  17.344091  2.276666</span></span>
+<span id="cb14-15"><a href="10-4-EPETC.html#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; english  15.76816 18.285927   1.117676  2.900940</span></span>
+<span id="cb14-16"><a href="10-4-EPETC.html#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lunch    44.70524 27.123381  15.315909 15.060068</span></span>
+<span id="cb14-17"><a href="10-4-EPETC.html#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; income   15.31659  7.225890  18.746764  5.807637</span></span></code></pre></div>
+<p>Las estadísticas resumidas revelan que el puntaje promedio de las pruebas es más alto para los distritos escolares de Massachusetts. La prueba que se usa en Massachusetts es algo diferente a la que se usa en California (la calificación de la prueba de Massachusetts también incluye los resultados de la materia escolar “Ciencias”), por lo que no es apropiada una comparación directa de las calificaciones de las pruebas. También se puede ver que, en promedio, las clases son más pequeñas en Massachusetts que en California y que el ingreso promedio del distrito, el porcentaje promedio de estudiantes de inglés y el porcentaje promedio de estudiantes que reciben almuerzos subsidiados difieren considerablemente de los promedios calculados para California. También existen diferencias notables en la dispersión observada de las variables.</p>
+<p>Examinando la relación entre los ingresos del distrito y los puntajes de las pruebas en Massachusetts como se hizo antes en el Capítulo <a href="9-FRNL.html#FRNL">9</a> para los datos de California y se produce una gráfica.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="10-4-EPETC.html#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar modelo lineal</span></span>
+<span id="cb15-2"><a href="10-4-EPETC.html#cb15-2" aria-hidden="true" tabindex="-1"></a>Linear_model_MA <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> income, <span class="at">data =</span> MASchools)</span>
+<span id="cb15-3"><a href="10-4-EPETC.html#cb15-3" aria-hidden="true" tabindex="-1"></a>Linear_model_MA</span>
+<span id="cb15-4"><a href="10-4-EPETC.html#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-5"><a href="10-4-EPETC.html#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb15-6"><a href="10-4-EPETC.html#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lm(formula = score ~ income, data = MASchools)</span></span>
+<span id="cb15-7"><a href="10-4-EPETC.html#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-8"><a href="10-4-EPETC.html#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb15-9"><a href="10-4-EPETC.html#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)       income  </span></span>
+<span id="cb15-10"><a href="10-4-EPETC.html#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     679.387        1.624</span></span>
+<span id="cb15-11"><a href="10-4-EPETC.html#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="10-4-EPETC.html#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar modelo lineal logarítmico</span></span>
+<span id="cb15-13"><a href="10-4-EPETC.html#cb15-13" aria-hidden="true" tabindex="-1"></a>Linearlog_model_MA <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> <span class="fu">log</span>(income), <span class="at">data =</span> MASchools) </span>
+<span id="cb15-14"><a href="10-4-EPETC.html#cb15-14" aria-hidden="true" tabindex="-1"></a>Linearlog_model_MA</span>
+<span id="cb15-15"><a href="10-4-EPETC.html#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-16"><a href="10-4-EPETC.html#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb15-17"><a href="10-4-EPETC.html#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lm(formula = score ~ log(income), data = MASchools)</span></span>
+<span id="cb15-18"><a href="10-4-EPETC.html#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-19"><a href="10-4-EPETC.html#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb15-20"><a href="10-4-EPETC.html#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)  log(income)  </span></span>
+<span id="cb15-21"><a href="10-4-EPETC.html#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      600.80        37.71</span></span>
+<span id="cb15-22"><a href="10-4-EPETC.html#cb15-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-23"><a href="10-4-EPETC.html#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar modelo cúbico</span></span>
+<span id="cb15-24"><a href="10-4-EPETC.html#cb15-24" aria-hidden="true" tabindex="-1"></a>cubic_model_MA <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> <span class="fu">I</span>(income) <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">3</span>), <span class="at">data =</span> MASchools)</span>
+<span id="cb15-25"><a href="10-4-EPETC.html#cb15-25" aria-hidden="true" tabindex="-1"></a>cubic_model_MA</span>
+<span id="cb15-26"><a href="10-4-EPETC.html#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-27"><a href="10-4-EPETC.html#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb15-28"><a href="10-4-EPETC.html#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lm(formula = score ~ I(income) + I(income^2) + I(income^3), data = MASchools)</span></span>
+<span id="cb15-29"><a href="10-4-EPETC.html#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-30"><a href="10-4-EPETC.html#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb15-31"><a href="10-4-EPETC.html#cb15-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)    I(income)  I(income^2)  I(income^3)  </span></span>
+<span id="cb15-32"><a href="10-4-EPETC.html#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  600.398531    10.635382    -0.296887     0.002762</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="10-4-EPETC.html#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar datos</span></span>
+<span id="cb16-2"><a href="10-4-EPETC.html#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(MASchools<span class="sc">$</span>income, MASchools<span class="sc">$</span>score,</span>
+<span id="cb16-3"><a href="10-4-EPETC.html#cb16-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb16-4"><a href="10-4-EPETC.html#cb16-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb16-5"><a href="10-4-EPETC.html#cb16-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Ingresos del distrito&quot;</span>,</span>
+<span id="cb16-6"><a href="10-4-EPETC.html#cb16-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Resultado de la prueba&quot;</span>,</span>
+<span id="cb16-7"><a href="10-4-EPETC.html#cb16-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>),</span>
+<span id="cb16-8"><a href="10-4-EPETC.html#cb16-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">620</span>, <span class="dv">780</span>))</span>
+<span id="cb16-9"><a href="10-4-EPETC.html#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="10-4-EPETC.html#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar una línea de regresión estimada para el modelo lineal</span></span>
+<span id="cb16-11"><a href="10-4-EPETC.html#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(Linear_model_MA, <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb16-12"><a href="10-4-EPETC.html#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="10-4-EPETC.html#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar función de regresión estimada para el modelo lineal logarítmico</span></span>
+<span id="cb16-14"><a href="10-4-EPETC.html#cb16-14" aria-hidden="true" tabindex="-1"></a>order_id  <span class="ot">&lt;-</span> <span class="fu">order</span>(MASchools<span class="sc">$</span>income)</span>
+<span id="cb16-15"><a href="10-4-EPETC.html#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="10-4-EPETC.html#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(MASchools<span class="sc">$</span>income[order_id],</span>
+<span id="cb16-17"><a href="10-4-EPETC.html#cb16-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">fitted</span>(Linearlog_model_MA)[order_id], </span>
+<span id="cb16-18"><a href="10-4-EPETC.html#cb16-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>, </span>
+<span id="cb16-19"><a href="10-4-EPETC.html#cb16-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb16-20"><a href="10-4-EPETC.html#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="10-4-EPETC.html#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar función de regresión cúbica estimada</span></span>
+<span id="cb16-22"><a href="10-4-EPETC.html#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="at">x =</span> MASchools<span class="sc">$</span>income[order_id], </span>
+<span id="cb16-23"><a href="10-4-EPETC.html#cb16-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> <span class="fu">fitted</span>(cubic_model_MA)[order_id],</span>
+<span id="cb16-24"><a href="10-4-EPETC.html#cb16-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="st">&quot;orange&quot;</span>, </span>
+<span id="cb16-25"><a href="10-4-EPETC.html#cb16-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>) </span>
+<span id="cb16-26"><a href="10-4-EPETC.html#cb16-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-27"><a href="10-4-EPETC.html#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="co"># agrega una leyenda</span></span>
+<span id="cb16-28"><a href="10-4-EPETC.html#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb16-29"><a href="10-4-EPETC.html#cb16-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Lineal&quot;</span>,<span class="st">&quot;Lineal logarítmico&quot;</span>,<span class="st">&quot;Cúbico&quot;</span>),</span>
+<span id="cb16-30"><a href="10-4-EPETC.html#cb16-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>,</span>
+<span id="cb16-31"><a href="10-4-EPETC.html#cb16-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;Black&quot;</span>, <span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;orange&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/556-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>La gráfica indica que la especificación cúbica se ajusta mejor a los datos. Curiosamente, esto es diferente de los datos de <strong>CASchools</strong>, donde el patrón de no linealidad se describe mejor mediante la especificación del modelo lineal logarítmico.</p>
+<p>Se continua estimando la mayoría de las especificaciones del modelo utilizadas para el análisis del conjunto de datos <strong>CASchools</strong> en el Capítulo <a href="9-FRNL.html#FRNL">9</a> y usando <strong>stargazer()</strong> <span class="citation">(<a href="#ref-R-stargazer" role="doc-biblioref">Hlavac 2018</a>)</span> para generar una representación tabular de los resultados de la regresión.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="10-4-EPETC.html#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar &#39;HiEL&#39; a &#39;MASchools&#39;</span></span>
+<span id="cb17-2"><a href="10-4-EPETC.html#cb17-2" aria-hidden="true" tabindex="-1"></a>MASchools<span class="sc">$</span>HiEL <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(MASchools<span class="sc">$</span>english <span class="sc">&gt;</span> <span class="fu">median</span>(MASchools<span class="sc">$</span>english))</span>
+<span id="cb17-3"><a href="10-4-EPETC.html#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="10-4-EPETC.html#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar las especificaciones del modelo a partir de la tabla</span></span>
+<span id="cb17-5"><a href="10-4-EPETC.html#cb17-5" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR, <span class="at">data =</span> MASchools)</span>
+<span id="cb17-6"><a href="10-4-EPETC.html#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="10-4-EPETC.html#cb17-7" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR <span class="sc">+</span> english <span class="sc">+</span> lunch <span class="sc">+</span> <span class="fu">log</span>(income), </span>
+<span id="cb17-8"><a href="10-4-EPETC.html#cb17-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">data =</span> MASchools)</span>
+<span id="cb17-9"><a href="10-4-EPETC.html#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="10-4-EPETC.html#cb17-10" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR <span class="sc">+</span> english <span class="sc">+</span> lunch <span class="sc">+</span> income <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">2</span>) </span>
+<span id="cb17-11"><a href="10-4-EPETC.html#cb17-11" aria-hidden="true" tabindex="-1"></a>                        <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">3</span>), <span class="at">data =</span> MASchools)</span>
+<span id="cb17-12"><a href="10-4-EPETC.html#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="10-4-EPETC.html#cb17-13" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR <span class="sc">+</span> <span class="fu">I</span>(STR<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(STR<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> english <span class="sc">+</span> lunch <span class="sc">+</span> income </span>
+<span id="cb17-14"><a href="10-4-EPETC.html#cb17-14" aria-hidden="true" tabindex="-1"></a>                        <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">3</span>), <span class="at">data =</span> MASchools)</span>
+<span id="cb17-15"><a href="10-4-EPETC.html#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="10-4-EPETC.html#cb17-16" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod5 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> HiEL<span class="sc">:</span>STR <span class="sc">+</span> lunch </span>
+<span id="cb17-17"><a href="10-4-EPETC.html#cb17-17" aria-hidden="true" tabindex="-1"></a>                        <span class="sc">+</span> income, <span class="at">data =</span> MASchools)</span>
+<span id="cb17-18"><a href="10-4-EPETC.html#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-19"><a href="10-4-EPETC.html#cb17-19" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod6 <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> STR <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(income<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> HiEL <span class="sc">+</span> HiEL<span class="sc">:</span>STR <span class="sc">+</span> lunch </span>
+<span id="cb17-20"><a href="10-4-EPETC.html#cb17-20" aria-hidden="true" tabindex="-1"></a>                        <span class="sc">+</span> income, <span class="at">data =</span> MASchools)</span>
+<span id="cb17-21"><a href="10-4-EPETC.html#cb17-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-22"><a href="10-4-EPETC.html#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co"># recopilar errores estándar robustos</span></span>
+<span id="cb17-23"><a href="10-4-EPETC.html#cb17-23" aria-hidden="true" tabindex="-1"></a>rob_se <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod1, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb17-24"><a href="10-4-EPETC.html#cb17-24" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod2, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb17-25"><a href="10-4-EPETC.html#cb17-25" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod3, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb17-26"><a href="10-4-EPETC.html#cb17-26" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod4, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb17-27"><a href="10-4-EPETC.html#cb17-27" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod5, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb17-28"><a href="10-4-EPETC.html#cb17-28" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(TestScore_MA_mod6, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="10-4-EPETC.html#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generar una tabla con &#39;stargazer()&#39;</span></span>
+<span id="cb18-2"><a href="10-4-EPETC.html#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stargazer)</span>
+<span id="cb18-3"><a href="10-4-EPETC.html#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="10-4-EPETC.html#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">stargazer</span>(Linear_model_MA, TestScore_MA_mod2, TestScore_MA_mod3, </span>
+<span id="cb18-5"><a href="10-4-EPETC.html#cb18-5" aria-hidden="true" tabindex="-1"></a>          TestScore_MA_mod4, TestScore_MA_mod5, TestScore_MA_mod6,</span>
+<span id="cb18-6"><a href="10-4-EPETC.html#cb18-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">&quot;Regresiones usando datos de puntajes de las prueba en Massachusetts&quot;</span>,</span>
+<span id="cb18-7"><a href="10-4-EPETC.html#cb18-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">type =</span> <span class="st">&quot;latex&quot;</span>,</span>
+<span id="cb18-8"><a href="10-4-EPETC.html#cb18-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb18-9"><a href="10-4-EPETC.html#cb18-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">header =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb18-10"><a href="10-4-EPETC.html#cb18-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">se =</span> rob_se,</span>
+<span id="cb18-11"><a href="10-4-EPETC.html#cb18-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">object.names =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb18-12"><a href="10-4-EPETC.html#cb18-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">model.numbers =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb18-13"><a href="10-4-EPETC.html#cb18-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">column.labels =</span> <span class="fu">c</span>(<span class="st">&quot;(I)&quot;</span>, <span class="st">&quot;(II)&quot;</span>, <span class="st">&quot;(III)&quot;</span>, <span class="st">&quot;(IV)&quot;</span>, <span class="st">&quot;(V)&quot;</span>, <span class="st">&quot;(VI)&quot;</span>))</span></code></pre></div>
+
+
+
+<table style="text-align:center"><tr><td colspan="7" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="6">Variable dependiente: Puntaje</td></tr>
+<tr><td></td><td colspan="6" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="6">score</td></tr>
+<tr><td style="text-align:left"></td><td>(I)</td><td>(II)</td><td>(III)</td><td>(IV)</td><td>(V)</td><td>(VI)</td></tr>
+<tr><td colspan="7" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">STR</td><td>-1.718<sup>***</sup></td><td>-0.689<sup>**</sup></td><td>-0.641<sup>**</sup></td><td>12.426</td><td>-1.018<sup>***</sup></td><td>-0.672<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.499)</td><td>(0.270)</td><td>(0.268)</td><td>(14.010)</td><td>(0.370)</td><td>(0.271)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(STR2)</td><td></td><td></td><td></td><td>-0.680</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.737)</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(STR3)</td><td></td><td></td><td></td><td>0.011</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.013)</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">english</td><td></td><td>-0.411</td><td>-0.437</td><td>-0.434</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.306)</td><td>(0.303)</td><td>(0.300)</td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">HiEL</td><td></td><td></td><td></td><td></td><td>-12.561</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td>(9.793)</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">lunch</td><td></td><td>-0.521<sup>***</sup></td><td>-0.582<sup>***</sup></td><td>-0.587<sup>***</sup></td><td>-0.709<sup>***</sup></td><td>-0.653<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.078)</td><td>(0.097)</td><td>(0.104)</td><td>(0.091)</td><td>(0.073)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">log(income)</td><td></td><td>16.529<sup>***</sup></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(3.146)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">income</td><td></td><td></td><td>-3.067</td><td>-3.382</td><td>-3.867</td><td>-3.218</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(2.353)</td><td>(2.491)</td><td>(2.488)</td><td>(2.306)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(income2)</td><td></td><td></td><td>0.164<sup>*</sup></td><td>0.174<sup>*</sup></td><td>0.184<sup>**</sup></td><td>0.165<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.085)</td><td>(0.089)</td><td>(0.090)</td><td>(0.085)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(income3)</td><td></td><td></td><td>-0.002<sup>**</sup></td><td>-0.002<sup>**</sup></td><td>-0.002<sup>**</sup></td><td>-0.002<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.001)</td><td>(0.001)</td><td>(0.001)</td><td>(0.001)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">STR:HiEL</td><td></td><td></td><td></td><td></td><td>0.799</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td>(0.555)</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>739.621<sup>***</sup></td><td>682.432<sup>***</sup></td><td>744.025<sup>***</sup></td><td>665.496<sup>***</sup></td><td>759.914<sup>***</sup></td><td>747.364<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(8.607)</td><td>(11.497)</td><td>(21.318)</td><td>(81.332)</td><td>(23.233)</td><td>(20.278)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td colspan="7" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>220</td><td>220</td><td>220</td><td>220</td><td>220</td><td>220</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.067</td><td>0.676</td><td>0.685</td><td>0.687</td><td>0.686</td><td>0.681</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>0.063</td><td>0.670</td><td>0.676</td><td>0.675</td><td>0.675</td><td>0.674</td></tr>
+<tr><td style="text-align:left">Residual Std. Error</td><td>14.646 (df = 218)</td><td>8.686 (df = 215)</td><td>8.607 (df = 213)</td><td>8.626 (df = 211)</td><td>8.621 (df = 212)</td><td>8.637 (df = 214)</td></tr>
+<tr><td style="text-align:left">F Statistic</td><td>15.616<sup>***</sup> (df = 1; 218)</td><td>112.284<sup>***</sup> (df = 4; 215)</td><td>77.232<sup>***</sup> (df = 6; 213)</td><td>57.803<sup>***</sup> (df = 8; 211)</td><td>66.023<sup>***</sup> (df = 7; 212)</td><td>91.560<sup>***</sup> (df = 5; 214)</td></tr>
+<tr><td colspan="7" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="6" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
+<caption><p style='text-align:center'><span id="tab:rumtsd">Table 10.1: </span> Regresiones usando datos de puntajes de las prueba en Massachusetts</p></caption>
+
+
+<p>A continuación, se reproducen los estadísticos <span class="math inline">\(F\)</span> y los valores de <span class="math inline">\(p\)</span> para probar la exclusión de grupos de variables.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="10-4-EPETC.html#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo de prueba F (3)</span></span>
+<span id="cb19-2"><a href="10-4-EPETC.html#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod3, </span>
+<span id="cb19-3"><a href="10-4-EPETC.html#cb19-3" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(income^2)=0&quot;</span>, <span class="st">&quot;I(income^3)=0&quot;</span>), </span>
+<span id="cb19-4"><a href="10-4-EPETC.html#cb19-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-5"><a href="10-4-EPETC.html#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="10-4-EPETC.html#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo de pruebas F (4)</span></span>
+<span id="cb19-7"><a href="10-4-EPETC.html#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod4, </span>
+<span id="cb19-8"><a href="10-4-EPETC.html#cb19-8" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;STR=0&quot;</span>, <span class="st">&quot;I(STR^2)=0&quot;</span>, <span class="st">&quot;I(STR^3)=0&quot;</span>), </span>
+<span id="cb19-9"><a href="10-4-EPETC.html#cb19-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-10"><a href="10-4-EPETC.html#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="10-4-EPETC.html#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod4, </span>
+<span id="cb19-12"><a href="10-4-EPETC.html#cb19-12" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(STR^2)=0&quot;</span>, <span class="st">&quot;I(STR^3)=0&quot;</span>), </span>
+<span id="cb19-13"><a href="10-4-EPETC.html#cb19-13" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-14"><a href="10-4-EPETC.html#cb19-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-15"><a href="10-4-EPETC.html#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod4, </span>
+<span id="cb19-16"><a href="10-4-EPETC.html#cb19-16" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(income^2)=0&quot;</span>, <span class="st">&quot;I(income^3)=0&quot;</span>), </span>
+<span id="cb19-17"><a href="10-4-EPETC.html#cb19-17" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-18"><a href="10-4-EPETC.html#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="10-4-EPETC.html#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo de pruebas F (5)</span></span>
+<span id="cb19-20"><a href="10-4-EPETC.html#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod5, </span>
+<span id="cb19-21"><a href="10-4-EPETC.html#cb19-21" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;STR=0&quot;</span>, <span class="st">&quot;STR:HiEL=0&quot;</span>), </span>
+<span id="cb19-22"><a href="10-4-EPETC.html#cb19-22" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-23"><a href="10-4-EPETC.html#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="10-4-EPETC.html#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod5, </span>
+<span id="cb19-25"><a href="10-4-EPETC.html#cb19-25" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(income^2)=0&quot;</span>, <span class="st">&quot;I(income^3)=0&quot;</span>), </span>
+<span id="cb19-26"><a href="10-4-EPETC.html#cb19-26" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-27"><a href="10-4-EPETC.html#cb19-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-28"><a href="10-4-EPETC.html#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod5, </span>
+<span id="cb19-29"><a href="10-4-EPETC.html#cb19-29" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;HiEL=0&quot;</span>, <span class="st">&quot;STR:HiEL=0&quot;</span>), </span>
+<span id="cb19-30"><a href="10-4-EPETC.html#cb19-30" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb19-31"><a href="10-4-EPETC.html#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-32"><a href="10-4-EPETC.html#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo de prueba F (6)</span></span>
+<span id="cb19-33"><a href="10-4-EPETC.html#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(TestScore_MA_mod6, </span>
+<span id="cb19-34"><a href="10-4-EPETC.html#cb19-34" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(income^2)=0&quot;</span>, <span class="st">&quot;I(income^3)=0&quot;</span>), </span>
+<span id="cb19-35"><a href="10-4-EPETC.html#cb19-35" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span></code></pre></div>
+<p>Se puede ver que, en términos de <span class="math inline">\(\bar{R}^2\)</span>, la especificación (3), que usa un cúbico para modelar la relación entre el ingreso del distrito y los puntajes de las pruebas, funciona mejor que la especificación de registro lineal (2). Usando diferentes pruebas <span class="math inline">\(F\)</span> en los modelos (4) y (5), no se puede rechazar la hipótesis de que no existe una relación no lineal entre la proporción de alumnos por maestro y el puntaje de la prueba y también que la proporción de estudiantes de inglés tiene una influencia en la relación de interés. Además, la regresión (6) muestra que el porcentaje de estudiantes de inglés se puede omitir como regresor. Debido a que las especificaciones del modelo hechas en (4) a (6) no conducen a resultados sustancialmente diferentes a los de la regresión (3), se elige el modelo (3) como la especificación más adecuada.</p>
+<p>En comparación con los datos de California, se observan los siguientes resultados:</p>
+<ol style="list-style-type: decimal">
+<li><p>Controlar las características de antecedentes de los estudiantes en la especificación del modelo (2) reduce el coeficiente de interés (proporción estudiante-maestro) en aproximadamente <span class="math inline">\(60\%\)</span>. Los coeficientes estimados están próximos entre sí.</p></li>
+<li><p>El coeficiente de la proporción alumno-maestro siempre es significativamente diferente de cero al nivel de <span class="math inline">\(1\%\)</span> para ambos conjuntos de datos. Esto es válido para todas las especificaciones del modelo consideradas en ambos estudios.</p></li>
+<li><p>En ambos estudios, la proporción de estudiantes de inglés en un distrito escolar es de poca importancia para el impacto estimado de un cambio en la proporción de estudiantes por maestro en el puntaje de la prueba.</p></li>
+</ol>
+<p>La mayor diferencia es que, en contraste con los resultados de California, no se encuentra evidencia de una relación no lineal entre los puntajes de las pruebas y la proporción de alumnos por maestro para los datos de Massachusetts, ya que las pruebas correspondientes de <span class="math inline">\(F\)</span> para el modelo (4) no rechazan la hipótesis nula.</p>
+<p>Como se señala, los puntajes de las pruebas de California y Massachusetts tienen diferentes unidades porque las pruebas subyacentes son diferentes. Por lo tanto, los coeficientes estimados en la proporción alumno-maestro en ambas regresiones no se pueden comparar antes de estandarizar los puntajes de las pruebas a las mismas unidades que <span class="math display">\[\frac{Testscore - \overline{TestScore}}{\sigma_{TestScore}}\]</span> para todas las observaciones en ambos conjuntos de datos y ejecutando las regresiones de interés utilizando nuevamente los datos estandarizados. Se puede demostrar que el coeficiente de la proporción de alumnos por maestro en la regresión que utiliza las puntuaciones de las pruebas estandarizadas es el coeficiente de la regresión original dividido por la desviación estándar de las puntuaciones de las pruebas.</p>
+<p>Para el modelo (3) de los datos de Massachusetts, el coeficiente estimado de la proporción alumno-maestro es de <span class="math inline">\(-0.64\)</span>. Se predice que una reducción de la proporción de estudiantes por maestro en dos estudiantes aumentará los puntajes de las pruebas en <span class="math inline">\(-2 \cdot (-0.64) = 1.28\)</span> puntos. Por lo tanto, se puede calcular el efecto de una reducción de la proporción de estudiantes por maestro de dos estudiantes en los puntajes de las pruebas estandarizadas de la siguiente manera:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="10-4-EPETC.html#cb20-1" aria-hidden="true" tabindex="-1"></a>TestScore_MA_mod3<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">/</span> <span class="fu">sd</span>(MASchools<span class="sc">$</span>score) <span class="sc">*</span> (<span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb20-2"><a href="10-4-EPETC.html#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        STR </span></span>
+<span id="cb20-3"><a href="10-4-EPETC.html#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.08474001</span></span></code></pre></div>
+<p>Para Massachusetts, el aumento previsto de los puntajes de las pruebas debido a una reducción de la proporción de estudiantes por maestro en dos estudiantes es de <span class="math inline">\(0.085\)</span> desviaciones estándar de la distribución observada de los puntajes de las pruebas.</p>
+<p>Utilizando la especificación lineal (2) para California, el coeficiente estimado de la proporción alumno-maestro es <span class="math inline">\(-0.73\)</span>, por lo que el aumento previsto de las puntuaciones de las pruebas inducido por una reducción de la proporción alumno-maestro por dos estudiantes es <span class="math inline">\(-0.73 \cdot (-2) = 1.46\)</span>. Usando <strong>R</strong> para calcular el cambio previsto en las unidades de desviación estándar:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="10-4-EPETC.html#cb21-1" aria-hidden="true" tabindex="-1"></a>TestScore_mod2<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">/</span> <span class="fu">sd</span>(CASchools<span class="sc">$</span>score) <span class="sc">*</span> (<span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb21-2"><a href="10-4-EPETC.html#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        STR </span></span>
+<span id="cb21-3"><a href="10-4-EPETC.html#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.07708103</span></span></code></pre></div>
+<p>Esto muestra que el aumento previsto de los puntajes de las pruebas debido a una reducción de la proporción de estudiantes por maestro en dos estudiantes es de <span class="math inline">\(0.077\)</span> desviación estándar de la distribución observada de los puntajes de las pruebas para los datos de California.</p>
+<p>En cuanto a los resultados de las pruebas estandarizadas, el cambio previsto es esencialmente el mismo para los distritos escolares de California y Massachusetts.</p>
+<p>En conjunto, los resultados apoyan la validez externa de las inferencias hechas utilizando datos sobre los distritos de escuelas primarias de California, al menos para Massachusetts.</p>
+</div>
+<div id="validez-interna-del-estudio" class="section level4 unnumbered">
+<h4>Validez interna del estudio</h4>
+<p>La validez externa del estudio <em>no asegura su validez interna</em>. Aunque la especificación del modelo elegido mejora sobre un modelo de regresión lineal simple, la validez interna aún puede violarse debido a algunas de las amenazas enumeradas en el Concepto clave 9.7. Dichas amenazas son:</p>
+<ul>
+<li><p>Sesgo variable omitido.</p></li>
+<li><p>Especificación incorrecta de la forma funcional.</p></li>
+<li><p>Errores en variables.</p></li>
+<li><p>Problemas de selección de muestras.</p></li>
+<li><p>Causalidad simultánea.</p></li>
+<li><p>Heterocedasticidad.</p></li>
+<li><p>Correlación de errores entre observaciones.</p></li>
+</ul>
+</div>
+<div id="resumen-1" class="section level4 unnumbered">
+<h4>Resumen</h4>
+<p>Se ha encontrado que <em>existe un efecto pequeño pero estadísticamente significativo</em> de la proporción de alumnos por maestro en los puntajes de las pruebas. Sin embargo, no está claro si de hecho se ha estimado el efecto causal de interés ya que — a pesar de que el enfoque incluye variables de control, teniendo en cuenta las no linealidades en la función de regresión de la población y la inferencia estadística utilizando errores estándar robustos — los resultados aún podrían estar sesgados; por ejemplo, si hay factores omitidos que no se han considerado. Por tanto, la <em>validez interna</em> del estudio sigue siendo cuestionable. Como se concluyó de la comparación con el análisis del conjunto de datos de Massachusetts, este resultado puede ser <em>válido externamente</em>.</p>
+<p>Los siguientes capítulos abordan técnicas que pueden ser remedios para todas las amenazas a la validez interna enumeradas en el Concepto clave 9.7 si la regresión múltiple por sí sola es insuficiente. Esto incluye regresión usando datos de panel y enfoques que emplean variables instrumentales.</p>
+</div>
+</div>
+<h3>Referencias bibliográficas</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-R-stargazer" class="csl-entry">
+Hlavac, Marek. 2018. <em><span class="nocase">stargazer: Well-Formatted Regression and Summary Statistics Tables</span></em> (version 5.2.2). <a href="https://CRAN.R-project.org/package=stargazer">https://CRAN.R-project.org/package=stargazer</a>.
+</div>
+<div id="ref-R-AER" class="csl-entry">
+Kleiber, Christian, and Achim Zeileis. 2020. <em><span class="nocase">AER: Applied Econometrics with R</span></em> (version 1.2-9). <a href="https://CRAN.R-project.org/package=AER">https://CRAN.R-project.org/package=AER</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="10-5-Ejercicios-9.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_10.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

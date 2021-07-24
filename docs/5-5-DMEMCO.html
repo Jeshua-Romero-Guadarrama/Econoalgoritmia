@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>5.5 La distribución muestral del estimador de MCO | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="5.5 La distribución muestral del estimador de MCO | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="5.5 La distribución muestral del estimador de MCO | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-21" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="5-4-SMC.html"/>
+<link rel="next" href="5-6-Ejercicios-4.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="DMEMCO" class="section level2" number="5.5">
+<h2><span class="header-section-number">5.5</span> La distribución muestral del estimador de MCO</h2>
+<p>Como <span class="math inline">\(\hat{\beta}_0\)</span> y <span class="math inline">\(\hat{\beta}_1\)</span> se calculan a partir de una muestra, los estimadores en sí mismos son variables aleatorias con una distribución de probabilidad, — la denominada distribución muestral de los estimadores — describe los valores que podrían tomar en diferentes muestras. Aunque la distribución muestral de <span class="math inline">\(\hat\beta_0\)</span> y <span class="math inline">\(\hat\beta_1\)</span> puede ser complicada cuando el tamaño de la muestra es pequeño y generalmente cambia con el número de observaciones, <span class="math inline">\(n\)</span>, es posible, siempre que se cumplan los supuestos discutidos sean válidos, para hacer ciertas declaraciones sobre lo que se mantiene para todos los <span class="math inline">\(n\)</span>. En particular</p>
+<p><span class="math display">\[ E(\hat{\beta}_0) = \beta_0 \ \ \text{and} \ \  E(\hat{\beta}_1) = \beta_1,\]</span></p>
+<p>es decir, <span class="math inline">\(\hat\beta_0\)</span> y <span class="math inline">\(\hat\beta_1\)</span> son estimadores no sesgados de <span class="math inline">\(\beta_0\)</span> y <span class="math inline">\(\beta_1\)</span>, los parámetros verdaderos. Si la muestra es lo suficientemente grande, según el teorema del límite central, la distribución muestral <em>conjunta</em> de los estimadores está bien aproximada por la distribución normal bivariada (<a href="#mjx-eqn-2.1">2.1</a>). Esto implica que las distribuciones marginales también son normales en muestras grandes. Los datos básicos sobre las distribuciones de muestras grandes de <span class="math inline">\(\hat\beta_0\)</span> y <span class="math inline">\(\hat\beta_1\)</span> se presentan en el Concepto clave 4.4.</p>
+<div id="KC4.4" class="keyconcept">
+<h3 class="right">
+Concepto clave 4.4
+</h3>
+<h3 class="left">
+Distribución de muestra grande de <span class="math inline">\(\hat\beta_0\)</span> y <span class="math inline">\(\hat\beta_1\)</span>
+</h3>
+<p>
+<p>Si se cumplen los supuestos de mínimos cuadrados del Concepto clave 4.3, entonces en muestras grandes <span class="math inline">\(\hat\beta_0\)</span> y <span class="math inline">\(\hat\beta_1\)</span> tienen una distribución muestral normal conjunta. La distribución normal de muestra grande de <span class="math inline">\(\hat\beta_1\)</span> es <span class="math inline">\(\mathcal{N}(\beta_1, \sigma^2_{\hat\beta_1})\)</span>, donde la varianza de la distribución, <span class="math inline">\(\sigma^2_{\hat\beta_1}\)</span>, es</p>
+<p><span class="math display" id="eq:olsvar1">\[\begin{align}
+\sigma^2_{\hat\beta_1} = \frac{1}{n} \frac{Var \left[ \left(X_i - \mu_X \right) u_i  \right]}  {\left[  Var \left(X_i \right)  \right]^2}. \tag{5.1}
+\end{align}\]</span></p>
+<p>La distribución normal de muestra grande de <span class="math inline">\(\hat\beta_0\)</span> es <span class="math inline">\(\mathcal{N}(\beta_0, \sigma^2_{\hat\beta_0})\)</span> con</p>
+<p><span class="math display" id="eq:olsvar2">\[\begin{align}
+\sigma^2_{\hat\beta_0} =  \frac{1}{n} \frac{Var \left( H_i u_i \right)}{ \left[  E \left(H_i^2  \right)  \right]^2 } \ , \ \text{donde} \ \ H_i = 1 - \left[ \frac{\mu_X} {E \left( X_i^2\right)} \right] X_i. \tag{5.2}
+\end{align}\]</span></p>
+<p>La siguiente simulación interactiva genera continuamente muestras aleatorias <span class="math inline">\((X_i, Y_i)\)</span> de <span class="math inline">\(200\)</span> observaciones donde <span class="math inline">\(E(Y\vert X) = 100 + 3X\)</span>, estima un modelo de regresión simple, almacena la estimación de la pendiente <span class="math inline">\(\beta_1\)</span> y visualiza la distribución de los <span class="math inline">\(\widehat{\beta}_1\)</span> observados hasta ahora usando un histograma. La idea aquí es que para un gran número de <span class="math inline">\(\widehat{\beta}_1\)</span>, el histograma da una buena aproximación de la distribución muestral del estimador. Al disminuir el tiempo entre dos iteraciones de muestreo, queda claro que la forma del histograma se aproxima a la forma de campana característica de una distribución normal centrada en la pendiente real de <span class="math inline">\(3\)</span>.</p>
+<iframe height="470" width="700" frameborder="0" scrolling="no" src="DCL/Distribución_de_regresión_de_muestras_pequeñas.html">
+</iframe>
+<p>(Haga doble clic en el histograma para reiniciar la simulación.)</p>
+</p>
+</div>
+<div id="estudio-de-simulación-1" class="section level3 unnumbered">
+<h3>Estudio de simulación 1</h3>
+<p>También se puede verificar si las afirmaciones del Concepto clave 4.4 realmente son válidas mediante <strong>R</strong>. Para esto, primero se construye una población de observaciones de <span class="math inline">\(100 000\)</span> en total. Para hacer esto, se necesitan valores para la variable independiente <span class="math inline">\(X\)</span>, para el término de error <span class="math inline">\(u\)</span> y para los parámetros <span class="math inline">\(\beta_0\)</span> y <span class="math inline">\(\beta_1\)</span>. Con estos combinados en un modelo de regresión simple, se calcula la variable dependiente <span class="math inline">\(Y\)</span>.</p>
+<p><br></p>
+<p>En el ejemplo, se generan los números <span class="math inline">\(X_i\)</span>, <span class="math inline">\(i = 1\)</span>, …, <span class="math inline">\(100000\)</span> extrayendo una muestra aleatoria de una distribución uniforme en el intervalo <span class="math inline">\([0, 20]\)</span>. La realización de los términos de error <span class="math inline">\(u_i\)</span> se extraen de una distribución normal estándar con parámetros <span class="math inline">\(\mu = 0\)</span> y <span class="math inline">\(\sigma^2 = 100\)</span> (se debe tener en cuenta que <strong>rnorm()</strong> requiere <span class="math inline">\(\sigma\)</span> como entrada para el argumento <strong>sd</strong>, consultar <strong>?rnorm</strong>). Además, se elige <span class="math inline">\(\beta_0 = -2\)</span> y <span class="math inline">\(\beta_1 = 3.5\)</span>, por lo que el modelo verdadero es</p>
+<p><span class="math display">\[ Y_i = -2 + 3.5 \cdot X_i. \]</span></p>
+<p>Finalmente, se almacenan los resultados en un marco de datos (data.frame):</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="5-5-DMEMCO.html#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># simular datos</span></span>
+<span id="cb19-2"><a href="5-5-DMEMCO.html#cb19-2" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">100000</span></span>
+<span id="cb19-3"><a href="5-5-DMEMCO.html#cb19-3" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">runif</span>(N, <span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">20</span>)</span>
+<span id="cb19-4"><a href="5-5-DMEMCO.html#cb19-4" aria-hidden="true" tabindex="-1"></a>u <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb19-5"><a href="5-5-DMEMCO.html#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="5-5-DMEMCO.html#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># regresión de población</span></span>
+<span id="cb19-7"><a href="5-5-DMEMCO.html#cb19-7" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">+</span> <span class="fl">3.5</span> <span class="sc">*</span> X <span class="sc">+</span> u</span>
+<span id="cb19-8"><a href="5-5-DMEMCO.html#cb19-8" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(X, Y)</span></code></pre></div>
+<p>De ahora en adelante, se consideran los datos generados previamente como la población real (que por supuesto sería <em>desconocida</em> en una aplicación del mundo real, de lo contrario no habría razón para extraer una muestra aleatoria en primer lugar). El conocimiento sobre la población real y la verdadera relación entre <span class="math inline">\(Y\)</span> y <span class="math inline">\(X\)</span> se puede utilizar para verificar las afirmaciones hechas en el Concepto clave 4.4.</p>
+<p>Primero, se calculan las verdaderas varianzas <span class="math inline">\(\sigma^2_{\hat{\beta}_0}\)</span> y <span class="math inline">\(\sigma^2_{\hat{\beta}_1}\)</span> para una muestra extraída al azar de tamaño <span class="math inline">\(n = 100\)</span>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="5-5-DMEMCO.html#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer el tamaño de la muestra</span></span>
+<span id="cb20-2"><a href="5-5-DMEMCO.html#cb20-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb20-3"><a href="5-5-DMEMCO.html#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="5-5-DMEMCO.html#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular la varianza de beta_hat_0</span></span>
+<span id="cb20-5"><a href="5-5-DMEMCO.html#cb20-5" aria-hidden="true" tabindex="-1"></a>H_i <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">mean</span>(X) <span class="sc">/</span> <span class="fu">mean</span>(X<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span> X</span>
+<span id="cb20-6"><a href="5-5-DMEMCO.html#cb20-6" aria-hidden="true" tabindex="-1"></a>var_b0 <span class="ot">&lt;-</span> <span class="fu">var</span>(H_i <span class="sc">*</span> u) <span class="sc">/</span> (n <span class="sc">*</span> <span class="fu">mean</span>(H_i<span class="sc">^</span><span class="dv">2</span>)<span class="sc">^</span><span class="dv">2</span> )</span>
+<span id="cb20-7"><a href="5-5-DMEMCO.html#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="5-5-DMEMCO.html#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular la varianza de hat_beta_1</span></span>
+<span id="cb20-9"><a href="5-5-DMEMCO.html#cb20-9" aria-hidden="true" tabindex="-1"></a>var_b1 <span class="ot">&lt;-</span> <span class="fu">var</span>( ( X <span class="sc">-</span> <span class="fu">mean</span>(X) ) <span class="sc">*</span> u ) <span class="sc">/</span> (<span class="dv">100</span> <span class="sc">*</span> <span class="fu">var</span>(X)<span class="sc">^</span><span class="dv">2</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="5-5-DMEMCO.html#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir variaciones en la consola</span></span>
+<span id="cb21-2"><a href="5-5-DMEMCO.html#cb21-2" aria-hidden="true" tabindex="-1"></a>var_b0</span>
+<span id="cb21-3"><a href="5-5-DMEMCO.html#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4.045066</span></span>
+<span id="cb21-4"><a href="5-5-DMEMCO.html#cb21-4" aria-hidden="true" tabindex="-1"></a>var_b1</span>
+<span id="cb21-5"><a href="5-5-DMEMCO.html#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.03018694</span></span></code></pre></div>
+<p>Suponga ahora que no conoce los valores verdaderos de <span class="math inline">\(\beta_0\)</span> y <span class="math inline">\(\beta_1\)</span> y que no es posible observar a toda la población. Sin embargo, se puede observar una muestra aleatoria de <span class="math inline">\(n\)</span> observaciones. Entonces, no sería posible calcular los parámetros verdaderos, pero se podrían obtener estimaciones de <span class="math inline">\(\beta_0\)</span> y <span class="math inline">\(\beta_1\)</span> a partir de los datos de muestra utilizando MCO. Sin embargo, se sabe que estas estimaciones son resultado de variables aleatorias en sí mismas, ya que las observaciones se extraen aleatoriamente de la población. El Concepto clave 4.4 describe sus distribuciones para grandes <span class="math inline">\(n\)</span>. Cuando se extrae una sola muestra de tamaño <span class="math inline">\(n\)</span>, no es posible hacer ninguna afirmación sobre estas distribuciones. Las cosas cambian si se repite el esquema de muestreo muchas veces y se calculan las estimaciones para cada muestra: usando este procedimiento, se simulan los resultados de las respectivas distribuciones.</p>
+<p>Para lograr esto en R, se emplea el siguiente enfoque:</p>
+<ul>
+<li><p>Se asigna el número de repeticiones, suponiendo <span class="math inline">\(10000\)</span>, a <strong>repeticiones</strong> y luego se inicializa una matriz <strong>ajuste</strong> donde las estimaciones obtenidas en cada iteración de muestreo se almacenan en filas. Por lo tanto, <strong>ajuste</strong> tiene que ser una matriz de dimensiones <strong>repeticiones</strong> <span class="math inline">\(\times2\)</span>.</p></li>
+<li><p>En el siguiente paso, se extraen <strong>repeticiones</strong> de muestras aleatorias de tamaño <strong>n</strong> de la población y se obtienen las estimaciones de MCO para cada muestra. Los resultados se almacenan como entradas de fila en la matriz de resultados <strong>ajuste</strong>. Esto se hace usando un bucle <strong>for()</strong>.</p></li>
+<li><p>Por último, se estiman las varianzas de ambos estimadores utilizando los resultados muestreados y se grafican los histogramas de estos últimos. También se agrega una gráfica de las funciones de densidad que pertenecen a las distribuciones que se derivan del Concepto clave 4.4. La función <strong>bquote()</strong> se usa para obtener expresiones matemáticas en los títulos y etiquetas de ambos gráficos. Ver <strong>?Bquote</strong>.</p></li>
+</ul>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="5-5-DMEMCO.html#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer repeticiones y tamaño de muestra</span></span>
+<span id="cb22-2"><a href="5-5-DMEMCO.html#cb22-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb22-3"><a href="5-5-DMEMCO.html#cb22-3" aria-hidden="true" tabindex="-1"></a>reps <span class="ot">&lt;-</span> <span class="dv">10000</span></span>
+<span id="cb22-4"><a href="5-5-DMEMCO.html#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="5-5-DMEMCO.html#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># inicializar la matriz de resultados</span></span>
+<span id="cb22-6"><a href="5-5-DMEMCO.html#cb22-6" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> reps)</span>
+<span id="cb22-7"><a href="5-5-DMEMCO.html#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="5-5-DMEMCO.html#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># muestreo de bucle y estimación de los coeficientes</span></span>
+<span id="cb22-9"><a href="5-5-DMEMCO.html#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>reps){</span>
+<span id="cb22-10"><a href="5-5-DMEMCO.html#cb22-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb22-11"><a href="5-5-DMEMCO.html#cb22-11" aria-hidden="true" tabindex="-1"></a> sample <span class="ot">&lt;-</span> population[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>N, n), ]</span>
+<span id="cb22-12"><a href="5-5-DMEMCO.html#cb22-12" aria-hidden="true" tabindex="-1"></a> fit[i, ] <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> sample)<span class="sc">$</span>coefficients</span>
+<span id="cb22-13"><a href="5-5-DMEMCO.html#cb22-13" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb22-14"><a href="5-5-DMEMCO.html#cb22-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb22-15"><a href="5-5-DMEMCO.html#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="5-5-DMEMCO.html#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular estimaciones de varianza utilizando resultados</span></span>
+<span id="cb22-17"><a href="5-5-DMEMCO.html#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(fit[, <span class="dv">1</span>])</span>
+<span id="cb22-18"><a href="5-5-DMEMCO.html#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4.186832</span></span>
+<span id="cb22-19"><a href="5-5-DMEMCO.html#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(fit[, <span class="dv">2</span>])</span>
+<span id="cb22-20"><a href="5-5-DMEMCO.html#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.03096199</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="5-5-DMEMCO.html#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dividir el área de graficado como una matriz de 1 por 2</span></span>
+<span id="cb23-2"><a href="5-5-DMEMCO.html#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb23-3"><a href="5-5-DMEMCO.html#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="5-5-DMEMCO.html#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar histogramas de estimaciones beta_0</span></span>
+<span id="cb23-5"><a href="5-5-DMEMCO.html#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(fit[, <span class="dv">1</span>],</span>
+<span id="cb23-6"><a href="5-5-DMEMCO.html#cb23-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex.main =</span> <span class="dv">1</span>,</span>
+<span id="cb23-7"><a href="5-5-DMEMCO.html#cb23-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="fu">bquote</span>(La <span class="sc">~</span> distribución <span class="sc">~</span> de <span class="sc">~</span> <span class="dv">10000</span> <span class="sc">~</span> estimaciones <span class="sc">~</span> beta[<span class="dv">0</span>]), </span>
+<span id="cb23-8"><a href="5-5-DMEMCO.html#cb23-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="fu">bquote</span>(<span class="fu">hat</span>(beta)[<span class="dv">0</span>]), </span>
+<span id="cb23-9"><a href="5-5-DMEMCO.html#cb23-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq =</span> F)</span>
+<span id="cb23-10"><a href="5-5-DMEMCO.html#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="5-5-DMEMCO.html#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar una distribución verdadera a la gráfica</span></span>
+<span id="cb23-12"><a href="5-5-DMEMCO.html#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x, </span>
+<span id="cb23-13"><a href="5-5-DMEMCO.html#cb23-13" aria-hidden="true" tabindex="-1"></a>            <span class="sc">-</span><span class="dv">2</span>, </span>
+<span id="cb23-14"><a href="5-5-DMEMCO.html#cb23-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">sqrt</span>(var_b0)), </span>
+<span id="cb23-15"><a href="5-5-DMEMCO.html#cb23-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">add =</span> T, </span>
+<span id="cb23-16"><a href="5-5-DMEMCO.html#cb23-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>)</span>
+<span id="cb23-17"><a href="5-5-DMEMCO.html#cb23-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-18"><a href="5-5-DMEMCO.html#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="co"># grraficar histogramas de beta_hat_1</span></span>
+<span id="cb23-19"><a href="5-5-DMEMCO.html#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(fit[, <span class="dv">2</span>],</span>
+<span id="cb23-20"><a href="5-5-DMEMCO.html#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">cex.main =</span> <span class="dv">1</span>,</span>
+<span id="cb23-21"><a href="5-5-DMEMCO.html#cb23-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="fu">bquote</span>(La <span class="sc">~</span> distribución <span class="sc">~</span> de <span class="sc">~</span> <span class="dv">10000</span> <span class="sc">~</span> estimaciones <span class="sc">~</span> beta[<span class="dv">1</span>]), </span>
+<span id="cb23-22"><a href="5-5-DMEMCO.html#cb23-22" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="fu">bquote</span>(<span class="fu">hat</span>(beta)[<span class="dv">1</span>]), </span>
+<span id="cb23-23"><a href="5-5-DMEMCO.html#cb23-23" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq =</span> F)</span>
+<span id="cb23-24"><a href="5-5-DMEMCO.html#cb23-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="5-5-DMEMCO.html#cb23-25" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar una distribución verdadera a la gráfica</span></span>
+<span id="cb23-26"><a href="5-5-DMEMCO.html#cb23-26" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x, </span>
+<span id="cb23-27"><a href="5-5-DMEMCO.html#cb23-27" aria-hidden="true" tabindex="-1"></a>            <span class="fl">3.5</span>, </span>
+<span id="cb23-28"><a href="5-5-DMEMCO.html#cb23-28" aria-hidden="true" tabindex="-1"></a>            <span class="fu">sqrt</span>(var_b1)), </span>
+<span id="cb23-29"><a href="5-5-DMEMCO.html#cb23-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">add =</span> T, </span>
+<span id="cb23-30"><a href="5-5-DMEMCO.html#cb23-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/310-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Las estimaciones de varianza apoyan las afirmaciones realizadas en el Concepto clave 4.4, acercándose a los valores teóricos. Los histogramas sugieren que las distribuciones de los estimadores pueden aproximarse bien mediante las respectivas distribuciones normales teóricas establecidas en el Concepto clave 4.4.</p>
+</div>
+<div id="estudio-de-simulación-2" class="section level3 unnumbered">
+<h3>Estudio de simulación 2</h3>
+<p>Otro resultado implícito en el Concepto clave 4.4 es que ambos estimadores son consistentes; es decir, convergen en probabilidad a los parámetros verdaderos que interesan. Esto se debe a que son asintóticamente insesgados y sus varianzas convergen a <span class="math inline">\(0\)</span> a medida que <span class="math inline">\(n\)</span> aumentan. Se puede comprobar esto repitiendo la simulación anterior para una secuencia de tamaños de muestra crecientes. Esto significa que ya no se asigna el tamaño de la muestra sino un <em>vector</em> de tamaños de muestra: <strong>n &lt;- c(…)</strong>.</p>
+<p><br></p>
+<p>Viendo las distribuciones de <span class="math inline">\(\beta_1\)</span>. La idea aquí es agregar una llamada adicional de <strong>for()</strong> al código. Esto se hace para recorrer el vector de tamaños de muestra <strong>n</strong>. Para cada uno de los tamaños de muestra, se realiza la misma simulación que antes, pero se traza una estimación de densidad para los resultados de cada iteración sobre <strong>n</strong>. Se puede observar que se tiene que cambiar <strong>n</strong> a <strong>n[j]</strong> en el ciclo interno para asegurar de que se use el elemento <strong>j</strong><span class="math inline">\(^{esimo}\)</span> de <strong>n</strong>. En la simulación, se usan tamaños de muestra de <span class="math inline">\(100, 250, 1000\)</span> y <span class="math inline">\(3000\)</span>. En consecuencia, se tiene un total de cuatro simulaciones distintas que utilizan diferentes tamaños de muestra.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="5-5-DMEMCO.html#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar la semilla para la reproducibilidad</span></span>
+<span id="cb24-2"><a href="5-5-DMEMCO.html#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb24-3"><a href="5-5-DMEMCO.html#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="5-5-DMEMCO.html#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer repeticiones y el vector de tamaños de muestra</span></span>
+<span id="cb24-5"><a href="5-5-DMEMCO.html#cb24-5" aria-hidden="true" tabindex="-1"></a>reps <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb24-6"><a href="5-5-DMEMCO.html#cb24-6" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">250</span>, <span class="dv">1000</span>, <span class="dv">3000</span>)</span>
+<span id="cb24-7"><a href="5-5-DMEMCO.html#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="5-5-DMEMCO.html#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># inicializar la matriz de resultados</span></span>
+<span id="cb24-9"><a href="5-5-DMEMCO.html#cb24-9" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> reps)</span>
+<span id="cb24-10"><a href="5-5-DMEMCO.html#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="5-5-DMEMCO.html#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co"># dividir el panel de la grafica en una matriz de 2 por 2</span></span>
+<span id="cb24-12"><a href="5-5-DMEMCO.html#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb24-13"><a href="5-5-DMEMCO.html#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="5-5-DMEMCO.html#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co"># muestreo y graficado de bucles</span></span>
+<span id="cb24-15"><a href="5-5-DMEMCO.html#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="5-5-DMEMCO.html#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="co"># bucle exterior sobre n</span></span>
+<span id="cb24-17"><a href="5-5-DMEMCO.html#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(n)) {</span>
+<span id="cb24-18"><a href="5-5-DMEMCO.html#cb24-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-19"><a href="5-5-DMEMCO.html#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bucle interno: muestreo y estimación de los coeficientes</span></span>
+<span id="cb24-20"><a href="5-5-DMEMCO.html#cb24-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>reps){</span>
+<span id="cb24-21"><a href="5-5-DMEMCO.html#cb24-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-22"><a href="5-5-DMEMCO.html#cb24-22" aria-hidden="true" tabindex="-1"></a>    sample <span class="ot">&lt;-</span> population[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>N, n[j]), ]</span>
+<span id="cb24-23"><a href="5-5-DMEMCO.html#cb24-23" aria-hidden="true" tabindex="-1"></a>    fit[i, ] <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> sample)<span class="sc">$</span>coefficients</span>
+<span id="cb24-24"><a href="5-5-DMEMCO.html#cb24-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-25"><a href="5-5-DMEMCO.html#cb24-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-26"><a href="5-5-DMEMCO.html#cb24-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-27"><a href="5-5-DMEMCO.html#cb24-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># dibujar estimaciones de densidad</span></span>
+<span id="cb24-28"><a href="5-5-DMEMCO.html#cb24-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="fu">density</span>(fit[ ,<span class="dv">2</span>]), <span class="at">xlim=</span><span class="fu">c</span>(<span class="fl">2.5</span>, <span class="fl">4.5</span>), </span>
+<span id="cb24-29"><a href="5-5-DMEMCO.html#cb24-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> j, </span>
+<span id="cb24-30"><a href="5-5-DMEMCO.html#cb24-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;n=&quot;</span>, n[j]), </span>
+<span id="cb24-31"><a href="5-5-DMEMCO.html#cb24-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="fu">bquote</span>(<span class="fu">hat</span>(beta)[<span class="dv">1</span>]))</span>
+<span id="cb24-32"><a href="5-5-DMEMCO.html#cb24-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-33"><a href="5-5-DMEMCO.html#cb24-33" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/311-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Se encontró que, a medida que aumenta <span class="math inline">\(n\)</span>, la distribución de <span class="math inline">\(\hat\beta_1\)</span> se concentra alrededor de su media; es decir, su varianza disminuye. Dicho de otra manera, la probabilidad de observar estimaciones cercanas al valor real de <span class="math inline">\(\beta_1 = 3.5\)</span> aumenta a medida que aumenta el tamaño de la muestra. Se puede observar el mismo comportamiento si se analiza la distribución de <span class="math inline">\(\hat\beta_0\)</span> en su lugar.</p>
+</div>
+<div id="estudio-de-simulación-3" class="section level3 unnumbered">
+<h3>Estudio de simulación 3</h3>
+<p>Además, la varianza del estimador MCO para <span class="math inline">\(\beta_1\)</span> disminuye a medida que aumenta la varianza de <span class="math inline">\(X_i\)</span>. En otras palabras, a medida que aumenta la cantidad de información proporcionada por el regresor; es decir, aumentando <span class="math inline">\(Var(X)\)</span>, que se utiliza para estimar <span class="math inline">\(\beta_1\)</span>, se tiene más confianza en que la estimación se acerca al valor real. (es decir, <span class="math inline">\(Var(\hat\beta_1)\)</span> disminuye).</p>
+<p><br></p>
+<p>Se puede visualizar esto tomando muestras de las observaciones <span class="math inline">\((X_i, Y_i)\)</span>, <span class="math inline">\(i = 1, \dots, 100\)</span> de una distribución normal bivariada con</p>
+<p><span class="math display">\[E(X)=E(Y)=5,\]</span></p>
+<p><span class="math display">\[Var(X)=Var(Y)=5\]</span></p>
+<p>y</p>
+<p><span class="math display">\[Cov(X,Y)=4.\]</span></p>
+<p>Formalmente, esto se escribe como</p>
+<p><span class="math display">\[\begin{align}
+  \begin{pmatrix}
+    X \\
+    Y \\
+  \end{pmatrix}
+  \overset{i.i.d.}{\sim} &amp; \ \mathcal{N} 
+  \left[
+    \begin{pmatrix}
+      5 \\
+      5 \\
+    \end{pmatrix}, \ 
+    \begin{pmatrix}
+      5 &amp; 4 \\
+      4 &amp; 5 \\
+    \end{pmatrix}
+  \right]. \tag{4.3}
+\end{align}\]</span></p>
+<p>Para realizar el muestreo aleatorio se utiliza la función <strong>mvrnorm()</strong> del paquete <strong>MASS</strong> <span class="citation">(<a href="#ref-R-MASS" role="doc-biblioref">Ripley 2021</a>)</span> que permite extraer muestras aleatorias de distribuciones normales multivariadas, ver <strong>?Mvtnorm</strong>. A continuación, se usa <strong>subset()</strong> para dividir la muestra en dos subconjuntos de modo que el primer conjunto, <strong>set1</strong>, consista en observaciones que cumplan la condición <span class="math inline">\(\lvert X - \overline{X} \rvert &gt; 1\)</span> y el segundo conjunto, <strong>set2</strong>, incluya el resto de la muestra. Luego se grafican ambos conjuntos y se usan diferentes colores para distinguir las observaciones.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="5-5-DMEMCO.html#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># carga el paquete MASS</span></span>
+<span id="cb25-2"><a href="5-5-DMEMCO.html#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span>
+<span id="cb25-3"><a href="5-5-DMEMCO.html#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="5-5-DMEMCO.html#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar la semilla para la reproducibilidad</span></span>
+<span id="cb25-5"><a href="5-5-DMEMCO.html#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">4</span>)</span>
+<span id="cb25-6"><a href="5-5-DMEMCO.html#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="5-5-DMEMCO.html#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># simular datos normales bivariados</span></span>
+<span id="cb25-8"><a href="5-5-DMEMCO.html#cb25-8" aria-hidden="true" tabindex="-1"></a>bvndata <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(<span class="dv">100</span>, </span>
+<span id="cb25-9"><a href="5-5-DMEMCO.html#cb25-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">5</span>), </span>
+<span id="cb25-10"><a href="5-5-DMEMCO.html#cb25-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">Sigma =</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">4</span>), <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>))) </span>
+<span id="cb25-11"><a href="5-5-DMEMCO.html#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-12"><a href="5-5-DMEMCO.html#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="co"># asignar nombres de columna / convertir a data.frame</span></span>
+<span id="cb25-13"><a href="5-5-DMEMCO.html#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(bvndata) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X&quot;</span>, <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb25-14"><a href="5-5-DMEMCO.html#cb25-14" aria-hidden="true" tabindex="-1"></a>bvndata <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(bvndata)</span>
+<span id="cb25-15"><a href="5-5-DMEMCO.html#cb25-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-16"><a href="5-5-DMEMCO.html#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="co"># subconjunto de los datos</span></span>
+<span id="cb25-17"><a href="5-5-DMEMCO.html#cb25-17" aria-hidden="true" tabindex="-1"></a>set1 <span class="ot">&lt;-</span> <span class="fu">subset</span>(bvndata, <span class="fu">abs</span>(<span class="fu">mean</span>(X) <span class="sc">-</span> X) <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb25-18"><a href="5-5-DMEMCO.html#cb25-18" aria-hidden="true" tabindex="-1"></a>set2 <span class="ot">&lt;-</span> <span class="fu">subset</span>(bvndata, <span class="fu">abs</span>(<span class="fu">mean</span>(X) <span class="sc">-</span> X) <span class="sc">&lt;=</span> <span class="dv">1</span>)</span>
+<span id="cb25-19"><a href="5-5-DMEMCO.html#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="5-5-DMEMCO.html#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar ambos conjuntos de datos</span></span>
+<span id="cb25-21"><a href="5-5-DMEMCO.html#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(set1, </span>
+<span id="cb25-22"><a href="5-5-DMEMCO.html#cb25-22" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>, </span>
+<span id="cb25-23"><a href="5-5-DMEMCO.html#cb25-23" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>, </span>
+<span id="cb25-24"><a href="5-5-DMEMCO.html#cb25-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>)</span>
+<span id="cb25-25"><a href="5-5-DMEMCO.html#cb25-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-26"><a href="5-5-DMEMCO.html#cb25-26" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(set2, </span>
+<span id="cb25-27"><a href="5-5-DMEMCO.html#cb25-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>, </span>
+<span id="cb25-28"><a href="5-5-DMEMCO.html#cb25-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">19</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/312-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Está claro que las observaciones que están cerca del promedio muestral de <span class="math inline">\(X_i\)</span> tienen menos varianza que las que están más lejos. Ahora, si se tuviera que dibujar una línea con la mayor precisión posible a través de cualquiera de los dos conjuntos, es intuitivo que elegir las observaciones indicadas por los puntos negros; es decir, usar el conjunto de observaciones que tiene una varianza mayor que las azules, resultaría en una línea más precisa. Ahora, se usarán los MCO para estimar la pendiente y la intersección para ambos conjuntos de observaciones. Luego se grafican las observaciones junto con ambas líneas de regresión.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="5-5-DMEMCO.html#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar ambas líneas de regresión</span></span>
+<span id="cb26-2"><a href="5-5-DMEMCO.html#cb26-2" aria-hidden="true" tabindex="-1"></a>lm.set1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> set1)</span>
+<span id="cb26-3"><a href="5-5-DMEMCO.html#cb26-3" aria-hidden="true" tabindex="-1"></a>lm.set2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> set2)</span>
+<span id="cb26-4"><a href="5-5-DMEMCO.html#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="5-5-DMEMCO.html#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar las observaciones</span></span>
+<span id="cb26-6"><a href="5-5-DMEMCO.html#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(set1, <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>, <span class="at">pch =</span> <span class="dv">19</span>)</span>
+<span id="cb26-7"><a href="5-5-DMEMCO.html#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(set2, <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>, <span class="at">pch =</span> <span class="dv">19</span>)</span>
+<span id="cb26-8"><a href="5-5-DMEMCO.html#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="5-5-DMEMCO.html#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar ambas líneas a la gráfica</span></span>
+<span id="cb26-10"><a href="5-5-DMEMCO.html#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(lm.set1, <span class="at">col =</span> <span class="st">&quot;green&quot;</span>)</span>
+<span id="cb26-11"><a href="5-5-DMEMCO.html#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(lm.set2, <span class="at">col =</span> <span class="st">&quot;red&quot;</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/313-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Evidentemente, la línea de regresión verde es mucho mejor para describir los datos muestreados de la distribución normal bivariada indicada en (<a href="#mjx-eqn-4.3">4.3</a>) que la línea roja. Este es un buen ejemplo para demostrar por qué se está interesado en una alta varianza del regresor <span class="math inline">\(X\)</span>: más varianza en <span class="math inline">\(X_i\)</span> significa más información de la que se beneficia la precisión de la estimación.</p>
+</div>
+</div>
+<h3>Referencias bibliográficas</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-R-MASS" class="csl-entry">
+Ripley, Brian. 2021. <em><span class="nocase">MASS: Support Functions and Datasets for Venables and Ripley’s MASS</span></em> (version 7.3-53.1). <a href="http://www.stats.ox.ac.uk/pub/MASS4/">http://www.stats.ox.ac.uk/pub/MASS4/</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="5-4-SMC.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="5-6-Ejercicios-4.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_05.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

@@ -1,0 +1,806 @@
+# Pruebas de hipótesis e intervalos de confianza en regresiones múltiples {#PHICRM}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 422, child="_setup.Rmd"}
+```
+
+```{r, 423, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+En este capítulo se analizan los métodos que permiten cuantificar la incertidumbre muestral en el estimador MCO de los coeficientes en modelos de regresión múltiple. La base para esto son las pruebas de hipótesis y los intervalos de confianza que, al igual que para el modelo de regresión lineal simple, pueden calcularse utilizando funciones básicas **R**. También se abordará la cuestión de probar hipótesis conjuntas sobre dichos coeficientes.
+
+Asegúrese de que los paquetes **AER** [@R-AER] y **stargazer** [@R-stargazer] estén instalados antes de continuar y reproducir los ejemplos. La forma más segura de hacerlo es verificando si el siguiente fragmento de código se ejecuta sin problemas.
+
+```{r, 424, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(stargazer)
+```
+
+## Pruebas de hipótesis e intervalos de confianza para un coeficiente único
+
+Primero se discute cómo calcular errores estándar, cómo probar hipótesis y cómo construir intervalos de confianza para un coeficiente de regresión único $\beta_j$ en un modelo de regresión múltiple. La idea básica se resume en el Concepto clave 7.1.
+
+```{r, 425, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC7.1">
+<h3 class = "right"> Concepto clave 7.1 </h3>          
+<h3 class = "left"> Probando la hipótesis $\\beta_j = \\beta_{j,0}$ <br>
+                    Contra la alternativa $\\beta_j \\neq \\beta_{j,0}$ </h3>
+<p>
+1. Calcular el error estándar de $\\hat{\\beta_j}$
+2. Calcular el estadístico $t$:
+$$t^{act} = \\frac{\\hat{\\beta}_j - \\beta_{j,0}} {SE(\\hat{\\beta_j})}$$
+3. Calcular el valor de $p$:
+$$p\\text{-value} = 2 \\Phi(-|t^{act}|)$$
+
+donde $t^{act}$ es el valor del estadístico $t$ realmente calculada. Rechazar la hipótesis en el nivel de significancia de $5\\%$ si el valor de $p$ es menor que $0.05$ o, de manera equivalente, si $|t^{act}| > 1.96$. 
+
+El error estándar y (típicamente) el estadístico $t$ y el valor $p$ correspondiente para probar $\\beta_j = 0$ se calculan automáticamente mediante las adecuadas funciones en <tt>R</tt>; por ejemplo, <tt>summary</tt>.
+</p>
+</div>
+')
+```
+
+```{r, 426, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Probando la hipótesis $\\beta_j = \\beta_{j,0}$
+                    Contra la alternativa $\\beta_j \\neq \\beta_{j,0}$]{7.1}
+\\begin{enumerate}
+\\item Calcular el error estándar de $\\hat{\\beta_j}$
+\\item Calcular el estadístico $t$:
+$$t^{act} = \\frac{\\hat{\\beta}_j - \\beta_{j,0}} {SE(\\hat{\\beta_j})}$$
+\\item Calcular el valor de $p$:
+$$p\\text{-value} = 2 \\Phi(-|t^{act}|)$$
+
+donde $t^{act}$ es el valor del estadístico $t$ realmente calculada. Rechazar la hipótesis en el nivel de significancia de $5\\%$ si el valor de $p$ es menor que $0.05$ o, de manera equivalente, si $|t^{act}| > 1.96$. \\end{enumerate}\\vspace{0.5cm}
+
+El error estándar y (típicamente) el estadístico $t$ y el valor $p$ correspondiente para probar $\\beta_j = 0$ se calculan automáticamente mediante las adecuadas funciones en \\texttt{R}; por ejemplo, \\texttt{summary()}.
+\\end{keyconcepts}
+')
+```
+
+La prueba de una sola hipótesis sobre la importancia de un coeficiente en el modelo de regresión múltiple procede como en el modelo de regresión simple.
+
+Puede ver esto fácilmente inspeccionando el resumen de coeficientes del modelo de regresión.
+
+$$ TestScore = \beta_0 + \beta_1 \times size  \beta_2 \times english + u $$
+
+ya discutido en el Capítulo \@ref(MRVR). Repasando esto:
+
+```{r, 427, echo=5:7, warning=F, message=F}
+library(AER)
+data(CASchools)
+CASchools$size <- CASchools$students/CASchools$teachers
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+model <- lm(score ~ size + english, data = CASchools)
+coeftest(model, vcov. = vcovHC, type = "HC1")
+```
+
+Se puede comprobar que estas cantidades se calculan como en el modelo de regresión simple calculando los estadísticos de $t$ o los valores de $p$ a mano utilizando la salida anterior y **R** como calculadora.
+
+Por ejemplo, utilizando la definición del valor $p$ para una prueba de dos lados como se da en el Concepto clave 7.1, se puede confirmar el valor $p$ para una prueba sobre la hipótesis de que el coeficiente $\beta_1$, el coeficiente de **size**, es aproximadamente cero.
+
+```{r, 428, warning=F, message=F}
+# calcular el valor p de dos colas
+2 * (1 - pt(abs(coeftest(model, vcov. = vcovHC, type = "HC1")[2, 3]),
+            df = model$df.residual))
+```
+
+```{r, 429, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC7.2">
+<h3 class = "right"> Concepto clave 7.2 </h3>          
+<h3 class = "left"> Intervalos de confianza para un coeficiente único en regresión múltiple </h3>
+<p>
+Un intervalo de confianza bilateral de $95\\%$ para el coeficiente $\\beta_j$ es un intervalo que contiene el valor verdadero de $\\beta_j$ con una probabilidad de $95\\%$; es decir, contiene el valor real de $\\beta_j$ en $95\\%$ de todas las muestras repetidas. De manera equivalente, es el conjunto de valores de $\\beta_j$ que no puede ser rechazado por una prueba de hipótesis de dos caras de $5\\%$. Cuando el tamaño de la muestra es grande, el intervalo de confianza de $95\\%$ para $\\beta_j$ es
+
+$$\\left[\\hat{\\beta_j}- 1.96 \\times SE(\\hat{\\beta}_j), \\hat{\\beta_j} + 1.96 \\times SE(\\hat{\\beta_j})\\right].$$
+</p>
+</div>
+')
+```
+
+```{r, 430, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Intervalos de confianza para un coeficiente único en regresión múltiple]{7.2}
+Un intervalo de confianza bilateral de $95\\%$ para el coeficiente $\\beta_j$ es un intervalo que contiene el valor verdadero de $\\beta_j$ con una probabilidad de $95\\%$; es decir, contiene el valor real de $\\beta_j$ en $95\\%$ de todas las muestras repetidas. De manera equivalente, es el conjunto de valores de $\\beta_j$ que no puede ser rechazado por una prueba de hipótesis de dos caras de $5\\%$. Cuando el tamaño de la muestra es grande, el intervalo de confianza de $95\\%$ para $\\beta_j$ es
+
+$$\\left[\\hat{\\beta_j}- 1.96 \\times SE(\\hat{\\beta}_j), \\hat{\\beta_j} + 1.96 \\times SE(\\hat{\\beta_j})\\right].$$
+\\end{keyconcepts}
+')
+```
+
+## Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro
+
+Echando un vistazo a la regresión de la Sección \@ref(MARM) nuevamente.
+
+El cálculo de intervalos de confianza para coeficientes individuales en el modelo de regresión múltiple procede como en el modelo de regresión simple usando la función **confint()**.
+
+```{r, 431, warning=F, message=F}
+model <- lm(score ~ size + english, data = CASchools)
+confint(model)
+```
+
+Para obtener intervalos de confianza en otro nivel, suponiendo $90\%$, simplemente se debe configurar el argumento **level** en la llamada de **confint()**; en consecuencia:
+
+```{r, 432, warning=F, message=F}
+confint(model, level = 0.9)
+```
+
+La salida ahora informa los intervalos de confianza de $90\%$ deseados para todos los coeficientes.
+
+Una desventaja de **confint()** es que no usa errores estándar robustos para calcular el intervalo de confianza. Para intervalos de confianza de muestras grandes, esto se hace rápidamente de forma manual de la siguiente manera:
+
+```{r, 433, warning=F, message=F}
+# calcular errores estándar robustos
+rob_se <- diag(vcovHC(model, type = "HC1"))^0.5
+
+# calcular intervalos de confianza robustos del 95%
+rbind("lower" = coef(model) - qnorm(0.975) * rob_se,
+      "upper" = coef(model) + qnorm(0.975) * rob_se)
+
+# calcular intervalos de confianza robustos del 90%
+rbind("lower" = coef(model) - qnorm(0.95) * rob_se,
+      "upper" = coef(model) + qnorm(0.95) * rob_se)
+```
+
+Sabiendo cómo usar **R** para hacer inferencias sobre los coeficientes en modelos de regresión múltiple, ahora se puede responder la siguiente pregunta:
+
+¿Puede la hipótesis nula de que un cambio en la proporción de estudiantes por maestro, **size**, no tiene una influencia significativa en los puntajes de las pruebas, **scores**, --- si se controla el porcentaje de estudiantes que aprenden inglés en el distrito, **inglés**, --- ser rechazada en el nivel de significancia de $10\%$ y $5\%$?
+ 
+El resultado anterior muestra que cero no es un elemento del intervalo de confianza para el coeficiente de **size** de modo que se puede rechazar la hipótesis nula en niveles de significancia de $5\%$ y $10\%$. Se puede llegar a la misma conclusión a través del valor $p$ para **size**: $0.00398 < 0.05 = \alpha$.
+
+Se debe tener en cuenta que el rechazo en el nivel de $5\%$ implica un rechazo en el nivel de $10\%$ (¿por qué?).
+
+Recordando el Capítulo \@ref(ICCR) el intervalo de confianza de $95\%$ calculado anteriormente *no indica que una disminución de una unidad en la proporción alumno-maestro tenga un efecto en los puntajes de las pruebas* que se encuentran en el intervalo con un límite menor de $-1.9497$ y un límite superior de $-0.2529$. Una vez que se ha calculado un intervalo de confianza, una declaración probabilística como esta es incorrecta: El intervalo contiene el parámetro verdadero o no lo contiene. No se sabe cuál es la verdad.
+
+### Otro aumento del modelo {-}
+
+¿Cuál es el efecto promedio en los puntajes de las pruebas de reducir la proporción de alumnos por maestro cuando los gastos por alumno y el porcentaje de alumnos que aprenden inglés se mantienen constantes?
+
+Aumentnado el modelo con un regresor adicional, que representa una medida del gasto por alumno. Usando **?CASchools** se puede encontrar que **CASchools** contiene la variable **expenditure**, que proporciona el gasto por estudiante.
+
+El modelo ahora es 
+
+$$ TestScore = \beta_0 + \beta_1 \times size + \beta_2 \times english + \beta_3 \times expenditure + u $$
+
+con $expenditure$ la cantidad total de gastos por alumno en el distrito (miles de dólares).
+
+Calculando ahora el modelo:
+
+```{r, 434, echo=6:11, warning=F, message=F}
+library(AER)
+data(CASchools)
+CASchools$size <- CASchools$students/CASchools$teachers
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+# escalar el gasto a miles de dólares
+CASchools$expenditure <- CASchools$expenditure/1000
+
+# estimar el modelo
+model <- lm(score ~ size + english + expenditure, data = CASchools)
+coeftest(model, vcov. = vcovHC, type = "HC1")
+```
+
+El efecto estimado de un cambio de una unidad en la proporción de estudiantes por maestro en los puntajes de las pruebas con el gasto y la proporción de alumnos que aprenden inglés manteniéndose constantes es de $-0.29$, que es bastante pequeño. Es más, el coeficiente de $size$ ya no es significativamente diferente de cero incluso a $10\%$ desde $p\text{-value}=0.55$. ¿Se le ocurre una interpretación de estos hallazgos? La insignificancia de $\hat\beta_1$ podría deberse a un error estándar mayor de $\hat{\beta}_1$ resultante de agregar $expenditure$ al modelo de modo que se estima el coeficiente de $size$ con menos precisión. Esto ilustra el problema de los regresores fuertemente correlacionados (multicolinealidad imperfecta). La correlación entre $size$  y $expenditure$  se puede calcular usando **cor()**.
+
+```{r, 435}
+# calcular la correlación de la muestra entre tamaño y gasto: 'size' y 'expenditure'
+cor(CASchools$size, CASchools$expenditure)
+```
+
+En conjunto, se llega a la conclusión de que el nuevo modelo no proporciona evidencia de que cambiar la proporción de estudiantes por maestro; por ejemplo, al contratar nuevos maestros, tenga algún efecto en los puntajes de las pruebas mientras se mantienen constantes los gastos por estudiante y la proporción de estudiantes de inglés.
+
+## Prueba de hipótesis conjunta utilizando el estadístico F
+
+El modelo estimado es
+
+$$ \widehat{TestScore} = \underset{(15.21)}{649.58} -\underset{(0.48)}{0.29} \times size - \underset{(0.04)}{0.66} \times english + \underset{(1.41)}{3.87} \times expenditure. $$
+
+Ahora bien, ¿se puede rechazar la hipótesis de que *el coeficiente de $size$ y el coeficiente de $expenditure$* son cero? Para responder a esto, se tiene que recurrir a pruebas de hipótesis conjuntas. Una hipótesis conjunta impone restricciones a los coeficientes de regresión múltiple. Esto es diferente de realizar pruebas de $t$ individuales en las que se impone una restricción sobre un solo coeficiente. 
+
+El estadístico $F$ de homocedasticidad está dado por
+
+$$ F = \frac{(SSR_{\text{restricted}} - SSR_{\text{unrestricted}})/q}{SSR_{\text{unrestricted}} / (n-k-1)} $$
+
+siendo $SSR_{restricted}$ la suma de los residuos al cuadrado de la regresión restringida; es decir, la regresión en la que se impone la restricción. $SSR_{unrestricted}$ es la suma de los residuos al cuadrado del modelo completo, $q$ es el número de restricciones bajo el valor nulo y $k$ es el número de regresores en la regresión sin restricciones.
+
+Es bastante fácil realizar pruebas $F$ en **R**. Se puede usar la función **linearHypothesis()** contenida en el paquete **car**.
+
+```{r, 436, warning=F, message=F}
+# estimar el modelo de regresión múltiple
+model <- lm(score ~ size + english + expenditure, data = CASchools)
+
+# ejecutar la función en el objeto modelo y proporcionar ambas restricciones lineales
+# para ser probadas como cadenas
+linearHypothesis(model, c("size=0", "expenditure=0"))
+```
+
+El resultado revela que el estadístico $F$ para esta prueba de hipótesis conjunta es de aproximadamente $8.01$ y el valor correspondiente $p$ es $0.0004$. Por tanto, se puede rechazar la hipótesis nula de que ambos coeficientes son cero en cualquier nivel de significación comúnmente utilizado en la práctica.
+
+Una versión robusta a la heterocedasticidad de esta prueba $F$ (que lleva a la misma conclusión) se puede realizar de la siguiente manera.
+
+```{r, 437, warning=F, message=F}
+# prueba F robusta de la heterocedasticidad
+linearHypothesis(model, c("size=0", "expenditure=0"), white.adjust = "hc1")
+```
+
+La salida estándar del resumen de un modelo también informa un estadístico $F$ y el valor de $p$ correspondiente. La hipótesis nula que pertenece a esta prueba $F$ es que *todos* los coeficientes de población en el modelo, excepto la intersección, son cero, por lo que las hipótesis son 
+
+$$H_0: \beta_1=0, \ \beta_2 =0, \ \beta_3 =0 \quad \text{vs.} \quad H_1: \beta_j \neq 0 \ \text{for at least one} \ j=1,2,3.$$
+
+Esto también se denomina *estadístico $F$ de la regresión general* y la hipótesis nula es obviamente diferente de probar si solo $\beta_1$ y $\beta_3$ son cero.
+
+Ahora se verifica si el estadístico $F$ perteneciente al valor $p$ listado en el resumen del modelo coincide con el resultado reportado por **linearHypothesis()**.
+
+```{r, 438, warning=F, message=F}
+# ejecutar la función en el objeto modelo y proporcionar las restricciones
+# para ser probado como vector de caracteres
+linearHypothesis(model, c("size=0", "english=0", "expenditure=0"))
+
+# acceda a la estadística F general desde el resumen del modelo
+summary(model)$fstatistic
+```
+
+La entrada **value** es el estadístico $F$ general y es igual al resultado de **linearHypothesis()**. La prueba $F$ rechaza la hipótesis nula de que el modelo no tiene poder para explicar los puntajes de las pruebas. Es importante saber que el estadístico $F$ informado por **summary** *no es robusto a la heterocedasticidad*.
+
+## Conjuntos de confianza para múltiples coeficientes
+
+Con base en el estadístico $F$ que se ha encontrado anteriormente, se pueden especificar conjuntos de confianza. Los conjuntos de confianza son análogos a los intervalos de confianza para coeficientes únicos. Como tal, los conjuntos de confianza consisten en *combinaciones* de coeficientes que contienen la combinación verdadera de coeficientes en, digamos, $95\%$ de todos los casos si se pudieran extraer repetidamente muestras aleatorias, como en el caso univariante. Dicho de otra manera, un conjunto de confianza es el conjunto de todas las combinaciones de coeficientes para las que no se puede rechazar la correspondiente hipótesis nula conjunta probada mediante una prueba $F$.
+
+El conjunto de confianza para dos coeficientes es una elipse que se centra alrededor del punto definido por ambas estimaciones de coeficientes. Nuevamente, existe una forma muy conveniente de graficar el conjunto de confianza para dos coeficientes de objetos del modelo, a saber, la función **trustEllipse()** del paquete **car**.
+
+Ahora se grafica la elipse de confianza de $95\%$ para los coeficientes de **size** y **expenditure** de la regresión realizada anteriormente. Al especificar el argumento adicional **fill**, se colorea el conjunto de confianza.
+
+```{r, 439, fig.align = 'center', warning=F, message=F}
+model <- lm(score ~ size + english + expenditure, data = CASchools)
+
+# dibujar el conjunto de confianza del 95% para los coeficientes de size y expenditure
+confidenceEllipse(model, 
+                  fill = T,
+                  lwd = 0,
+                  which.coef = c("size", "expenditure"),
+                  main = "95% Confidence Set")
+```
+
+Se puede ver que la elipse se centra alrededor de $(-0.29, 3.87)$, el par de coeficientes se estima en $size$ y $expenditure$. Además, $(0,0)$ no es un elemento del conjunto de confianza $95\%$, por lo que se puede rechazar $H_0: \beta_1 = 0, \ \beta_3 = 0$.
+
+De forma predeterminada, **trustEllipse()** usa errores estándar de homocedasticidad solamente. El siguiente fragmento de código muestra cómo calcular una elipse de confianza robusta y cómo superponerla con la gráfica anterior.
+
+```{r, 440, fig.align = 'center', warning=F, message=F}
+# graficar el conjunto robusto de confianza del 95% para los coeficientes de size y expenditure.
+confidenceEllipse(model, 
+                  fill = T,
+                  lwd = 0,
+                  which.coef = c("size", "expenditure"),
+                  main = "95% Confidence Sets",
+                  vcov. = vcovHC(model, type = "HC1"),
+                  col = "red")
+                  
+# graficar el conjunto de confianza del 95% para los coeficientes de size y expenditure.
+confidenceEllipse(model, 
+                  fill = T,
+                  lwd = 0,
+                  which.coef = c("size", "expenditure"),
+                  add = T)
+```
+
+Como los errores estándar robustos son ligeramente mayores que los válidos bajo homocedasticidad, en este caso, solo el conjunto de confianza robusto es ligeramente mayor. Esto es análogo a los intervalos de confianza para los coeficientes individuales.
+
+## Especificación de modelo para regresión múltiple
+
+Elegir una especificación de regresión; es decir, seleccionar las variables que se incluirán en un modelo de regresión, es una tarea difícil. Sin embargo, existen algunas pautas sobre cómo proceder. El objetivo es claro: Obtener una estimación imparcial y precisa del efecto causal de interés. 
+
+Como punto de partida, piense en las variables omitidas; es decir, para evitar posibles sesgos mediante el uso de variables de control adecuadas. El sesgo de las variables omitidas en el contexto de la regresión múltiple se explica en el Concepto clave 7.3. 
+
+Un segundo paso podría ser comparar diferentes especificaciones por medidas de ajuste. Sin embargo, como se puede observar, uno no debería depender únicamente de $\bar{R}^2$.
+
+```{r, 441, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC7.3">
+<h3 class = "right"> Concepto clave 7.3 </h3>          
+<h3 class = "left"> Sesgo variable omitido en regresión múltiple </h3>
+<p>
+El sesgo de variable omitida es el sesgo en el estimador de MCO que surge cuando los regresores se correlacionan con una variable omitida. Para que surja un sesgo de variable omitida, dos cosas deben ser ciertas:
+
+1. Al menos uno de los regresores incluidos debe estar correlacionado con la variable omitida.
+2. La variable omitida debe ser un determinante de la variable dependiente, $Y$.
+</p>
+</div>
+')
+```
+
+```{r, 442, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Sesgo variable omitido en regresión múltiple]{7.3}
+El sesgo de variable omitida es el sesgo en el estimador de MCO que surge cuando los regresores se correlacionan con una variable omitida. Para que surja un sesgo de variable omitida, dos cosas deben ser ciertas:
+
+\\begin{enumerate}
+\\item Al menos uno de los regresores incluidos debe estar correlacionado con la variable omitida.
+\\item La variable omitida debe ser un determinante de la variable dependiente, $Y$.
+\\end{enumerate}
+
+\\end{keyconcepts}
+')
+```
+
+Ahora se discute un ejemplo en el que se enfrenta un posible sesgo de variable omitida en un modelo de regresión múltiple:
+
+Considere nuevamente la ecuación de regresión estimada:
+
+$$ \widehat{TestScore} = \underset{(8.7)}{686.0} - \underset{(0.43)}{1.10} \times size - \underset{(0.031)}{0.650} \times english. $$
+
+Se está interesado en estimar el efecto causal del tamaño de la clase en la puntuación de la prueba. Podría haber un sesgo debido a la omisión de "oportunidades de aprendizaje externas" en la regresión, ya que tal medida podría ser un determinante de los puntajes de las pruebas de los estudiantes y también podría correlacionarse con ambos regresores ya incluidos en el modelo (de modo que ambas condiciones de del Concepto clave 7.3 se cumplen). Las "oportunidades de aprendizaje externo" son un concepto complicado que es difícil de cuantificar. Un sustituto que se puede considerar, en cambio, es el entorno económico de los estudiantes que probablemente esté fuertemente relacionado con las oportunidades de aprendizaje externas: Piense en padres adinerados que pueden proporcionar tiempo y/o dinero para la matrícula privada de sus hijos. Por lo tanto, se aumenta el modelo con la variable **lunch**, el porcentaje de estudiantes que califican para un almuerzo gratis o subsidiado en la escuela debido a ingresos familiares por debajo de cierto umbral, y reestimar el modelo.
+
+```{r, 443, echo=6:8, warning=F, message=F}
+library(AER)
+data(CASchools)
+CASchools$size <- CASchools$students/CASchools$teachers
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+# estimar el modelo e imprimir el resumen en la consola
+model <- lm(score ~ size + english + lunch, data = CASchools)
+coeftest(model, vcov. = vcovHC, type = "HC1")
+```
+
+Por tanto, la recta de regresión estimada es
+
+$$ \widehat{TestScore} = \underset{(5.56)}{700.15} - \underset{(0.27)}{1.00} \times size - \underset{(0.03)}{0.12} \times english - \underset{(0.02)}{0.55} \times lunch. $$
+
+No se observan cambios sustanciales en la conclusión sobre el efecto de $size$ en $TestScore$: El coeficiente de $size$ cambia solo $0.1$ y conserva su importancia.
+
+Aunque la diferencia en los coeficientes estimados no es grande, en este caso, es útil mantener **lunch** para hacer más creíble el supuesto de independencia media condicional.
+
+### Especificación del modelo en teoría y en la práctica {-}
+
+El Concepto clave 7.4 enumera algunos errores comunes al usar $R^2$ y $\bar{R}^2$ para evaluar la capacidad predictiva de los modelos de regresión.
+
+```{r, 444, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC7.4">
+<h3 class = "right"> Concepto clave 7.4 </h3>          
+<h3 class = "left"> $R^2$ y $\\bar{R}^2$: lo que te dicen --- y lo que no </h3>
+
+<p>
+
+$R^2$ y $\\bar{R}^2$ indican si los regresores son buenos para explicar la variación de la variable independiente en la muestra. Si $R^2$ (o $\\bar{R}^2$) es casi $1$, entonces los regresores producen una buena predicción de la variable dependiente en esa muestra, en el sentido de que la varianza de los residuales de MCO es pequeña en comparación con la varianza de la variable dependiente. Si $R^2$ (o $\\bar{R}^2$) es casi $0$, lo contrario es cierto.
+
+La $R^2$ y $\\bar{R}^2$ *no* indican si:
+
+1. Una variable incluida es estadísticamente significativa.
+2. Los regresores son la verdadera causa de los movimientos en la variable dependiente (causalidad).
+3. Existe sesgo de variable omitida.
+4. Se ha elegido el conjunto de regresores más apropiado.
+</p>
+  
+</div>
+')
+```
+
+```{r, 445, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[$R^2$ y $\\bar{R}^2$: lo que te dicen --- y lo que no]{7.4}
+
+$R^2$ y $\\bar{R}^2$ indican si los regresores son buenos para explicar la variación de la variable independiente en la muestra. Si $R^2$ (o $\\bar{R}^2$) es casi $1$, entonces los regresores producen una buena predicción de la variable dependiente en esa muestra, en el sentido de que la varianza de los residuales de MCO es pequeña en comparación con la varianza de la variable dependiente. Si $R^2$ (o $\\bar{R}^2$) es casi $0$, lo contrario es cierto.\\newline
+
+La $R^2$ y $\\bar{R}^2$ \\textit{no} indican si:\\newline
+
+\\begin{enumerate}
+\\item Una variable incluida es estadísticamente significativa.
+\\item Los regresores son la verdadera causa de los movimientos en la variable dependiente (causalidad).
+\\item Existe sesgo de variable omitida.
+\\item Se ha elegido el conjunto de regresores más apropiado.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+Por ejemplo, piense en hacer una regresión de $TestScore$ en $PLS$, que mide el espacio de estacionamiento disponible en miles de pies cuadrados. Es probable que observe un coeficiente significativo de magnitud razonable y valores de moderados a altos para $R^2$ y $\bar{R}^2$. La razón de esto es que el espacio en el estacionamiento se correlaciona con muchos factores determinantes de la puntuación de la prueba, como la ubicación, el tamaño de la clase, la dotación financiera, entre otrs. Aunque no se tienen observaciones sobre $PLS$, se puede usar **R** para generar algunos datos relativamente realistas.
+
+```{r, 446}
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# generar observaciones para el espacio de estacionamiento
+CASchools$PLS <- c(22 * CASchools$income 
+                   - 15 * CASchools$size 
+                   + 0.2 * CASchools$expenditure
+                   + rnorm(nrow(CASchools), sd = 80) + 3000)
+```
+
+```{r, 447, fig.align='center',}
+# geficar el espacio del estacionamiento contra el puntaje de la prueba
+plot(CASchools$PLS, 
+     CASchools$score,
+     xlab = "Espacio de estacionamiento",
+     ylab = "Resultado de la prueba",
+     pch = 20,
+     col = "steelblue")
+
+# puntuación de la prueba de regresión en PLS
+summary(lm(score ~ PLS, data = CASchools))
+```
+
+$PLS$ se genera como una función lineal de $expenditure$, $income$, $size$ y una perturbación aleatoria. Por lo tanto, los datos sugieren que existe una relación positiva entre el espacio de estacionamiento y la puntuación de la prueba. De hecho, al estimar el modelo
+
+\begin{align}
+TestScore = \beta_0 + \beta_1 \times PLS + u (\#eq:plsmod) 
+\end{align}
+
+usando **lm()** se encuentra que el coeficiente en $PLS$ es positivo y significativamente diferente de cero. Además, $R^2$ y $\bar{R}^2$ son aproximadamente $0.3$, que es mucho más que los aproximadamente $0.05$ observados al hacer una regresión de los puntajes de las pruebas solo en el tamaño de las clases. Esto sugiere que aumentar el espacio de estacionamiento aumenta las calificaciones de las pruebas de la escuela y que el modelo \@ref(eq:plsmod) explica mejor la heterogeneidad en la variable dependiente que un modelo con $size$ como único regresor. Teniendo en cuenta cómo se construye $PLS$, esto no es ninguna sorpresa. Es evidente que el alto $R^2$ <it>no</it> puede utilizarse para concluir que la relación estimada entre el espacio de estacionamiento y los puntajes de las pruebas es causal: El (relativamente) alto $R^2$ se debe a la correlación entre $PLS$ y otros determinantes y/o variables de control. ¡Aumentar el espacio de estacionamiento *no* es una medida apropiada para generar más éxito en el aprendizaje!
+
+## Análisis del conjunto de datos de puntuación de la prueba
+
+El capítulo \@ref(MRVR) y algunas de las secciones anteriores han enfatizado que es importante incluir variables de control en los modelos de regresión si es plausible que haya factores omitidos. En el ejemplo de puntajes de pruebas, se quiere estimar el efecto causal de un cambio en la proporción alumno-maestro en los puntajes de las pruebas. Ahora se proporciona un ejemplo de cómo usar la regresión múltiple para aliviar el sesgo de las variables omitidas y demostrar cómo informar los resultados usando **R**.
+
+Hasta ahora se han considerado dos variables que controlan las características no observables de los estudiantes, que se correlacionan con la proporción de estudiantes por maestro *y se supone que* tienen un impacto en los puntajes de las pruebas:
+
+  + $English$, el porcentaje de estudiantes que aprenden inglés
+  
+  + $lunch$, la proporción de estudiantes que califican para un almuerzo subsidiado o incluso gratis en la escuela.
+  
+Otra nueva variable proporcionada con **CASchools** es **calworks**, el porcentaje de estudiantes que califican para el programa de asistencia de ingresos *CalWorks*. Los estudiantes elegibles para *CalWorks* viven en familias con un ingreso total por debajo del umbral del programa de almuerzo subsidiado, por lo que ambas variables son indicadores de la proporción de niños en desventaja económica. Ambos indicadores están altamente correlacionados:
+
+```{r, 448} 
+# estimar la correlación entre 'calworks' y 'lunch'
+cor(CASchools$calworks, CASchools$lunch)
+```
+
+No existe una manera inequívoca de proceder al decidir qué variable usar. En cualquier caso, puede que no sea una buena idea utilizar ambas variables como regresores en vista de la colinealidad. Por lo tanto, también se consideran especificaciones de modelos alternativos.
+
+Para empezar, se grafican las características de los estudiantes con los puntajes de las pruebas.
+
+```{r, 449}
+# configurar la disposición de las gráficas
+m <- rbind(c(1, 2), c(3, 0))
+graphics::layout(mat = m)
+
+# gráfico de dispersión
+plot(score ~ english, 
+     data = CASchools, 
+     col = "steelblue", 
+     pch = 20, 
+     xlim = c(0, 100),
+     cex.main = 0.9,
+     main = "Porcentaje de estudiantes de inglés")
+
+plot(score ~ lunch, 
+     data = CASchools, 
+     col = "steelblue", 
+     pch = 20,
+     cex.main = 0.9,
+     main = "Porcentaje que califica para el almuerzo a precio reducido")
+
+plot(score ~ calworks, 
+     data = CASchools, 
+     col = "steelblue", 
+     pch = 20, 
+     xlim = c(0, 100),
+     cex.main = 0.9,
+     main = "Porcentaje que califica para asistencia económica")
+```
+
+Se divide el área de graficado usando **layout()**. La matriz **m** especifica la ubicación de las gráficas, consultar `?layout`.
+
+Se puede ver que todas las relaciones son negativas. Aquí están los coeficientes de correlación:
+
+```{r, 450}
+# estimar la correlación entre las características de los estudiantes y los puntajes de las pruebas
+cor(CASchools$score, CASchools$english)
+cor(CASchools$score, CASchools$lunch)
+cor(CASchools$score, CASchools$calworks)
+```
+
+Se consideran cinco ecuaciones modelo diferentes:
+
+\begin{align*}
+  (I) \quad TestScore=& \, \beta_0 + \beta_1 \times size + u, \\
+  (II) \quad TestScore=& \, \beta_0 + \beta_1 \times size + \beta_2 \times english + u, \\
+  (III) \quad TestScore=& \, \beta_0 + \beta_1 \times size + \beta_2 \times english + \beta_3 \times lunch + u, \\
+  (IV) \quad TestScore=& \, \beta_0 + \beta_1 \times size + \beta_2 \times english + \beta_4 \times calworks + u, \\
+  (V) \quad TestScore=& \, \beta_0 + \beta_1 \times size + \beta_2 \times english + \beta_3 \times lunch + \beta_4 \times calworks + u
+\end{align*}
+
+La mejor forma de comunicar los resultados de la regresión es en una tabla. El paquete **stargazer** es muy conveniente para este propósito. Proporciona una función que genera tablas HTML y LaTeX de aspecto profesional que satisfacen los estándares científicos. Uno simplemente tiene que proporcionar uno o varios objetos de clase **lm**. El resto lo hace la función **stargazer()**.
+
+```{r, 451, eval=F}
+# cargar la biblioteca stargazer
+library(stargazer)
+
+# estimar diferentes especificaciones de modelo
+spec1 <- lm(score ~ size, data = CASchools)
+spec2 <- lm(score ~ size + english, data = CASchools)
+spec3 <- lm(score ~ size + english + lunch, data = CASchools)
+spec4 <- lm(score ~ size + english + calworks, data = CASchools)
+spec5 <- lm(score ~ size + english + lunch + calworks, data = CASchools)
+
+# recopilar errores estándar robustos en una lista
+rob_se <- list(sqrt(diag(vcovHC(spec1, type = "HC1"))),
+               sqrt(diag(vcovHC(spec2, type = "HC1"))),
+               sqrt(diag(vcovHC(spec3, type = "HC1"))),
+               sqrt(diag(vcovHC(spec4, type = "HC1"))),
+               sqrt(diag(vcovHC(spec5, type = "HC1"))))
+
+# generar una tabla LaTeX usando stargazer
+stargazer(spec1, spec2, spec3, spec4, spec5,
+          se = rob_se,
+          digits = 3,
+          header = F,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)"))
+```
+
+<!--html_preserve-->
+
+```{r, 452, results='asis', echo=F, cache=T, message=FALSE, warning=FALSE, eval=my_output == "html"}
+library(stargazer)
+spec1 <- lm(score ~ size, data = CASchools)
+spec2 <- lm(score ~ size + english, data = CASchools)
+spec3 <- lm(score ~ size + english + lunch, data = CASchools)
+spec4 <- lm(score ~ size + english + calworks, data = CASchools)
+spec5 <- lm(score ~ size + english + lunch + calworks, data = CASchools)
+
+# recopilar errores estándar robustos en una lista
+rob_se <- list(
+  sqrt(diag(vcovHC(spec1, type = "HC1"))),
+  sqrt(diag(vcovHC(spec2, type = "HC1"))),
+  sqrt(diag(vcovHC(spec3, type = "HC1"))),
+  sqrt(diag(vcovHC(spec4, type = "HC1"))),
+  sqrt(diag(vcovHC(spec5, type = "HC1")))
+)
+
+stargazer(spec1, spec2, spec3, spec4, spec5, 
+          type = "html",
+          se = rob_se,
+          header = F,
+          digits = 3,
+          float.env = "sidewaystable",
+          object.names = TRUE,
+          dep.var.caption = "Variable dependiente: Puntaje de la prueba",
+          model.numbers = FALSE,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)")
+          )
+
+stargazer_html_title("Regresiones de los puntajes de las pruebas en la relación alumno-maestro y las variables de control", "rotsostracv")
+```
+
+<!--/html_preserve-->
+
+```{r, 453, results='asis', echo=F, cache=T, message=FALSE, warning=FALSE, eval=my_output == "latex"}
+library(stargazer)
+spec1 <- lm(score ~ size, data = CASchools)
+spec2 <- lm(score ~ size + english, data = CASchools)
+spec3 <- lm(score ~ size + english + lunch, data = CASchools)
+spec4 <- lm(score ~ size + english + calworks, data = CASchools)
+spec5 <- lm(score ~ size + english + lunch + calworks, data = CASchools)
+
+# gather robust standard errors in a list
+rob_se <- list(
+  sqrt(diag(vcovHC(spec1, type = "HC1"))),
+  sqrt(diag(vcovHC(spec2, type = "HC1"))),
+  sqrt(diag(vcovHC(spec3, type = "HC1"))),
+  sqrt(diag(vcovHC(spec4, type = "HC1"))),
+  sqrt(diag(vcovHC(spec5, type = "HC1")))
+)
+
+stargazer(spec1, spec2, spec3, spec4, spec5, 
+          type = "latex",
+          title = "\\label{tab:rotsostracv} Regresiones de los puntajes de las pruebas en la relación alumno-maestro y las variables de control",
+          float.env = "sidewaystable",
+          column.sep.width = "-10pt",
+          se = rob_se,
+          header = F,
+          digits = 3,
+          dep.var.caption = "Variable dependiente: Puntaje de la prueba",
+          object.names = TRUE,
+          model.numbers = FALSE,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)")
+          )
+```
+
+La tabla \@ref(tab:rotsostracv) establece que $score$ es la variable dependiente y que se consideran cinco modelos. Se puede ver que las columnas de la Tabla \@ref(tab:rotsostracv) contienen la mayor parte de la información proporcionada por **coeftest()** y **summary()** para los modelos de regresión en consideración: Los coeficientes estimados equipados con códigos de significancia (los asteriscos) y errores estándar entre paréntesis. Aunque no existen estadísticos de $t$, es sencillo para el lector calcularlas simplemente dividiendo una estimación de coeficiente por el error estándar correspondiente. La parte inferior de la tabla informa de estadísticas resumidas para cada modelo y una leyenda.
+
+¿Qué se puede concluir de la comparación del modelo?
+
+1. Se puede ver que la adición de variables de control reduce aproximadamente a la mitad el coeficiente de **size**. Además, la estimación no es sensible al conjunto de variables de control utilizadas. La conclusión es que la disminución de la proporción alumno-maestro ceteris paribus en una unidad conduce a un aumento promedio estimado en los puntajes de las pruebas de alrededor de $1$ punto.
+
+2. Agregar características de los estudiantes como controles aumenta $R^2$ y $\bar{R}^2$ desde $0.049$ (**spec1**) hasta $0.773$ (**spec3** y **spec5**) , por lo que se pueden considerar estas variables como predictores adecuados para los resultados de las pruebas. Además, los coeficientes estimados en todas las variables de control son consistentes.
+
+3. Se puede ver que las variables de control no son estadísticamente significativas en todos los modelos. Por ejemplo, en **spec5**, el coeficiente de $calworks$ no es significativamente diferente de cero a $5\%$ ya que $\lvert-0.048/0.059\rvert=0.81 < 1.64$. También se puede observar que el efecto sobre la estimación (y su error estándar) del coeficiente sobre $size$ de agregar $calworks$ a la especificación base **spec3** es insignificante. Por lo tanto, se puede considerar **calworks** como una variable de control superflua, dada la inclusión de **lunch** en este modelo.
+
+## Ejercicios {#Ejercicios-7}
+
+```{r, 454, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Prueba de hipótesis en un modelo de regresión múltiple --- estadísticos $t$ y valores $p$ {-}
+
+Reconsidere el conjunto de datos de <tt>Boston</tt> y el siguiente modelo estimado (errores estándar de solo homocedasticidad entre paréntesis) del capítulo anterior:
+
+$$\\widehat{medv}_i = \\underset{(0.75)}{32.828} -\\underset{(0.05)}{0.994} \\times lstat_i -\\underset{(0.04)}{0.083} \\times crim_i + \\underset{(0.01)}{0.038} \\times age_i.$$
+
+Al igual que en el marco de regresión lineal simple, se pueden realizar pruebas de hipótesis sobre los coeficientes en modelos de regresión múltiples. La hipótesis más común es $H_0:\\beta_j=0$ contra la alternativa $H_1:\\beta_j\\ne 0$ para unos $j$ en $0,1,\\dots,k$.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>. Las estimaciones de los coeficientes, así como los errores estándar correspondientes, están disponibles en <tt>coefs</tt> y <tt>SEs</tt>, respectivamente.
+
+**Instrucciones:**
+
+Utilizar aritmética vectorial para resolver las siguientes tareas:
+
+  + Calcular los estadísticos $t$ para cada coeficiente utilizando los objetos predefinidos <tt>coefs</tt> y <tt>SEs</tt>. Asignar el resultado a <tt>tstats</tt>.
+
+  + Calcular los valores de $p$ para cada coeficiente y asignar el resultado a <tt>pval</tt>.
+
+  + Verificar, con la ayuda de operadores lógicos, si las hipótesis se rechazan en el nivel de significancia de $1\\%$.
+
+<iframe src="DCL/ex7_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El estadístico $t$ para cada coeficiente se define como $t=\\frac{\\widehat{\\beta}_j-\\beta_{j,0}}{SE(\\widehat{\\beta}_j)}$.
+
+  + El valor $p$ para una prueba de los dos lados usados se calcula como $2\\cdot\\Phi(-|t^{act}|)$ donde $t^{act}$ denota el estadístico $t$ calculado.
+
+</div>') } else {
+  cat("\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}")
+}
+```
+
+```{r, 455, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 2. Prueba de hipótesis en un modelo de regresión múltiple: Intervalos de confianza {-}
+
+Considerar nuevamente el modelo estimado
+
+$$\\widehat{medv}_i = \\underset{(0.75)}{32.828} -\\underset{(0.05)}{0.994} \\times lstat_i -\\underset{(0.04)}{0.083} \\times crim_i + \\underset{(0.01)}{0.038} \\times age_i.$$
+
+que está disponible como objeto <tt>mod</tt> en el entorno de trabajo. Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>.
+
+**Instrucciones:**
+
+  + Construir intervalos de confianza de $99\\%$ para todos los coeficientes del modelo. Utilizar los intervalos para decidir si las hipótesis nulas individuales $H_0:\\beta_j=0$, $j=0,1,2,3,4$ se rechazan en el nivel de $1\\%$.
+
+<iframe src="DCL/ex7_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + Se puede usar <tt>confint()</tt> para construir intervalos de confianza. El nivel de confianza se puede establecer mediante el argumento <tt>level</tt>.
+
+</div>')
+```
+
+```{r, 456, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 3. Prueba de hipótesis sólida en varios modelos de regresión {-}
+
+De <tt>lm</tt> el objeto <tt>mod</tt> de los ejercicios anteriores está disponible en el entorno de trabajo. Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>.
+
+**Instrucciones:**
+
+  + Imprimir un resumen de coeficientes que informen sobre los errores estándar robustos a la heterocedasticidad.
+
+  + Acceder a las entradas de la matriz generada por <tt>coeftest()</tt> para comprobar si las hipótesis se rechazan a un nivel de significancia del 1%. Utilizar operadores lógicos <tt><</tt> y <tt>></tt>.
+
+<iframe src="DCL/ex7_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El uso del argumento <tt>vcov.</tt> en <tt>coeftest()</tt> fuerza a la función a utilizar errores estándar robustos.
+
+  + Los valores de $p$ están contenidos en la cuarta columna de la salida generada por <tt>coeftest()</tt>. Utilizar corchetes para crear subconjuntos de la matriz en consecuencia.
+
+</div>')
+```
+
+```{r, 457, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 4. Prueba de hipótesis conjunta --- Prueba $F$ I {-}
+
+A veces interesa probar hipótesis conjuntas que imponen restricciones sobre coeficientes de regresión *múltiples*. Por ejemplo, en el modelo
+
+$$medv_i = \\beta_0 + \\beta_1\\times lstat_i + \\beta_2\\times crim_i + \\beta_3\\times age_i + u_i$$
+
+se puede probar la hipótesis nula $H_0: \\beta_2=\\beta_3$ frente a la alternativa $H_1: \\beta_2\\ne\\beta_3$ (que es una hipótesis conjunta, ya que se impone una restricción en *dos* coeficientes de regresión ).
+
+La idea básica detrás de probar una hipótesis de este tipo es realizar dos regresiones y comparar los resultados: Para una de las regresiones, se imponen las restricciones formalizadas por la hipótesis nula (lo se llama modelo de regresión restringida), mientras que para la otra regresión la restricción se deja fuera (a esto lo se le llama el modelo irrestricto). A partir de este punto de partida, se constuye un estadístico de prueba que, bajo el valor nulo, sigue una distribución bien conocida, una distribución $F$ (ver el siguiente ejercicio).
+
+Sin embargo, en este ejercicio se comienza con los cálculos iniciales necesarios para construir el estadístico de prueba.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>.
+
+**Instrucciones:**
+
+  + Estimar el modelo restringido; es decir, el modelo donde se asume que la restricción formalizada por $H_0: \\beta_2=\\beta_3$ es verdadera. Guardar el modelo en <tt>model_res</tt>.
+
+  + Calcular el $SSR$ del modelo restringido y asignar el resultado a <tt>RSSR</tt>.
+
+  + Estimar el modelo sin restricciones; es decir, el modelo donde se supone que la restricción es falsa. Guardar en <tt>model_unres</tt>.
+
+  + Calcular el $SSR$ del modelo no restringido y asignar el resultado a <tt>USSR</tt>.
+
+<iframe src="DCL/ex7_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El modelo restringido se puede escribir como $$medv_i = \\beta_0 + \\beta_1\\times lstat_i + \\beta_2\\times crim_i + \\beta_2\\times age_i + u_i$$ que, después de reorganizar, puede ser expresado como $$medv_i = \\beta_0 + \\beta_1\\times lstat_i + \\beta_2\\times(crim_i+age_i) + u_i.$$
+
+  + El $SSR$ se define como la suma de los residuos al cuadrado.
+
+  + Se debe tener en cuenta que los residuos de un modelo de regresión están disponibles como <tt>residuals</tt> en el objeto <tt>lm</tt> correspondiente. Por lo tanto, se puede acceder a ellos como de costumbre a través del operador <tt>$</tt>.
+
+</div>')
+```
+
+```{r, 458, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 5. Prueba de hipótesis conjunta --- Prueba F II {-}
+
+Después de estimar los modelos y calcular los $SSR$, ahora se tiene que calcular la estadística de prueba y realizar la prueba $F$. Como se mencionó en el último ejercicio, la estadística de prueba sigue una distribución de $F$. Más precisamente, se trata con la distribución $F_{q,n-k-1}$ donde $q$ denota el número de restricciones bajo la hipótesis nula y $k$ es el de regresores en el modelo no restringido, excluyendo la intersección.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>. Ambos modelos (<tt>model_res</tt> y <tt>model_unres</tt>) así como su SSR (<tt>RSSR</tt> y <tt>USSR</tt>) están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular el estadístico $F$ y asignar el resultado a <tt>Fstat</tt>.
+
+  + Calcular el valor $p$ y asignar el resultado a <tt>pval</tt>.
+
+  + Comprobar si la hipótesis nula se rechaza en el nivel del $1\\%$ utilizando operadores lógicos.
+
+  + Verificar el resultado usando <tt>linearHypothesis()</tt> e imprimir los resultados.
+
+<iframe src="DCL/ex7_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El estadístico $F$ se define como $\\frac{RSSR-USSR/q}{USSR/(n-k-1)}$.
+
+  + El valor $p$ se puede calcular como $1-F_{q,n-k-1}(F^{act})$ donde $F_{q,n-k-1}$ denota el CDF de la distribución $F$ (<tt>pf()</tt>) con grados de libertad $q$ y $nk-1$ y $F^{act}$ del estadístico $F$ calculado.
+
+  + <tt>linearHypothesis()</tt> espera el modelo sin restricciones así como la hipótesis nula como argumentos.
+
+</div>')
+```
+
+```{r, 459, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 6. Prueba de hipótesis conjunta: Conjunto de confianza {-}
+
+Como sabrá por los capítulos anteriores, la construcción de un conjunto de confianza para un único coeficiente de regresión da como resultado un intervalo de confianza simple en la línea real. Sin embargo, si se consideran los coeficientes de regresión de $n$ conjuntamente (como lo se hace en un entorno de prueba de hipótesis conjunta), se mueve de $\\mathbb{R}$ a $\\mathbb{R}^n$, lo que da como resultado un conjunto de confianza de n-dimensiones. En aras de la ilustración, a menudo se elige $n = 2$, de modo que se termina con un plano bidimensional representable.
+
+Recuerde el modelo estimado
+
+$$\\widehat{medv}_i = \\underset{(0.75)}{32.828} -\\underset{(0.05)}{0.994} \\times lstat_i -\\underset{(0.04)}{0.083} \\times crim_i + \\underset{(0.01)}{0.038} \\times age_i.$$
+
+que está disponible como <tt>mod</tt> en el entorno de trabajo. Suponga que desea probar la hipótesis nula $H_0: \\beta_2=\\beta_3=0$ frente a $H_1: \\beta_2\\ne 0$ o $\\beta_3\\ne 0$.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>.
+
+**Instrucciones:**
+
+  + Construir un conjunto de confianza de $99\\%$ para los coeficientes de <tt>crim</tt> y <tt>lstat</tt>, que es un conjunto de confianza bidimensional. ¿Se puede rechazar la hipótesis nula mencionada anteriormente?
+
+  + Verificar su inspección visual realizando una prueba $F$ correspondiente.
+
+<iframe src="DCL/ex7_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Utilizar <tt>trustEllipse()</tt> para construir un conjunto de confianza bidimensional. Además de los coeficientes para los que se construirá el conjunto de confianza (<tt>which.coef</tt>), se debe especificar el nivel de confianza (<tt>levels</tt>).
+
+  + Como de costumbre, se puede usar <tt>linearHypothesis()</tt> para realizar la prueba $F$. Se debe tener en cuenta que ahora existen dos restricciones; por lo tanto, se debe pasar un vector que contenga ambas restricciones.
+
+</div>')
+```

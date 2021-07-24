@@ -1,0 +1,870 @@
+# Modelos de regresión con varios regresores {#MRVR}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 389, child="_setup.Rmd"}
+```
+
+```{r, 390, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+A continuación, se presentan modelos de regresión lineal que utilizan más de una variable explicativa y se analizan conceptos clave importantes en la regresión múltiple. A medida que se amplia el alcance más allá de la relación de solo dos variables (la variable dependiente y un regresor único), surgen algunos problemas potenciales nuevos como *multicolinealidad* y *sesgo de variable omitida* (SVO). En particular, este capítulo trata de las variables omitidas y su implicación para la interpretación causal de los coeficientes estimados por MCO.
+
+Naturalmente, se discutrá la estimación de modelos de regresión múltiple usando **R**. También se ilustrará la importancia del uso cuidadoso de modelos de regresión múltiple a través de estudios de simulación que demuestran las consecuencias del uso de regresores altamente correlacionados o modelos mal especificados.
+
+Los paquetes **AER** [@R-AER] y **MASS** [@R-MASS] son necesarios para reproducir el código presentado en este capítulo. Asegúrese de que el siguiente fragmento de código se ejecute sin errores.
+
+```{r, 391, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(MASS)
+```
+
+## Sesgo variable omitido
+
+El análisis anterior de la relación entre la puntuación de la prueba y el tamaño de la clase discutido en los Capítulos \@ref(RLR) y \@ref(PHICMRLS) tiene un defecto importante: Se ignoran otros determinantes de la variable dependiente (puntuación de la prueba) que se correlacionan con el regresor (tamaño de la clase). Se debe recordar que las influencias sobre la variable dependiente que no son capturadas por el modelo se recogen en el término de error, que hasta ahora se ha supuesto que no está correlacionado con el regresor. Sin embargo, este supuesto se viola si se excluyen los determinantes de la variable dependiente que varían con el regresor. Esto podría inducir un sesgo de estimación; es decir, la media de la distribución muestral del estimador de MCO ya no es igual a la media verdadera. En el ejemplo, por lo tanto, se estima erróneamente el efecto causal en los puntajes de las pruebas de un cambio de unidad en la proporción alumno-maestro, en promedio. Este problema se denomina *sesgo de variable omitida* (SVO) y se resume en el Concepto clave 6.1.
+
+```{r, 392, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC6.1">
+<h3 class = "right"> Concepto clave 6.1 </h3>          
+<h3 class = "left"> Sesgo de variable omitida en regresión con un regresor único </h3>
+
+El sesgo de variable omitida es el sesgo en el estimador de MCO que surge cuando el regresor, $X$, se *correlaciona* con una variable omitida. Para que ocurra el sesgo de la variable omitida, se deben cumplir dos condiciones:
+
+1. $X$ está correlacionado con la variable omitida.
+2. La variable omitida es un determinante de la variable dependiente $Y$.
+
+Juntos, 1. y 2. dan como resultado una violación del primer supuesto de MCO $E(u_i\\vert X_i) = 0$. Formalmente, el sesgo resultante se puede expresar como
+
+$$ \\hat\\beta_1 \\xrightarrow[]{p} \\beta_1 + \\rho_{Xu} \\frac{\\sigma_u}{\\sigma_X}. \\tag{6.1} $$
+
+El SVO es un problema que no se puede resolver aumentando el número de observaciones utilizadas para estimar $\\beta_1$, como $\\hat\\beta_1$ es inconsistente (<a href="#mjx-eqn-6.1">6.1</a>) : SVO evita que el estimador converja en probabilidad con el valor verdadero del parámetro. La fuerza y la dirección del sesgo están determinadas por $\\rho_{Xu}$, la correlación entre el término de error y el regresor.
+
+</div>
+')
+```
+
+```{r, 393, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Sesgo de variable omitida en regresión con un regresor único]{6.1}
+El sesgo de variable omitida es el sesgo en el estimador de MCO que surge cuando el regresor, $X$, se \\textit{correlaciona} con una variable omitida. Para que ocurra el sesgo de la variable omitida, se deben cumplir dos condiciones:\\newline
+
+\\begin{enumerate}
+\\item $X$ está correlacionado con la variable omitida. 
+\\item La variable omitida es un determinante de la variable dependiente $Y$.
+\\end{enumerate}\\vspace{0.5cm}
+
+Juntos, 1. y 2. dan como resultado una violación del primer supuesto de MCO $E(u_i\\vert X_i) = 0$. Formalmente, el sesgo resultante se puede expresar como
+
+\\begin{align}
+\\hat\\beta_1 \\xrightarrow[]{p} \\beta_1 + \\rho_{Xu} \\frac{\\sigma_u}{\\sigma_X}.
+\\end{align}
+
+El SVO es un problema que no se puede resolver aumentando el número de observaciones utilizadas para estimar $\\beta_1$, como $\\hat\\beta_1$ es inconsistente (<a href="#mjx-eqn-6.1">6.1</a>) : SVO evita que el estimador converja en probabilidad con el valor verdadero del parámetro. La fuerza y la dirección del sesgo están determinadas por $\\rho_{Xu}$, la correlación entre el término de error y el regresor.
+
+\\end{keyconcepts}
+')
+```
+
+En el ejemplo del puntaje de la prueba y el tamaño de la clase, es fácil encontrar variables que puedan causar tal sesgo, si se omiten del modelo. Una variable muy relevante podría ser el porcentaje de estudiantes de inglés en el distrito escolar: es plausible que la capacidad de hablar, leer y escribir en inglés sea un factor importante para un aprendizaje exitoso. Por lo tanto, es probable que los estudiantes que todavía están aprendiendo inglés obtengan peores resultados en las pruebas que los hablantes nativos. Además, es concebible que la proporción de estudiantes que aprenden inglés sea mayor en los distritos escolares donde el tamaño de las clases es relativamente grande: piense en los distritos urbanos pobres donde viven muchos inmigrantes. 
+<br>
+
+Si se piensa en un posible sesgo inducido al omitir la proporción de estudiantes que aprenden inglés ($PctEL$) en vista de (6.1). Cuando el modelo de regresión estimado no incluye $PctEL$ como regresor aunque el verdadero proceso de generación de datos (DGP) es
+
+$$ TestScore = \beta_0 + \beta_1 \times STR + \beta_2 \times PctEL \tag{6.2}$$ 
+
+donde $STR$ y $PctEL$ están correlacionados, se tiene
+
+$$\rho_{STR,PctEL}\neq0.$$
+
+Se puede investigar esto usando **R**. Después de definir las variables, se puede calcular la correlación entre $STR$ y $PctEL$, así como la correlación entre $STR$ y $TestScore$.
+
+```{r, 394, message=F, warnings=F}
+# cargar el paquete AER
+library(AER)
+
+# cargar el conjunto de datos
+data(CASchools)   
+
+# definir variables
+CASchools$STR <- CASchools$students/CASchools$teachers       
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+# calcular correlaciones
+cor(CASchools$STR, CASchools$score)
+cor(CASchools$STR, CASchools$english)
+```
+
+El hecho de que $\widehat{\rho}_{STR, Testscore} = -0.2264$ es motivo de preocupación de que omitir $PctEL$ conduce a una estimación con sesgo negativo $\hat\beta_1$, ya que esto indica que $\rho_{Xu} < 0$. Como consecuencia, se espera que $\hat\beta_1$, el coeficiente de $STR$, sea demasiado grande en valor absoluto. Dicho de otra manera, la estimación de MCO de $\hat\beta_1$ sugiere que las clases pequeñas mejoran los puntajes de las pruebas, pero que el efecto de las clases pequeñas se sobrestima, ya que captura el efecto de tener menos estudiantes de inglés también.
+
+¿Qué pasa con la magnitud de $\hat\beta_1$ si se suma la variable $PctEL$ a la regresión? En otras palabras, si se estima el siguiente modelo
+
+$$ TestScore = \beta_0 + \beta_1 \times STR + \beta_2 \times PctEL + u $$
+
+¿Qué se espera del signo de $\hat\beta_2$, el coeficiente estimado en $PctEL$? Siguiendo el razonamiento anterior, se debría terminar con una estimación de coeficiente negativa pero mayor a $\hat\beta_1$ que antes y una estimación negativa $\hat\beta_2$.
+
+Se necesita estimar ambos modelos de regresión y compararlos. Reealizar una regresión múltiple en **R** es sencillo. Uno puede simplemente agregar variables adicionales al lado derecho del argumento **formula** de la función **lm()** usando sus nombres y el operador **+**.
+
+```{r, 395}
+# estimar ambos modelos de regresión
+mod <- lm(score ~ STR, data = CASchools) 
+mult.mod <- lm(score ~ STR + english, data = CASchools)
+
+# imprimir los resultados en la consola
+mod
+mult.mod
+```
+
+Se encontró que los resultados son consistentes con las expectativas.
+
+La siguiente sección analiza algunas teorías sobre modelos de regresión múltiple.
+
+## El modelo de regresión múltiple {#MRM}
+
+El modelo de regresión múltiple extiende el concepto básico del modelo de regresión simple discutido en los Capítulos \@ref(RLR) y \@ref(PHICMRLS). Un modelo de regresión múltiple permite estimar el efecto en $Y_i$ de cambiar un regresor $X_{1i}$ si los regresores restantes $X_{2i},X_{3i}\dots,X_{ki}$ *no varían*. De hecho, ya se ha realizado la estimación del modelo de regresión múltiple (<a href="#mjx-eqn-6.2">6.2</a>) usando **R** en la sección anterior. La interpretación del coeficiente de la proporción de estudiantes por maestro es el efecto en los puntajes de las pruebas de un cambio de una unidad de la proporción de estudiantes por maestro si el porcentaje de estudiantes de inglés se mantiene constante.
+
+Al igual que en el modelo de regresión simple, se asume que la verdadera relación entre $Y$ y $X_{1i},X_{2i}\dots\dots,X_{ki}$ es lineal. En promedio, esta relación viene dada por la función de regresión poblacional
+
+$$ E(Y_i\vert X_{1i}=x_1, X_{2i}=x_2,  X_{3i}=x_3,\dots, X_{ki}=x_k) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + \dots + \beta_k x_k. \tag{6.3} $$
+
+Como en el modelo de regresión simple, la relación 
+
+$$Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + \beta_3 X_{3i} + \dots + \beta_k X_{ki}$$ 
+
+no se mantienen exactamente, ya que existen influencias perturbadoras en la variable dependiente $Y$ que no se puede observar como variables explicativas. Por lo tanto, se agrega un término de error $u$ que representa las desviaciones de las observaciones de la línea de regresión de la población a (<a href="#mjx-eqn-6.3">6.3</a>). Esto produce el modelo de regresión múltiple de población 
+
+$$ Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + \beta_3 X_{3i} + \dots + \beta_k X_{ki} + u_i, \ i=1,\dots,n. \tag{6.4} $$ 
+
+El Concepto clave 6.2 resume los conceptos centrales del modelo de regresión múltiple.
+
+```{r, 396, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC6.2">
+<h3 class = "right"> Concepto clave 6.2 </h3>          
+<h3 class = "left"> El modelo de regresión múltiple </h3>
+
+El modelo de regresión múltiple es
+
+$$ Y_i = \\beta_0 + \\beta_1 X_{1i} + \\beta_2 X_{2i} + \\beta_3 X_{3i} + \\dots + \\beta_k X_{ki} + u_i \\ \\ , \\ \\ i=1,\\dots,n.  $$ 
+
+Las designaciones son similares a las del modelo de regresión simple:
+
+- $Y_i$ es la observación $i^{th}$ en la variable dependiente. Las observaciones sobre los regresores $k$ se indican mediante $X_{1i},X_{2i},\\dots,X_{ki}$ y $u_i$ es el término de error.
+- La relación promedio entre $Y$ y los regresores está dada por la línea de regresión poblacional
+
+$$ E(Y_i\\vert X_{1i}=x_1, X_{2i}=x_2,  X_{3i}=x_3,\\dots, X_{ki}=x_k) = \\beta_0 + \\beta_1 x_1 + \\beta_2 x_2 + \\beta_3 x_3 + \\dots + \\beta_k x_k. $$
+
+- $\\beta_0$ es la intersección; es el valor esperado de $Y$ cuando todos los $X$ son iguales a $0$. $\\beta_j \\ , \\ j=1,\\dots,k$ son los coeficientes en $X_j \\ , \\ j=1,\\dots,k$. $\\beta_1$ mide el cambio esperado en $Y_i$ que resulta de un cambio de una unidad en $X_{1i}$ mientras se mantienen constantes todos los demás regresores.
+</div>
+')
+```
+
+```{r, 397, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El modelo de regresión múltiple]{6.2}
+
+El modelo de regresión múltiple es
+
+$$ Y_i = \\beta_0 + \\beta_1 X_{1i} + \\beta_2 X_{2i} + \\beta_3 X_{3i} + \\dots + \\beta_k X_{ki} + u_i \\ \\ , \\ \\ i=1,\\dots,n.  $$ 
+
+Las designaciones son similares a las del modelo de regresión simple:
+
+\\begin{itemize}
+\\item $Y_i$ es la observación $i^{th}$ en la variable dependiente. Las observaciones sobre los regresores $k$ se indican mediante $X_{1i},X_{2i},\\dots,X_{ki}$ y $u_i$ es el término de error.
+\\item La relación promedio entre $Y$ y los regresores está dada por la línea de regresión poblacional
+
+$$ E(Y_i\\vert X_{1i}=x_1, X_{2i}=x_2,  X_{3i}=x_3,\\dots, X_{ki}=x_k) = \\beta_0 + \\beta_1 x_1 + \\beta_2 x_2 + \\beta_3 x_3 + \\dots + \\beta_k x_k. $$
+
+\\item $\\beta_0$ es la intersección; es el valor esperado de $Y$ cuando todos los $X$ son iguales a $0$. $\\beta_j \\ , \\ j=1,\\dots,k$ son los coeficientes en $X_j \\ , \\ j=1,\\dots,k$. $\\beta_1$ mide el cambio esperado en $Y_i$ que resulta de un cambio de una unidad en $X_{1i}$ mientras se mantienen constantes todos los demás regresores.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+¿Cómo se pueden estimar los coeficientes del modelo de regresión múltiple (<a href="#mjx-eqn-6.4">6.4</a>)? No se entrará demasiado en detalles sobre este tema, ya que el enfoque está en el uso de **R**. Sin embargo, cabe señalar que, al igual que en el modelo de regresión simple, los coeficientes del modelo de regresión múltiple se pueden estimar mediante MCO. Como en el modelo simple, se busca minimizar la suma de errores al cuadrado eligiendo estimaciones $b_0,b_1,\dots,b_k$ para los coeficientes $\beta_0,\beta_1,\dots,\beta_k$ tales que
+
+$$\sum_{i=1}^n (Y_i - b_0 - b_1 X_{1i} - b_2 X_{2i} - \dots -  b_k X_{ki})^2 \tag{6.5}$$
+
+se minimiza. Se debe tener en cuenta que (<a href="#mjx-eqn-6.5">6.5</a>) es simplemente una extensión de $SSR$ en el caso de un solo regresor y una constante. Por tanto, los estimadores que minimizan (<a href="#mjx-eqn-6.5">6.5</a>) se denominan $\hat\beta_0,\hat\beta_1,\dots,\hat\beta_k$ y, como en el modelo de regresión simple, se llaman estimadores de mínimos cuadrados ordinarios de $\beta_0,\beta_1,\dots,\beta_k$. Para el valor predicho de $Y_i$ dados los regresores y las estimaciones $\hat\beta_0,\hat\beta_1,\dots,\hat\beta_k$ se tiene:
+
+$$ \hat{Y}_i = \hat\beta_0 + \hat\beta_1 X_{1i} + \dots +\hat\beta_k X_{ki}. $$
+
+La diferencia entre $Y_i$ y su valor predicho $\hat{Y}_i$ se denomina MCO residual de la observación $i$: $\hat{u} = Y_i - \hat{Y}_i$.
+
+Para obtener más información sobre la teoría detrás de la regresión múltiple, se presenta una derivación del estimador MCO en el modelo de regresión múltiple utilizando notación matricial.
+
+Volviendo al ejemplo de los resultados de las pruebas y el tamaño de las clases. El objeto de modelo estimado es **mult.mod**. En cuanto a los modelos de regresión simple, se puede usar **summary()** para obtener información sobre los coeficientes estimados y las estadísticas del modelo.
+
+```{r, 398}
+summary(mult.mod)$coef
+```
+
+Entonces, el modelo de regresión múltiple estimado es
+
+$$ \widehat{TestScore} = 686.03 - 1.10 \times STR - 0.65 \times PctEL \tag{6.6}.  $$
+
+A diferencia del modelo de regresión simple donde los datos se pueden representar por puntos en el sistema de coordenadas bidimensionales, ahora se tienen tres dimensiones. Por tanto, las observaciones se pueden representar mediante puntos en el espacio tridimensional. Por lo tanto (<a href="#mjx-eqn-6.6">6.6</a>) ahora ya no es más una línea de regresión sino un *plano de regresión*. Esta idea se extiende a dimensiones superiores cuando se amplian aún más el número de regresores $k$. Luego, se dice que el modelo de regresión se puede representar mediante un hiperplano en el espacio dimensional $k+1$. Ya es difícil imaginar un espacio así con $k = 3$ y lo mejor es seguir con la idea general de que, en el modelo de regresión múltiple, la variable dependiente se explica por una *combinación lineal de regresores*. Sin embargo, en el presente caso se puede visualizar la situación. La siguiente figura es una visualización 3D interactiva de los datos y el plano de regresión estimado (<a href="#mjx-eqn-6.6">6.6</a>).
+
+<center>
+```{r plotlyfig, 399, echo=F, fig.height=5, fig.width=9, warning=F, message=F}
+if(knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"){
+library(plotly)
+
+y <- CASchools$score
+x1 <- CASchools$STR
+x2 <- CASchools$english
+df <- data.frame(y, x1, x2)
+
+reg <- lm(y ~ x1 + x2)
+cf.mod <- coef(reg)
+
+x1.seq <- seq(min(x1),max(x1),length.out=25)
+x2.seq <- seq(min(x2),max(x2),length.out=25)
+z <- t(outer(x1.seq, x2.seq, function(x,y) cf.mod[1] + cf.mod[2]*x + cf.mod[3]*y))
+
+
+rbPal <- colorRampPalette(c('red','blue'))
+cols <- rbPal(10)[as.numeric(cut(abs(y-reg$fitted.values), breaks = 10))]
+
+m <- list(
+  t = 5
+)
+
+p <- plot_ly(x=x1.seq, 
+             y=x2.seq, 
+             z=z,
+             colors = "red",
+             opacity = 0.9,
+             name = "Reg.Plane",
+             type="surface"
+     ) %>%
+  add_trace(data=df, name='CASchools', x=x1, y=x2, z=y, mode="markers", type="scatter3d",
+            marker = list(color=cols, opacity=0.85, symbol=105, size=4)
+  ) %>%
+  hide_colorbar() %>%
+  layout(
+    margin = m,
+    showlegend = FALSE,
+    scene = list(
+      aspectmode = "manual", aspectratio = list(x=1, y=1.3, z=1),
+      xaxis = list(title = "STR"),
+      yaxis = list(title = "PctEL"),
+      zaxis = list(title = "TestScore"),
+      camera = list(eye = list(x = -2,y = -0.1, z=0.05),
+                    center = list(x = 0,
+                                  y = 0,
+                                  z = 0
+                                  )
+               )
+    )
+    
+  )
+
+p <- p %>% config(showLink = F, displayModeBar = F);p
+}
+```
+</center>
+
+```{r, 400, echo=F, purl=F, eval=my_output=="latex", results='asis'}
+cat('\\begin{center}\\textit{This interactive part of the book is only available in the HTML version.}\\end{center}')
+```
+
+Se puede observar que el plano de regresión estimado se ajusta razonablemente bien a los datos, al menos respecto a la forma y posición espacial de los puntos. El color de los marcadores es un indicador de la desviación absoluta del plano de regresión predicho. Las observaciones que tienen un color más rojizo se encuentran cerca del plano de regresión, mientras que el color cambia a azul con la distancia creciente. Una anomalía que se puede ver en el gráfico es que podría haber heterocedasticidad: Se puede ver que la dispersión de los errores de regresión cometidos; es decir, la distancia de las observaciones al plano de regresión tiende a disminuir a medida que aumenta la proporción de estudiantes que aprenden inglés.
+
+## Medidas de ajuste en regresión múltiple {#MARM}
+
+En la regresión múltiple, las estadísticas de resumen comunes son $SER$, $R^2$ y el $R^2$ ajustado.
+
+Tomando el código de la Sección \@ref(MRM), simplemente se debe usar **summary(mult.mod)** para obtener $SER$, $R^2$ y ajustado $R^2$. Para modelos de regresión múltiple, $SER$ se calcula como
+
+$$ SER = s_{\hat u} = \sqrt{s_{\hat u}^2} $$
+
+donde modificar el denominador del factor premultiplicado en $s_{\hat u}^2$ para acomodar regresores adicionales. Por lo tanto,
+
+$$ s_{\hat u}^2 = \frac{1}{n-k-1} \, SSR $$
+
+donde $k$ denota el número de regresores *excluyendo* la intersección.
+
+Si bien **summary()** calcula $R^2$ como en el caso de un solo regresor, no es una medida confiable para modelos de regresión múltiple. Esto se debe a que $R^2$ aumenta cada vez que se agrega un regresor adicional al modelo. Agregar un regresor disminuye el $SSR$ --- lo reduce a menos que el coeficiente estimado respectivo sea exactamente cero, lo que prácticamente nunca sucede. El $R^2$ ajustado toma esto en consideración al "castigar" la adición de regresores usando un factor de corrección. Entonces, el $R^2$ ajustado, o simplemente $\bar{R}^2$, es una versión modificada de $R^2$. Se define como
+
+$$ \bar{R}^2 = 1-\frac{n-1}{n-k-1} \, \frac{SSR}{TSS}. $$
+
+Como ya se habrá sospechado, **summary()** ajusta la fórmula para $SER$ y calcular $\bar{R}^2$ y, por supuesto, $R^2$ por defecto, dejando así la decisión de qué medida confiar en el usuario.
+
+Puede encontrar ambas medidas en la parte inferior de la salida generada llamando a **summary(mult.mod)**.
+
+```{r, 401}
+summary(mult.mod)
+```
+
+También se pueden calcular las medidas a mano usando las fórmulas anteriores. Comprobando que los resultados coinciden con los valores proporcionados por **summary()**.
+
+```{r, 402}
+# definir los componentes
+n <- nrow(CASchools)                            # número de observaciones (filas)
+k <- 2                                          # número de regresores
+
+y_mean <- mean(CASchools$score)                 # medida de la media de los resultados de las pruebas
+
+SSR <- sum(residuals(mult.mod)^2)               # suma de residuos cuadrados
+TSS <- sum((CASchools$score - y_mean )^2)       # suma total de cuadrados
+ESS <- sum((fitted(mult.mod) - y_mean)^2)       # suma explicada de cuadrados
+
+# calcular las medidas
+
+SER <- sqrt(1/(n-k-1) * SSR)                    # error estándar de la regresión
+Rsq <- 1 - (SSR / TSS)                          # R^2
+adj_Rsq <- 1 - (n-1)/(n-k-1) * SSR/TSS          # R^2 ajustada
+
+# imprimir las medidas en la consola
+c("SER" = SER, "R2" = Rsq, "Adj.R2" = adj_Rsq)
+```
+
+Ahora, ¿qué se puede decir sobre el ajuste del modelo de regresión múltiple para los puntajes de las pruebas con el porcentaje de estudiantes de inglés como regresor adicional? ¿Mejora el modelo simple que incluye solo una intersección y una medida del tamaño de la clase? La respuesta es sí: Compare $\bar{R}^2$ con el obtenido para el modelo de regresión simple **mod**.
+
+Incluir $PctEL$ como regresor mejora $\bar{R}^2$, que se considera más confiable en vista de la discusión anterior. Se puede observar que la diferencia entre $R^2$ y $\bar{R}^2$ es pequeña ya que $k = 2$ y $n$ es grande. En resumen, el ajuste de (<a href="#mjx-eqn-6.6">6.6</a>) mejora enormemente el ajuste del modelo de regresión simple con $STR$ como único regresor. 
+<br>
+
+Al comparar los errores de regresión, se encuentra que la precisión del modelo de regresión múltiple (<a href="#mjx-eqn-6.6">6.6</a>) mejora el modelo simple, ya que agregar $PctEL$ reduce el $SER$ de $18.6$ a $14.5$ unidades de puntaje de prueba.
+
+Como ya se mencionó, $\bar{R}^2$ puede usarse para cuantificar qué tan bien un modelo se ajusta a los datos. Sin embargo, rara vez es una buena idea maximizar estas medidas llenando el modelo con regresores. No encontrará ningún estudio serio que lo haga. En cambio, es más útil incluir regresores que mejoren la estimación del efecto causal de interés que *no se evalúa* mediante los $R^2$ del modelo. El tema de la selección de variables se trata en el Capítulo \@ref(FRNL).
+
+## Supuestos de MCO en regresión múltiple
+
+En el modelo de regresión múltiple se amplian los tres supuestos de mínimos cuadrados del modelo de regresión simple (ver Capítulo \@ref(RLR)) y se agrega un cuarto supuesto. Estos supuestos se presentan en el Concepto clave 6.4. No se entrará en detalles sobre los supuestos 1-3, ya que sus ideas se generalizan fácilmente al caso de regresores múltiples. La atención se centrará en el cuarto supuesto. Este supuesto descarta la correlación perfecta entre regresores.
+
+```{r, 403, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC6.4">
+<h3 class = "right"> Concepto clave 6.4 </h3>          
+<h3 class = "left"> Los supuestos de mínimos cuadrados en el modelo de regresión múltiple </h3>
+
+El modelo de regresión múltiple viene dado por
+
+$$ Y_i = \\beta_0 + \\beta_1 X_{1i} + \\beta_1 X_{2i} + \\dots + \\beta_k X_{ki} + u_i \\ , \\ i=1,\\dots,n. $$
+
+Los supuestos de MCO en el modelo de regresión múltiple son una extensión de los realizados para el modelo de regresión simple:
+
+1. Los regresores $(X_{1i}, X_{2i}, \\dots, X_{ki}, Y_i) \\ , \\ i=1,\\dots,n$, se constuye de manera que la suposición i.i.d. se mantiene.
+2. $u_i$ es un término de error con media condicional cero dados los regresores; es decir,
+
+$$ E(u_i\\vert X_{1i}, X_{2i}, \\dots, X_{ki}) = 0. $$
+
+3. Los valores atípicos grandes son poco probables, formalmente $X_{1i},\\dots,X_{ki}$ y $Y_i$ tienen cuartos momentos finitos.
+4. No existe multicolinealidad perfecta.
+
+</div>
+')
+```
+
+```{r, 404, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[The Least Squares Assumptions in the Multiple Regression Model]{6.4}
+
+El modelo de regresión múltiple viene dado por
+
+$$ Y_i = \\beta_0 + \\beta_1 X_{1i} + \\beta_1 X_{2i} + \\dots + \\beta_k X_{ki} + u_i \\ , \\ i=1,\\dots,n. $$
+
+Los supuestos de MCO en el modelo de regresión múltiple son una extensión de los realizados para el modelo de regresión simple:
+
+\\begin{enumerate}
+\\item Los regresores $(X_{1i}, X_{2i}, \\dots, X_{ki}, Y_i) \\ , \\ i=1,\\dots,n$, se constuye de manera que la suposición i.i.d. se mantiene.
+\\item $u_i$ es un término de error con media condicional cero dados los regresores; es decir,
+$$ E(u_i\\vert X_{1i}, X_{2i}, \\dots, X_{ki}) = 0. $$
+\\item Los valores atípicos grandes son poco probables, formalmente $X_{1i},\\dots,X_{ki}$ y $Y_i$ tienen cuartos momentos finitos.
+\\item No existe multicolinealidad perfecta.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+### Multicolinealidad {-}
+
+*Multicolinealidad* significa que dos o más regresores en un modelo de regresión múltiple están *fuertemente* correlacionados. Si la correlación entre dos o más regresores es perfecta; es decir, un regresor puede escribirse como una combinación lineal del otro(s), se tiene *multicolinealidad perfecta*. Si bien la multicolinealidad fuerte en general es desagradable, ya que hace que la varianza del estimador MCO sea grande (se discutirá esto a profundidad más adelante), la presencia de multicolinealidad perfecta hace que sea imposible resolver el estimador MCO; es decir, el modelo no puede estimarse en primer lugar.
+
+La siguiente sección presenta algunos ejemplos de multicolinealidad perfecta y demuestra cómo **lm()** los trata.
+
+#### Ejemplos de multicolinealidad perfecta {-}
+
+¿Cómo reacciona **R** si se intenta estimar un modelo con regresores perfectamente correlacionados?
+
+La función **lm** produce una advertencia en la primera línea de la sección del coeficiente de la salida (**1 no definido debido a singularidades**) e ignorará el regresor que se supone que es una combinación lineal del otro(s). Considere el siguiente ejemplo donde se agrega otra variable **FracEL**, la fracción de estudiantes de inglés, a **CASchools** donde las observaciones son valores escalados de las observaciones para **inglés** y lo se usa como regresor junto con **STR** e **inglés** en un modelo de regresión múltiple. En este ejemplo, **inglés** y **FracEL** son perfectamente colineales. El código **R** es el siguiente.
+
+```{r, 405}
+# definir la fracción de estudiantes de inglés        
+CASchools$FracEL <- CASchools$english / 100
+
+# estimar el modelo
+mult.mod <- lm(score ~ STR + english + FracEL, data = CASchools) 
+
+# obtener un resumen del modelo
+summary(mult.mod)                                                 
+```
+
+La fila **FracEL** en la sección de coeficientes del resultado consta de entradas **NA**, ya que **FracEL** se excluyó del modelo.
+
+Si se tuviera que calcular el MCO a mano, se encontraría con el mismo problema, ¡pero nadie estaría ayudando! El cálculo simplemente falla. ¿Por qué es esto? Tome el siguiente ejemplo:
+
+Suponga que desea estimar un modelo de regresión lineal simple con una constante y un regresor único $X$. Como se mencionó anteriormente, para que exista una multicolinealidad perfecta, $X$ tiene que ser una combinación lineal de los otros regresores. Dado que el único otro regresor es una constante (piense en el lado derecho de la ecuación del modelo como $\beta_0 \times 1 + \beta_1 X_i + u_i$ de modo que $\beta_1$ siempre se multiplica por $1$ para cada observación), $X$ también tiene que ser constante. Por $\hat\beta_1$ se tiene
+
+$\hat\beta_1 =  \frac{\sum_{i = 1}^n (X_i - \bar{X})(Y_i - \bar{Y})} { \sum_{i=1}^n (X_i - \bar{X})^2} = \frac{\widehat{Cov}(X,Y)}{\widehat{Var}(X)}. \tag{6.7}$
+
+La varianza del regresor $X$ está en el denominador. Dado que la varianza de una constante es cero, no se puede calcular esta fracción y $\hat{\beta}_1$ no está definida.
+
+**Nota:** En este caso especial, el denominador en (<a href="#mjx-eqn-6.7">6.7</a>) también es igual a cero. ¿Se puede mostrar eso?
+
+Se pueden considerar dos ejemplos más en los que la selección de regresores induce una multicolinealidad perfecta. Primero, se debe suponer que se tiene la intención de analizar el efecto del tamaño de la clase en el puntaje de la prueba usando una variable ficticia que identifica las clases que no son pequeñas ($NS$). Se define que una escuela tiene el atributo $NS$ cuando la proporción promedio de estudiantes por maestro de la escuela es de al menos $12$,
+
+$$ NS = \begin{cases} 0, \ \ \ \text{si STR < 12} \\ 1 \ \ \ \text{de lo contrario.} \end{cases} $$
+
+Se agrega la columna correspondiente a **CASchools** y se estima un modelo de regresión múltiple con covariables **computadora** e **inglés**.
+
+```{r, 406}
+# si STR menor a 12, NS = 0, en caso contrario NS = 1
+CASchools$NS <- ifelse(CASchools$STR < 12, 0, 1)
+
+# estimar el modelo
+mult.mod <- lm(score ~ computer + english + NS, data = CASchools)
+
+# obtener un resumen del modelo
+summary(mult.mod)                                                  
+```
+
+Nuevamente, el resultado de **summary(mult.mod)** indica que la inclusión de **NS** en la regresión haría inviable la estimación. ¿Que pasó aquí? Este es un ejemplo en el que se cometió un error lógico al definir el regresor **NS**: Al observar más de cerca $NS$, la medida redefinida para el tamaño de la clase, revela que no existe una sola escuela con $STR < 12$ por tanto, $NS$ es igual a uno para todas las observaciones. Se puede verificar esto imprimiendo el contenido de **CASchools\\$NS** o usando la función **table()**, vea **?Table**.
+
+```{r, 407}
+table(CASchools$NS)
+```
+
+**Cascools$NS** es un vector de $420$, mientras que el conjunto de datos analizado incluye $420$ observaciones. Esto obviamente viola la suposición 4 del Concepto clave 6.4: Las observaciones para el intercepto son siempre $1$,
+
+\begin{align*}
+  intercept = \, & \lambda \cdot NS
+\end{align*}
+
+\begin{align*}
+\begin{pmatrix} 1 
+  \\ \vdots \\ 1
+  \end{pmatrix} = \, & \lambda \cdot 
+  \begin{pmatrix} 1 \\ 
+  \vdots \\ 1
+  \end{pmatrix} \\   
+  \Leftrightarrow \, & \lambda = 1.
+\end{align*}
+
+Dado que los regresores se pueden escribir como una combinación lineal entre sí, se enfrenta a multicolinenalidad perfecta y **R** excluye **NS** del modelo. Por lo tanto, el mensaje de advertencia es: ¡Piense cuidadosamente sobre cómo se relacionan los regresores en sus modelos!
+
+Otro ejemplo de multicolinealidad perfecta se conoce como la *trampa variable ficticia*. Esto puede ocurrir cuando se utilizan múltiples variables ficticias como regresores. Un caso común para esto es cuando se utilizan variables ficticias para ordenar los datos en categorías mutuamente exclusivas. Por ejemplo, suponiendo que se tiene información espacial que indica si una escuela está ubicada en el norte, al oeste, al sur o al este de los EE. UU. Esto permite crear las variables ficticias
+
+\begin{align*}
+  North_i =& 
+  \begin{cases}
+    1 \ \ \text{Si se encuentra en el norte} \\
+    0 \ \ \text{de lo contrario}
+  \end{cases} \\
+    West_i =& 
+  \begin{cases}
+    1 \ \ \text{Si se encuentra en el oeste} \\
+    0 \ \ \text{de lo contrario}
+  \end{cases} \\
+    South_i =& 
+  \begin{cases}
+    1 \ \ \text{Si se encuentra en el sur} \\
+    0 \ \ \text{de lo contrario}
+  \end{cases} \\
+    East_i =& 
+  \begin{cases}
+    1 \ \ \text{Si se encuentra en el este} \\
+    0 \ \ \text{de lo contrario}.
+  \end{cases}
+\end{align*}
+
+Dado que las regiones son mutuamente excluyentes, por cada escuela $i=1,\dots,n$ se tiene 
+
+$$ North_I + West_i + South_I + East_I = 1. $$
+
+Se enfrenta con problemas al tratar de estimar un modelo que incluye una constante y *las cuatro* variables ficticias en el modelo; por ejemplo, 
+
+$$ TestScore = \beta_0 + \beta_1 \times STR + \beta_2 \times english + \beta_3 \times North_i + \beta_4 \times West_i + \beta_5 \times South_i + \beta_6 \times East_i + u_i \tag{6.8}$$
+
+desde entonces, para todas las observaciones $i=1,\dots,n$ el término constante es una combinación lineal de las variables ficticias:
+
+\begin{align}
+  intercept = \, & \lambda_1 \cdot (North + West + South + East) \\
+  \begin{pmatrix} 1 \\ \vdots \\ 1\end{pmatrix} = \, & \lambda_1 \cdot \begin{pmatrix} 1 \\ \vdots \\ 1\end{pmatrix} \\   \Leftrightarrow \, & \lambda_1 = 1
+\end{align}
+
+y se tiene una perfecta multicolinealidad. Por lo tanto, la "trampa de la variable ficticia" significa no prestar atención e *incluir falsamente dummies exhaustivas* y *una constante* en un modelo de regresión.
+
+¿Cómo la función **lm()** utiliza una regresión como (<a href="#mjx-eqn-6.8">6.8</a>)? Primero se deben generar algunos datos categóricos artificiales y agregar una nueva columna llamada **directions** a **CASchools** y ver cómo **lm()** se comporta cuando se le pide que estime el modelo.
+
+```{r, 408}
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# generar datos artificiales en la ubicación
+CASchools$direction <- sample(c("West", "North", "South", "East"), 
+                              420, 
+                              replace = T)
+
+# estimar el modelo
+mult.mod <- lm(score ~ STR + english + direction, data = CASchools)
+
+# obtener un resumen del modelo
+summary(mult.mod)                                                 
+```
+
+Observe que **R** resuelve el problema por sí solo al generar e incluir las variables ficticias **directionNorth**, **directionSouth** y **directionWest** pero omitiendo **directionEast**. Por supuesto, la omisión de todas las demás ficticias lograría lo mismo. Otra solución sería excluir la constante e incluir todas las variables ficticias.
+
+¿Significa esto que se pierde la información sobre las escuelas ubicadas en el Este? Afortunadamente, este no es el caso: la exclusión de **directEast** simplemente altera la interpretación de las estimaciones de coeficientes en las variables ficticias restantes de absoluto a relativo. Por ejemplo, la estimación del coeficiente en **directionNorth** establece que, en promedio, los puntajes de las pruebas en el norte son aproximadamente $1.61$ puntos más altos que en el este.
+
+Un último ejemplo considera el caso en el que una relación lineal perfecta surge de regresores redundantes. Suponiendo que se tiene un regresor $PctES$, el porcentaje de hablantes de inglés en la escuela donde
+
+$$ PctES = 100 -  PctEL$$
+
+y tanto $PctES$ como $PctEL$ se incluyen en un modelo de regresión. Un regresor es redundante ya que el otro transmite la misma información. Dado que obviamente este es un caso en el que los regresores se pueden escribir como una combinación lineal, se termina con una multicolinealidad perfecta, nuevamente.
+
+Haciendo esto en **R**.
+
+```{r, 409}
+# porcentaje de hablantes de inglés
+CASchools$PctES <- 100 - CASchools$english
+
+# estimar el modelo
+mult.mod <- lm(score ~ STR + english + PctES, data = CASchools)
+
+# obtener un resumen del modelo
+summary(mult.mod)                                                 
+```
+
+Una vez más, **lm()** se niega a estimar el modelo completo usando MCO y excluye **PctES**.
+
+Lo anterior se debe a la multicolinealidad perfecta, sus consecuencias para el estimador MCO en modelos generales de regresión múltiple se pueden demostrar utilizando notación matricial.
+
+#### Multicolinealidad imperfecta {-}
+
+A diferencia de la multicolinealidad perfecta, la multicolinealidad imperfecta es, hasta cierto punto, un problema menor. De hecho, la multicolinealidad imperfecta es la razón por la que se está interesado en estimar modelos de regresión múltiple en primer lugar: El estimador MCO permite *aislar* las influencias de los regresores *correlacionados* en la variable dependiente. Si no fuera por estas dependencias, no habría razón para recurrir a un enfoque de regresión múltiple y simplemente se podría trabajar con un modelo de regresor único. Sin embargo, este rara vez es el caso en las aplicaciones. Ya se sabe que ignorar las dependencias entre regresores que influyen en la variable de resultado tiene un efecto adverso sobre los resultados de la estimación.
+
+Entonces, ¿cuándo y por qué es un problema la multicolinealidad imperfecta? Suponga que tiene el modelo de regresión
+
+$$ Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + u_i \tag{6.9} $$
+
+y está interesado en estimar $\beta_1$, el efecto en $Y_i$ de un cambio de una unidad en $X_{1i}$, mientras se mantiene constante $X_{2i}$. No sabe que el verdadero modelo incluye $X_2$. Sigue un razonamiento y agrega $X_2$ como una covariable al modelo para abordar un posible sesgo de variable omitida. Está seguro de que $E(u_i\vert X_{1i}, X_{2i})=0$ y que no existe razón alguna para sospechar una violación de los supuestos 2 y 3 del Concepto clave 6.4. Si $X_1$ y $X_2$ están altamente correlacionadas, el MCO tendrá dificultades para estimar con precisión $\beta_1$. Eso significa que aunque $\hat\beta_1$ es un estimador consistente e imparcial para $\beta_1$, tiene una gran variación debido a que $X_2$ está incluido en el modelo. Si los errores son homocedásticos, este problema se puede comprender mejor con la fórmula de la varianza de $\hat\beta_1$ en el modelo (<a href="#mjx-eqn-6.9">6.9</a>):
+
+$$ \sigma^2_{\hat\beta_1} = \frac{1}{n} \left( \frac{1}{1-\rho^2_{X_1,X_2}} \right) \frac{\sigma^2_u}{\sigma^2_{X_1}}. \tag{6.10} $$
+
+Primero, si $\rho_{X_1,X_2}=0$, es decir, si no existe correlación entre ambos regresores, incluir $X_2$ en el modelo no influye en la varianza de $\hat\beta_1$. 
+
+En segundo lugar, si $X_1$ y $X_2$ están correlacionados, $\sigma^2_{\hat\beta_1}$ es inversamente proporcional a $1-\rho^2_{X_1,X_2}$ así que cuanto más fuerte sea la correlación entre $X_1$ y $X_2$, el menor es $1-\rho^2_{X_1,X_2}$ y, por lo tanto, mayor es la varianza de $\hat\beta_1$. 
+
+En tercer lugar, aumentar el tamaño de la muestra ayuda a reducir la varianza de $\hat\beta_1$. Por supuesto, esto no se limita al caso de dos regresores: En regresiones múltiples, la multicolinealidad imperfecta infla la varianza de uno o más estimadores de coeficientes. Es una cuestión empírica qué estimaciones de coeficientes se ven gravemente afectadas por esto y cuáles no. Cuando el tamaño de la muestra es pequeño, a menudo uno se enfrenta a la decisión de aceptar la consecuencia de agregar un gran número de covariables (mayor varianza) o utilizar un modelo con pocos regresores (posible sesgo de variable omitida). Esto se llama *compensación de sesgo-varianza*.
+
+En resumen, las consecuencias indeseables de la multicolinealidad imperfecta generalmente no son el resultado de un error lógico cometido por el investigador (como suele ser el caso de la multicolinealidad perfecta) sino más bien un problema que está vinculado a los datos utilizados, el modelo que se va a estimar y la pregunta de investigación en cuestión.
+
+### Estudio de simulación: Multicolinealidad imperfecta {-}
+
+Resulta importante realizar un estudio de simulación para ilustrar los problemas esbozados anteriormente.
+
+1. Usando (<a href="#mjx-eqn-6.8">6.9</a>) como proceso de generación de datos y al elegir $\beta_0 = 5$, $\beta_1 = 2.5$ y $\beta_2 = 3$, así como $u_i$ (que es un término de error distribuido como $\mathcal{N}(0,5)$). En un primer paso, se toma una muestra de los datos del regresor de una distribución normal bivariada: 
+
+$$ X_i = (X_{1i}, X_{2i}) \overset{i.i.d.}{\sim} \mathcal{N} \left[\begin{pmatrix} 0 \\ 0  \end{pmatrix}, \begin{pmatrix} 10 & 2.5 \\ 2.5 & 10 \end{pmatrix} \right] $$ 
+
+Es sencillo ver que la correlación entre $X_1$ y $X_2$ en la población es bastante baja:
+
+$$ \rho_{X_1,X_2} = \frac{Cov(X_1,X_2)}{\sqrt{Var(X_1)}\sqrt{Var{(X_2)}}} = \frac{2.5}{10} = 0.25 $$
+
+2. A continuación, se estima el modelo (<a href="#mjx-eqn-6.9">6.9</a>) y se guardan las estimaciones para $\beta_1$ y $\beta_2$. Esto se repite $10000$ veces con un bucle **for**, por lo que termina con una gran cantidad de estimaciones que permiten describir las distribuciones de $\hat\beta_1$ y $\hat\beta_2$.
+
+3. Se repiten los pasos 1 y 2, pero aumentando la covarianza entre $X_1$ y $X_2$ de $2.5$ a $8.5$ de manera que la correlación entre los regresores sea alta: 
+
+$$ \rho_{X_1,X_2} = \frac{Cov(X_1,X_2)}{\sqrt{Var(X_1)}\sqrt{Var{(X_2)}}} = \frac{8.5}{10} = 0.85 $$
+
+4. Para evaluar el efecto sobre la precisión de los estimadores de aumentar la colinealidad entre $X_1$ y $X_2$, se estiiman y comparan las varianzas de $\hat\beta_1$ y $\hat\beta_2$ .
+
+```{r, 410, message=F, warning=F, fig.align='center', cache=T}
+# cargar paquetes
+library(MASS)
+library(mvtnorm)
+
+# establecer el número de observaciones
+n <- 50
+
+# inicializar vectores de coeficientes
+coefs1 <- cbind("hat_beta_1" = numeric(10000), "hat_beta_2" = numeric(10000))
+coefs2 <- coefs1
+
+# sembrar semilla
+set.seed(1)
+
+# muestreo y estimación de bucles
+for (i in 1:10000) {
+  
+  # para cov(X_1, X_2) = 0.25
+  X <- rmvnorm(n, c(50, 100), sigma = cbind(c(10, 2.5), c(2.5, 10)))
+  u <- rnorm(n, sd = 5)
+  Y <- 5 + 2.5 * X[, 1] + 3 * X[, 2] + u
+  coefs1[i, ] <- lm(Y ~ X[, 1] + X[, 2])$coefficients[-1]
+  
+  # para cov(X_1, X_2) = 0.85
+  X <- rmvnorm(n, c(50, 100), sigma = cbind(c(10, 8.5), c(8.5, 10)))
+  Y <- 5 + 2.5 * X[, 1] + 3 * X[, 2] + u
+  coefs2[i, ] <- lm(Y ~ X[, 1] + X[, 2])$coefficients[-1]
+  
+}
+
+# obtener estimaciones de varianza
+diag(var(coefs1))
+diag(var(coefs2))
+```
+
+Se está interesado en las variaciones que son los elementos diagonales. Se puede ver que debido a la alta colinealidad, las varianzas de $\hat\beta_1$ y $\hat\beta_2$ se han más que triplicado, lo que significa que es más difícil estimar con precisión los coeficientes verdaderos.
+
+## La distribución de los estimadores de MCO en regresión múltiple
+
+Como en la regresión lineal simple, diferentes muestras producirán diferentes valores de los estimadores de MCO en el modelo de regresión múltiple. Una vez más, esta variación conduce a la incertidumbre de los estimadores que se busca describir utilizando su(s) distribución(es) muestral(es). En resumen, si se cumple la suposición hecha en el Concepto clave 6.4, la distribución muestral grande de $\hat\beta_0,\hat\beta_1,\dots,\hat\beta_k$ es multivariante normal, de modo que los estimadores individuales también se distribuyen normalmente. El Concepto clave 6.5 resume las declaraciones correspondientes.
+
+```{r, 411, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC6.5">
+<h3 class = "right"> Concepto clave 6.5 </h3>          
+<h3 class = "left"> Distribución de muestra grande de $\\hat\\beta_0,\\hat\\beta_1,\\dots,\\hat\\beta_k$ </h3>
+
+Si se cumplen los supuestos de mínimos cuadrados en el modelo de regresión múltiple (ver Concepto clave 6.4), entonces, en muestras grandes, los estimadores de MCO $\\hat\\beta_0,\\hat\\beta_1,\\dots,\\hat\\beta_k$ se distribuyen normalmente de forma conjunta. También se dice que su distribución conjunta es *multivariante* normal. Además, cada $\\hat\\beta_j$ se distribuye como $\\mathcal{N}(\\beta_j,\\sigma_{\\beta_j}^2)$.
+
+</div>
+')
+```
+
+```{r, 412, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Distribución de muestra grande de $\\hat\\beta_0,\\hat\\beta_1,\\dots,\\hat\\beta_k$]{6.5}
+
+Si se cumplen los supuestos de mínimos cuadrados en el modelo de regresión múltiple (ver Concepto clave 6.4), entonces, en muestras grandes, los estimadores de MCO $\\hat\\beta_0,\\hat\\beta_1,\\dots,\\hat\\beta_k$ se distribuyen normalmente de forma conjunta. También se dice que su distribución conjunta es \\textit{multivariante} normal. Además, cada $\\hat\\beta_j$ se distribuye como $\\mathcal{N}(\\beta_j,\\sigma_{\\beta_j}^2)$.
+
+\\end{keyconcepts}
+')
+```
+
+Esencialmente, el Concepto clave 6.5 establece que, si el tamaño de la muestra es grande, se pueden aproximar las distribuciones muestrales individuales de los estimadores de coeficientes mediante distribuciones normales específicas y su distribución muestral conjunta mediante una distribución normal multivariante.
+
+¿Cómo se puede usar **R** para tener una idea de cómo se ve la FDP conjunta de los estimadores de coeficientes en el modelo de regresión múltiple? Al estimar un modelo sobre algunos datos, se termina con un conjunto de estimaciones puntuales que no revelan mucha información sobre la densidad *conjunta* de los estimadores. Sin embargo, con una gran cantidad de estimaciones que utilizan datos muestreados aleatoriamente repetidamente de la misma población, se puede generar un gran conjunto de estimaciones puntuales que permiten trazar una *estimación* de la función de densidad conjunta.
+
+El enfoque que se usará para hacer esto en **R** es el siguiente:
+
+- Generar $10000$ muestras aleatorias de tamaño $50$ usando el DGP $$ Y_i = 5 + 2.5 \cdot X_{1i} + 3 \cdot X_{2i} + u_i  $$ donde los regresores $X_{1i}$ y $X_{2i}$ se muestrean para cada observación como  $$ X_i = (X_{1i}, X_{2i}) \sim \mathcal{N} \left[\begin{pmatrix} 0 \\ 0  \end{pmatrix}, \begin{pmatrix} 10 & 2.5 \\ 2.5 & 10 \end{pmatrix} \right] $$  y  $$ u_i \sim \mathcal{N}(0,5) $$  es el término de error.
+
+- Para cada uno de los conjuntos de datos de muestra simulados de $10000$, se estima el modelo $$ Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + u_i $$  y se guardan las estimaciones de coeficientes $\hat\beta_1$ y $\hat\beta_2$.
+
+- Se calcula una estimación de densidad de la distribución conjunta de $\hat\beta_1$ y $\hat\beta_2$ en el modelo anterior usando la función **kde2d()** del paquete **MASS**, ver `?MASS`. Esta estimación luego se grafica usando la función **persp()**.
+
+```{r, 413, echo=T, message=F, warning=F, fig.align='center'}
+# cargar paquetes
+library(MASS)
+library(mvtnorm)
+
+# establecer tamaño de muestra
+n <- 50
+
+# inicializar vector de coeficientes
+coefs <- cbind("hat_beta_1" = numeric(10000), "hat_beta_2" = numeric(10000))
+
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# muestreo y estimación de bucles
+for (i in 1:10000) {
+  
+  X <- rmvnorm(n, c(50, 100), sigma = cbind(c(10, 2.5), c(2.5, 10)))
+  u <- rnorm(n, sd = 5)
+  Y <- 5 + 2.5 * X[, 1] + 3 * X[, 2] + u
+  coefs[i,] <- lm(Y ~ X[, 1] + X[, 2])$coefficients[-1]
+  
+}
+
+# calcular la estimación de la densidad
+kde <- kde2d(coefs[, 1], coefs[, 2])
+
+# graficar densidad de estimación
+persp(kde, 
+      theta = 310, 
+      phi = 30, 
+      xlab = "beta_1", 
+      ylab = "beta_2", 
+      zlab = "Densidad de estimación")
+```
+
+En el gráfico anterior, se puede ver que la estimación de densidad tiene cierta similitud con una distribución normal bivariada (consulte el Capítulo \@ref(TP)), aunque no es muy bonita y probablemente un poco aproximada. Además, existe una correlación entre las estimaciones tal que $\rho\neq0$ (<a href="#mjx-eqn-2.1">2.1</a>). Además, la forma de la distribución se desvía de la forma de campana simétrica de la distribución normal estándar bivariada y, en cambio, tiene un área de superficie elíptica.
+
+```{r, 414}
+# estimar la correlación entre estimadores
+cor(coefs[, 1], coefs[, 2])
+```
+
+¿De dónde proviene esta correlación? Observe que, debido a la forma en que se generan los datos, existe una correlación entre los regresores $X_1$ y $X_2$. La correlación entre los regresores en un modelo de regresión múltiple siempre se traduce en una correlación entre los estimadores. En este caso, la correlación positiva entre $X_1$ y $X_2$ se traduce en una correlación negativa entre $\hat\beta_1$ y $\hat\beta_2$. Para tener una mejor idea de la distribución, puede variar el punto de vista en el subsecuente suave gráfico 3D interactivo de la misma estimación de densidad utilizada para el trazado con **persp()**. Aquí se puede ver que la forma de la distribución está algo estirada debido a $\rho=-0.20$ y también es evidente que ambos estimadores son insesgados ya que su densidad conjunta parece estar centrada cerca del vector de parámetro verdadero $(\beta_1,\beta_2) = (2.5,3)$.
+
+<center>
+```{r, 415, echo=F, message=F, warning=F}
+if(knitr::opts_knit$get("rmarkdown.pandoc.to") == "html") {
+library(plotly)
+
+kde <- kde2d(coefs[, 1], coefs[, 2], n = 100)
+
+p <- plot_ly(x = kde$x, y = kde$y, z = kde$z, 
+             type = "surface", showscale = FALSE)
+
+p %>% layout(scene = list(zaxis = list(title = "Est. Density"
+                                       ),
+                          xaxis = list(title = "hat_beta_1"
+                                       ),
+                          yaxis = list(title = "hat_beta_2"
+                                       )
+                          )
+             ) %>% 
+  config(showLink = F, displayModeBar = F)
+}
+```
+</center>
+
+```{r, 416, echo=F, purl=F, eval=my_output=="latex", results='asis'}
+cat('\\begin{center}\\textit{This interactive part of the book is only available in the HTML version.}\\end{center}')
+```
+
+## Ejercicios {#Ejercicios-6}
+
+```{r, 417, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Conjunto de datos de vivienda de Boston {-}
+
+En el transcurso de esta sección, trabajará con <tt>Boston</tt>, el conjunto de datos de Boston Housing que contiene 506 observaciones sobre el valor de las viviendas en los suburbios de Boston. <tt>Boston</tt> viene con el paquete <tt>MASS</tt> que ya está instalado para los ejercicios interactivos <tt>R</tt> a continuación.
+
+**Instrucciones:**
+
+  + Cargar tanto el paquete como el conjunto de datos.
+
+  + Obtener una descripción general de los datos utilizando funciones conocidas de los capítulos anteriores.
+
+  + Estimar un modelo de regresión lineal simple que explique el valor medio de la vivienda de los distritos (<tt>medv</tt>) por el porcentaje de hogares con un nivel socioeconómico bajo, <tt>lstat</tt>, y una constante. Guardar el modelo en <tt>bh_mod</tt>.
+
+  + Imprimir un resumen de coeficientes en la consola que informe de errores estándar robustos.
+
+<iframe src="DCL/ex6_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + Aquí solo se necesitan funciones <tt>R</tt> básicas: <tt>library()</tt>, <tt>data()</tt>, <tt>lm()</tt> y <tt>coeftest()</tt>.
+
+</div>') } else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 418, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 2. Un modelo de regresión múltiple de los precios de la vivienda I {-}
+
+Ahora, se amplía el enfoque del ejercicio anterior agregando regresores adicionales al modelo y estimándolo nuevamente.
+
+Como se discutió en el Capítulo \\@ref(MARM), agregar regresores al modelo mejora el ajuste, por lo que $SER$ disminuye y $R^2$ aumenta.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>. El objeto modelo <tt>bh_mod</tt> está disponible en el entorno.
+
+**Instrucciones:**
+
+  + Hacer una regresión del valor medio de la vivienda en un distrito, <tt>medv</tt>, sobre la edad promedio de los edificios, <tt>age</tt>, la tasa de delincuencia per cápita, <tt>crim</tt>, el porcentaje de personas con un nivel socioeconómico bajo, <tt>lstat</tt>, y una constante. Dicho de otra manera, estime el modelo $$medv_i = \\beta_0 + \\beta_1 lstat_i + \\beta_2 age_i + \\beta_3 crim_i + u_i.$$
+
+  + Imprimir un resumen de coeficientes en la consola que informe de errores estándar robustos para el modelo aumentado.
+
+  + El $R^2$ del modelo de regresión simple se almacena en <tt>R2_res</tt>. Guardar los modelos de regresión múltiple $R^2$ en <tt>R2_unres</tt> y comprobar si el modelo aumentado produce un $R^2$ más alto. Utilizar <tt> < </tt> o <tt> > </tt> para la comparación.
+
+<iframe src="DCL/ex6_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')
+```
+
+```{r, 419, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 3. Un modelo de regresión múltiple de precios de la vivienda II {-}
+
+La siguiente ecuación describe el modelo estimado del Ejercicio 2 (errores estándar robustos a la heterocedasticidad entre paréntesis).
+
+$$ \\widehat{medv}_i = \\underset{(0.74)}{32.828} \\underset{(0.08)}{-0.994} \\times lstat_i \\underset{(0.03)}{-0.083} \\times crim_i + \\underset{(0.02)}{0.038} \\times age_i$$
+
+Este modelo se guarda en <tt>bh_mult_mod</tt> que está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+Como se enfatizó en el Capítulo \\@ref(MARM), no tiene sentido usar $R^2$ cuando se comparan modelos de regresión con un número diferente de regresores. En su lugar, se debe usar $\\bar{R}^2$. $\\bar{R}^2$ se ajusta a la circunstancia de que $SSR$ se reduce cuando se agrega un regresor al modelo.
+
+  + Utilizar el objeto modelo para calcular el factor de corrección $CF = \\frac{n-1}{n-k-1}$ donde $n$ es el número de observaciones y $k$ es el número de regresores, excluyendo la intersección. Guardarlo en <tt>CF</tt>.
+
+  + Utilizar <tt>summary()</tt> para obtener $R^2$ y $\\bar{R}^2$ para <tt>bh_mult_mod</tt>. Es suficiente si se imprimen ambos valores en la consola.
+
+  + Comprobar que $$\\bar{R}^2 = 1 - (1-R^2) \\cdot CF.$$ Usar el operador <tt>==</tt>.
+
+<iframe src="DCL/ex6_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')
+```
+
+```{r, 420, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 4. ¿Un modelo completo para los valores de la vivienda? {-}
+
+Echar un vistazo a la <a href="https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html"> descripción </a> de las variables contenidas en el conjunto de datos de <tt>Boston</tt>.
+¿Qué variable esperaría tener el valor $p$ más alto en un modelo de regresión múltiple que usa *todas* las variables restantes como regresores para explicar <tt>medv</tt>?
+
+**Instrucciones:**
+
+  + Hacer una regresión de <tt>medv</tt> en todas las variables restantes que se encuentran en el conjunto de datos de Boston.
+
+  + Obtener un resumen robusto de heterocedasticidad de los coeficientes.
+
+  + La $\\bar{R}^2 para el modelo del ejercicio 3 es $0.5533$. ¿Qué puedes decir acerca de $\\bar{R}^2$ del modelo de regresión grande? ¿Este modelo mejora el anterior (no es necesario enviar el código)?
+
+Los paquetes <tt>AER</tt> y <tt>MASS</tt> así como el conjunto de datos <tt>Boston</tt> se cargan en el entorno de trabajo.
+
+<iframe src="DCL/ex6_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Para abreviar, usar la fórmula de regresión <tt>medv ~.</tt> en su llamada de <tt>lm()</tt>. Este es un atajo que especifica una regresión de <tt>medv</tt> en todas las variables restantes en el conjunto de datos proporcionado al argumento <tt>data</tt>.
+
+  + Usar <tt>summary</tt> en ambos modelos para comparar ambos $\\bar{R}^2$s.
+
+</div>')
+```
+
+```{r, 421, echo=F, purl=F, results='asis', eval=my_output == "html"}
+cat('
+<div  class = "DCexercise">
+
+#### 5. Selección de modelo {-}
+
+¿Quizás se pueda mejorar el modelo eliminando una variable?
+
+En este ejercicio, se deben estimar varios modelos, descartando cada vez una de las variables explicativas utilizadas en el modelo de regresión grande del Ejercicio 4 y comparar $\\bar{R}^2$.
+
+El modelo de regresión completo del ejercicio anterior, <tt>full_mod</tt>, está disponible en el entorno.
+
+**Instrucciones:**
+
+  + Eres completamente libre para resolver este ejercicio. Se recomienda el siguiente enfoque:
+
+    1. Empezar por estimar un modelo <tt>mod_new</tt>, donde, por ejemplo, <tt>lstat</tt> se excluye de las variables explicativas. A continuación, acceder a la barra $\\bar{R}^2$ de este modelo.
+
+    2. Comparar la $\\bar{R}^2$ de este modelo con la $\\bar{R}^2$ del modelo completo (esto fue aproximadamente $0.7338$).
+
+    3. Repetir los pasos 1 y 2 para todas las variables explicativas utilizadas en el modelo de regresión completo. Guardar el modelo con la mayor mejora en $\\bar{R}^2$ en <tt>better_mod</tt>.
+
+<iframe src="DCL/ex6_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')
+```

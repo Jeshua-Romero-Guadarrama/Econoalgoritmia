@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+      <body>
+      <div data-datacamp-exercise data-lang='r' data-height =320>
+      <code data-type="pre-exercise-code">
+      library(AER)
+      library(MASS)
+      model_res <- lm(medv ~ lstat + I(crim + age), data = Boston)
+      RSSR <- sum(model_res$residuals^2)
+      model_unres <- lm(medv ~ lstat + crim + age, data = Boston)
+      USSR <- sum(model_unres$residuals^2)
+      </code>
+
+      <code data-type="sample-code">
+      # calcular el estadístico F y asignar el resultado a `Fstat`
+      
+      # calcular el valor p y asignarlo a `pval`
+      
+      # comprobar si se rechaza la hipótesis nula con un nivel de significancia del 1%
+      
+      # verificar el resultado con `linearHypothesis()`
+      
+      </code>
+
+      <code data-type="solution">
+      # calcular el estadístico F y asignar el resultado a `Fstat`
+      Fstat <- ((RSSR-USSR)/1)/(USSR/(nrow(Boston)-3-1))
+      
+      # calcular el valor p y asignarlo a `pval`
+      pval <- 1 - pf(Fstat, df1 = 1, df2 = nrow(Boston)-3-1)
+      
+      # comprobar si se rechaza la hipótesis nula con un nivel de significancia del 1%
+      pval < 0.01
+      
+      # verificar el resultado con `linearHypothesis()`
+      linearHypothesis(model_unres, "age = crim")
+      </code>
+
+      <code data-type="sct">
+      test_object("Fstat")
+      test_object("pval")
+      test_or(test_output_contains("pval < 0.01"), test_output_contains("pval > 0.01"))
+      test_function_result("linearHypothesis")
+      success_msg("¡Correcto! La hipótesis nula se rechaza a un nivel de significancia del 1%.")
+      </code>
+      </div>
+      </body>
+</html>

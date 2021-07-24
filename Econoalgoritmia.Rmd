@@ -1,0 +1,544 @@
+---
+title: "Econoalgoritmia: Econometría avanzada y ciencia de datos con R"
+cover-image: "images/cover.png"
+author: "Jeshua Romero Guadarrama"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: 
+  bookdown::pdf_book:
+    pandoc_args: ["+RTS", "-K64m", "-RTS", "--csl", "apa-old-doi-prefix.csl"]
+    includes:
+      in_header: preamble.tex
+    citation_package: natbib
+    keep_tex: yes
+  bookdown::gitbook:
+    config:
+      toc:
+        collapse: subsection
+        scroll_highlight: yes
+      fontsettings:
+        theme: white
+        family: serif
+        size: 2
+    split_by: section+number
+    highlight: tango
+    includes:
+      in_header: [header_include.html]
+always_allow_html: yes
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+biblatexoptions:
+  - sortcites
+link-citations: yes
+github-repo: "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia"
+description: "Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. 'Econoalgoritmia: Econometría avanzada y ciencia de datos con R' por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js."
+url: 'https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/'
+tags: [Academia, Modelos lineales, Econoalgoritmia, Econometría avanzada, Análisis causal, Programación R]
+---
+
+# Prefacio {-}
+
+Placeholder
+
+
+#### Las convenciones usadas en el presente curso {-}
+#### Reconocimiento {-}
+
+<!--chapter:end:index.Rmd-->
+
+
+# Introducción {#Introducción}
+
+Placeholder
+
+
+## Marco teórico {#MT}
+### ¿Qué es la econometría? {-}
+### ¿Qué es la ciencia de datos? {-}
+### ¿Qué es la econoalgoritmia? {-}
+## Colofón {#Colofón}
+## Una breve introducción a *R* y *RStudio* {#BIRR}
+### Primeros pasos en R {-}
+#### Instalación {-}
+#### Paquetes {-}
+### Trabajar con R {-}
+#### Manipulación sencilla de objetos {-}
+#### Llamada de funciones {-}
+#### Clases y funciones genéricas {-}
+#### Salir de R {-}
+#### Gestión de archivos {-}
+#### Obtención de ayuda {-}
+#### Viñetas {-}
+#### Demos {-}
+#### Manuales, preguntas frecuentes y publicaciones {-}
+### El modelo de desarrollo {-}
+#### Conceptos básicos en R {-}
+#### Vectores {-}
+#### Funciones {-}
+## Ejemplos introductorios a sesiones típicas en R {#EISTP}
+### Ejemplo 1: La demanda de revistas de economía {-}
+### Ejemplo 2: Determinantes de los salarios {-}
+## Una breve historia de R {#UBHR}
+
+<!--chapter:end:Capitulo_01.Rmd-->
+
+
+# Repaso de las nociones fundamentales de R para la econometría y ciencia de datos {#RNFRECD}
+
+Placeholder
+
+
+## **R** como calculadora {#RCC}
+### Aritmética vectorial {-}
+### Vectores de subconjuntos {-}
+### Modelado de vectores {-}
+## Operaciones con matrices {#OCM}
+### Álgebra básica matricial {-}
+### Modelado de matrices {-}
+### Combinando matrices {-}
+### R como lenguaje de programación {-}
+### La moda de un vector {-}
+### Vectores lógicos y de caracteres {-}
+### Más sobre subconjuntos {-}
+### Listas {-}
+### Comparaciones lógicas {-}
+### Coerción {-}
+### Generación de números aleatorios {-}
+### Control de flujo {-}
+### Escritura de funciones {-}
+### Cálculos vectorizados {-}
+### Palabras reservadas {-}
+## Fórmulas {#Fórmulas}
+## Gestión de datos en R {#GDR}
+### Creación desde cero {-}
+### Selección de subconjuntos {-}
+### Importar y exportar {-}
+### Leer y escribir formatos binarios extranjeros {-}
+### Interacción con el sistema de archivos y manipulaciones de cadenas {-}
+### Factores {-}
+### Valores faltantes {-}
+## Orientación a objetos {#OO}
+## Gráficos en **R** {#GR}
+### La función plot() {-}
+### Parámetros gráficos {-}
+### Exportación de gráficos {-}
+### Anotación matemática de parcelas {-}
+## Análisis exploratorio de datos con **R** {#AEDR}
+### Una variable numérica {-}
+### Una variable categórica {-}
+### Dos variables categóricas {-}
+### Dos variables numéricas {-}
+### Una variable numérica y una categórica {-}
+### Ejercicios {-}
+
+<!--chapter:end:Capitulo_02.Rmd-->
+
+
+# Teoría de la probabilidad {#TP}
+
+Placeholder
+
+
+## Variables aleatorias y distribuciones de probabilidad
+### Distribuciones de probabilidad de variables aleatorias discretas {-}
+### Ensayos de Bernoulli {-}
+### Valor esperado, media y varianza {-}
+### Distribuciones de probabilidad de variables aleatorias continuas {-}
+### La distribución normal {-}
+### La distribución chi-cuadrado {-}
+### La distribución t de Student {-#thetdist}
+### La distribución F {-}
+## Muestreo aleatorio y distribución de promedios muestrales {#MADPM}
+### Media y varianza de la media muestral {-}
+#### La distribución de muestreo de $\overline{Y}$ cuando $Y$ se distribuye normalmente {-}
+### Aproximaciones de muestras grandes para distribuciones de muestreo {-}
+## Ejercicios {#Ejercicios-2}
+
+<!--chapter:end:Capitulo_03.Rmd-->
+
+
+# Revisión de estadística con R {#RER}
+
+Placeholder
+
+
+## Estimación de la media poblacional
+## Propiedades de la media muestral {#PMM}
+#### $\overline{Y}$ es el estimador de mínimos cuadrados de $\mu_Y$ {-}
+#### ¿Por qué es importante el muestreo aleatorio? {-}
+## Pruebas de hipótesis relativas a la media de la población
+#### Acerca de las hipótesis y las pruebas de hipótesis {-}
+### El valor p (p-Value) {-}
+### Cálculo del valor p cuando se conoce la desviación estándar {-}
+### Varianza de muestra, desviación estándar de muestra y error estándar {-}
+### Cálculo del valor p cuando la desviación estándar es desconocida {-}
+### La estadística t {-}
+### Prueba de hipótesis con un nivel de significancia preespecificado {-}
+### Alternativas unilaterales {-}
+## Intervalos de confianza para la media de la población
+## Comparación de medias de diferentes poblaciones {#CMDP}
+## Una aplicación a la brecha de género en los ingresos {#UABGI}
+## Diagramas de dispersión, covarianza de muestra y correlación de muestra
+#### Covarianza y correlación de muestra {-}
+## Ejercicios {#Ejercicios-3}
+
+<!--chapter:end:Capitulo_04.Rmd-->
+
+
+# Regresión lineal con un regresor {#RLR}
+
+Placeholder
+
+
+## Regresión lineal simple
+## Estimación de los coeficientes del modelo de regresión lineal
+### El estimador de mínimos cuadrados ordinarios {-}
+## Medidas de ajuste
+### El coeficiente de determinación {-}
+### El error estándar de la regresión {-}
+### Aplicación a los datos de la prueba de puntuación {-}
+## Supuestos de mínimos cuadrados {#SMC}
+### Supuesto 1: El término de error tiene una media condicional de cero {-}
+### Supuesto 2: Datos independientes e idénticamente distribuidos  {-}
+### Supuesto 3: Los valores atípicos grandes son poco probables {-}
+## La distribución muestral del estimador de MCO {#DMEMCO}
+### Estudio de simulación 1 {-}
+### Estudio de simulación 2 {-}
+### Estudio de simulación 3 {-}
+## Ejercicios {#Ejercicios-4}
+
+<!--chapter:end:Capitulo_05.Rmd-->
+
+
+# Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple {#PHICMRLS}
+
+Placeholder
+
+
+## Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente
+## Intervalos de confianza para coeficientes de regresión {#ICCR}
+### Estudio de simulación: Intervalos de confianza {-}
+## Regresión cuando X es una variable binaria {#RCXVB}
+## Heteroscedasticidad y homocedasticidad {#HH}
+### Un ejemplo del mundo real de heterocedasticidad {-}
+### ¿Los economistas deberían preocuparse por la heterocedasticidad? {-}
+### Cálculo de errores estándar robustos de heterocedasticidad {-}
+## El teorema de Gauss-Markov
+### Estudio de simulación: Estimador AZUL {-}
+## Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño
+## Ejercicios {#Ejercicios-5}
+
+<!--chapter:end:Capitulo_06.Rmd-->
+
+
+# Modelos de regresión con varios regresores {#MRVR}
+
+Placeholder
+
+
+## Sesgo variable omitido
+## El modelo de regresión múltiple {#MRM}
+## Medidas de ajuste en regresión múltiple {#MARM}
+## Supuestos de MCO en regresión múltiple
+### Multicolinealidad {-}
+#### Ejemplos de multicolinealidad perfecta {-}
+#### Multicolinealidad imperfecta {-}
+### Estudio de simulación: Multicolinealidad imperfecta {-}
+## La distribución de los estimadores de MCO en regresión múltiple
+## Ejercicios {#Ejercicios-6}
+
+<!--chapter:end:Capitulo_07.Rmd-->
+
+
+# Pruebas de hipótesis e intervalos de confianza en regresiones múltiples {#PHICRM}
+
+Placeholder
+
+
+## Pruebas de hipótesis e intervalos de confianza para un coeficiente único
+## Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro
+### Otro aumento del modelo {-}
+## Prueba de hipótesis conjunta utilizando el estadístico F
+## Conjuntos de confianza para múltiples coeficientes
+## Especificación de modelo para regresión múltiple
+### Especificación del modelo en teoría y en la práctica {-}
+## Análisis del conjunto de datos de puntuación de la prueba
+## Ejercicios {#Ejercicios-7}
+
+<!--chapter:end:Capitulo_08.Rmd-->
+
+
+# Funciones de regresión no lineal {#FRNL}
+
+Placeholder
+
+
+## Una estrategia general para modelar funciones de regresión no lineal
+## Funciones no lineales de una única variable independiente {#FNLUVI}
+### Polinomios {-}
+#### Interpretación de coeficientes en modelos de regresión no lineal {-}
+### Logaritmos {-}
+#### Caso I: $X$ está en logaritmo, $Y$ no. {-}
+#### Caso II: $Y$ está en logaritmo, $X$ no {-}
+#### Caso III: $Y$ y $X$ están en logaritmos {-}
+## Interacciones entre variables independientes
+#### Interacciones entre dos variables binarias {-}
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés {-}
+#### Interacciones entre una variable continua y una binaria {-}
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés {-}
+#### Interacciones entre dos variables continuas {-}
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés
+#### Ejemplo: La demanda de revistas económicas {-}
+## Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro
+#### Modelos de regresión no lineal de puntajes de prueba {-}
+#### Resumen {-}
+## Ejercicios {#Ejercicios-8}
+
+<!--chapter:end:Capitulo_09.Rmd-->
+
+
+# Evaluación de estudios basados en regresión múltiple {#EEBRM}
+
+Placeholder
+
+
+## Validez interna y externa
+#### Amenazas a la validez interna {-}
+#### Amenazas a la validez externa {-}
+## Amenazas a la validez interna del análisis de regresión múltiple {#AVIARM}
+#### Sesgo de variable omitida {-}
+#### Especificación incorrecta de la forma funcional de la función de regresión {-}
+#### Error de medición y sesgo de errores en variables {-}
+#### Selección de muestra y datos faltantes {-}
+#### Causalidad simultánea {-}
+#### Fuentes de inconsistencia de errores estándar de MCO {-}
+## Validez interna y externa cuando la regresión se usa para pronosticar
+## Ejemplo: Puntajes de exámenes y tamaño de la clase {#EPETC}
+#### Validez externa del estudio {-}
+#### Validez interna del estudio {-}
+#### Resumen {-}
+## Ejercicios {#Ejercicios-9}
+
+<!--chapter:end:Capitulo_10.Rmd-->
+
+
+# Regresión con datos de panel {#RDP}
+
+Placeholder
+
+
+## Datos de panel
+#### Ejemplo: Muertes por accidentes de tránsito e impuestos sobre el alcohol {-}
+## Datos de panel con dos períodos de tiempo: Comparaciones "antes y después" {#DPDPTCAD}
+## Regresión de efectos fijos
+### Estimación e inferencia {-}
+### Aplicación a muertes por accidentes de tráfico {-}
+## Regresión con efectos fijos en el tiempo
+## Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos {#SREFEEREF}
+#### Errores estándar para regresión de efectos fijos {-}
+## Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico
+#### Resumen {-}
+## Ejercicios {#Ejercicios-10}
+
+<!--chapter:end:Capitulo_11.Rmd-->
+
+
+# Regresión con una variable dependiente binaria {#RVDB}
+
+Placeholder
+
+
+## Variables dependientes binarias y el modelo de probabilidad lineal
+#### Datos hipotecarios {-}
+## Regresión Probit y Logit {#RPL}
+### Regresión Probit {-}
+### Regresión Logit {-}
+#### Comparación de los modelos {-}
+## Estimación e inferencia en los modelos logit y probit
+#### Mínimos cuadrados no lineales {-}
+#### Estimación de máxima verosimilitud {-}
+#### Medidas de ajuste {-}
+## Aplicación a los datos de la HMDA de Boston
+#### Resumen {-}
+## Ejercicios {#Ejercicios-11}
+
+<!--chapter:end:Capitulo_12.Rmd-->
+
+
+# Regresión de variables instrumentales {#RVI}
+
+Placeholder
+
+
+## El estimador de VI con un solo regresor y un solo instrumento {#EVIURUI}
+#### El estimador de mínimos cuadrados en dos etapas {-}
+#### Aplicación a la demanda de cigarrillos {-}
+## El modelo de regresión VI general {#MRVIG}
+#### Aplicación a la demanda de cigarrillos {-}
+## Comprobación de la validez del instrumento {#CVI}
+#### Relevancia del instrumento {-}
+#### Si los instrumentos son débiles {-}
+#### Cuando se infringe la suposición de exogeneidad del instrumento {-}
+## Aplicación a la demanda de cigarrillos {#ADC}
+## ¿De dónde provienen los instrumentos válidos?
+#### Resumen {-}
+## Ejercicios {#Ejercicios-12}
+
+<!--chapter:end:Capitulo_13.Rmd-->
+
+
+# Experimentos y cuasiexperimentos {#EC}
+
+Placeholder
+
+
+## Resultados potenciales, efectos causales y experimentos idealizados {#RPECEI}
+#### Resultados potenciales y efecto causal promedio {-}
+## Amenazas a la validez de los experimentos
+#### Amenazas a la validez interna {-}
+#### Amenazas a la validez externa {-}
+## Estimaciones experimentales del efecto de las reducciones del tamaño de las clases
+### Diseño experimental y conjunto de datos {-}
+### Análisis de los datos STAR {-}
+## Cuasi experimentos {#CE}
+### El Estimador de diferencias en diferencias {-}
+### Estimadores de discontinuidad de regresión {-}
+#### Resumen {-}
+## Ejercicios {#Ejercicios-13}
+
+<!--chapter:end:Capitulo_14.Rmd-->
+
+
+# Introducción a la regresión de series de tiempo y pronóstico {#IRSTP}
+
+Placeholder
+
+
+## Uso de modelos de regresión para la previsión
+## Datos de series de tiempo y correlación serial {#DSTCS}
+### Notación, retrasos, diferencias, logaritmos y tasas de crecimiento {-}
+#### Autocorrelación {-}
+#### Otros ejemplos de series de tiempo económicas {-}
+## Autoregresiones
+#### El modelo autorregresivo de primer orden {-}
+#### Pronósticos y errores de pronóstico {-}
+#### Pronósticos y valores previstos {-}
+#### Aplicación al crecimiento del PIB {-}
+### Modelos autorregresivos de orden $p$ {-}
+## ¿Puede ganarle al mercado? (Parte I) {#PGMPI}
+## Predictores adicionales y el modelo ADL {#PAMADL}
+#### Pronóstico del crecimiento del PIB mediante el diferencial de plazos {-}
+#### Estacionariedad {-}
+#### Regresión de series temporales con varios predictores {-}
+#### Inferencia estadística y prueba de causalidad de Granger {-}
+### Incertidumbre de pronóstico e intervalos de pronóstico {-}
+## Selección de la longitud de retraso utilizando criterios de información {#SLRUCI}
+## No estacionariedad I: Tendencias {#NEIT}
+#### El modelo de caminata aleatoria de una tendencia {-}
+#### Problemas causados por tendencias estocásticas {-}
+#### Prueba para una raíz unitaria AR {-}
+#### Valores críticos para el estadístico ADF {-}
+#### ¿Tiene el PIB de EE. UU. una raíz unitaria? {-}
+## No estacionariedad II: Pausas {#NEIIP}
+#### ¿Se ha mantenido estable el poder predictivo del diferencial de plazo? {-}
+#### Pronóstico pseudo fuera de la muestra {-}
+#### ¿Cambió el poder predictivo de la extensión del término durante la década de 2000? {-}
+## ¿Puedes ganarle al mercado? (Parte II)
+#### Resumen {-}
+
+<!--chapter:end:Capitulo_15.Rmd-->
+
+
+# Estimación de efectos causales dinámicos {#EECD}
+
+Placeholder
+
+
+## Los datos del jugo de naranja
+## Efectos causales dinámicos
+## Multiplicadores dinámicos y multiplicadores dinámicos acumulativos
+## Errores estándar de HAC
+## Estimación de efectos causales dinámicos con regresores estrictamente exógenos
+#### Cuasi-diferencias {-}
+#### Estimación MCO del modelo ADL {-}
+#### Estimación de mínimos cuadrados generalizados (MCG) {-}
+## Precios del jugo de naranja y clima frío
+#### Resumen {-}
+
+<!--chapter:end:Capitulo_16.Rmd-->
+
+
+# Temas adicionales en la regresión de series temporales {#TARST}
+
+Placeholder
+
+
+## Autorregresiones vectoriales
+#### Un modelo VAR de la tasa de crecimiento del PIB y el margen temporal {-}
+#### Pronósticos multivariados iterados usando un VAR iterado {-}
+#### Pronósticos directos para múltiples períodos {-}
+## Órdenes de integración y prueba de raíz unitaria DF-GLS {#OIPRUDFGLS}
+#### La prueba DF-GLS para una raíz unitaria {-}
+## Cointegración
+#### Pruebas de cointegración {-}
+#### Aplicación a las tasas de interés {-}
+##### Un modelo de corrección de errores vectoriales para $TB10YS_t$ y $TB3MS$ {-}
+## Agrupación de volatilidad y heterocedasticidad condicional autorregresiva
+### Modelos ARCH y GARCH {-}
+### Aplicación a la volatilidad del precio de las acciones {-}
+### Resumen {-}
+
+<!--chapter:end:Capitulo_17.Rmd-->
+
+# Ciencia de datos
+
+```{r, child="_setup.Rmd"}
+```
+
+```{r, 918, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+<!--chapter:end:Capitulo_18.Rmd-->
+
+# Ciencia de datos
+
+```{r, child="_setup.Rmd"}
+```
+
+```{r, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+<!--chapter:end:Capitulo_19.Rmd-->
+
+# Ciencia de datos
+
+```{r, child="_setup.Rmd"}
+```
+
+```{r, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+<!--chapter:end:Capitulo_20.Rmd-->
+
+`r if (knitr:::is_html_output()) '# Referencias bibliográficas {-}'`
+
+```{r include=FALSE}
+# generate a BibTeX database automatically for some R packages
+  knitr::write_bib(c(.packages(), 'bookdown', 'knitr', 'rmarkdown'), 
+                   'packages.bib', width = 500)
+
+# some adjustments
+library(dplyr)
+l <- gsub(pattern = "note = ", replacement = "version = ", x = readLines("packages.bib")) %>% gsub(pattern = "R package version ", replacement = "")
+
+l[grep("title = ", l)] <- gsub("\\{", "\\{\\{", l[grep("title = ", l)]) %>% gsub(pattern = "\\}", replacement = "\\}\\}")
+
+writeLines(l, con = "packages.bib")
+```
+
+<!--chapter:end:Referencias_bibliograficas.Rmd-->
+

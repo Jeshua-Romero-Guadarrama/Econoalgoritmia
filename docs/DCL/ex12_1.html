@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+     <body>
+     <div data-datacamp-exercise data-lang="r" data-height="auto">
+     <code data-type="pre-exercise-code">
+     </code>
+           
+     <code data-type="sample-code">
+     # adjuntar el paquete `AER`
+           
+     # cargar el conjunto de datos `CollegeDistance`
+           
+     # obtener una descripción general del conjunto de datos
+           
+     # generar un histograma de `distance`
+           
+     </code>
+           
+     <code data-type="solution">
+     # adjuntar el paquete `AER`
+     library(AER)           
+           
+     # cargar el conjunto de datos `CollegeDistance`
+     data("CollegeDistance")
+           
+     # obtener una descripción general del conjunto de datos
+     summary(CollegeDistance)
+     # o
+     str(CollegeDistance)
+     # o
+     head(CollegeDistance)
+           
+     # generar un histograma de `distance`
+     hist(CollegeDistance$distance, main = "Distance to College", xlab = "Distance in 10 Miles")
+     </code>
+           
+     <code data-type="sct">
+     test_function("data")
+     test_or({
+     test_function("summary", args = "object")
+     },{
+     test_function("head", args = "x")
+     },{
+     test_function("str", args = "object")
+     })
+     test_function("hist", args = "x")
+     success_msg("Estupendo. El histograma muestra que la mayoría de los encuestados vivían cerca de una universidad cuando estaban en la escuela secundaria.")
+     </code>
+     </div>
+     </body>
+</html>

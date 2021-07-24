@@ -1,0 +1,1097 @@
+# Regresión con una variable dependiente binaria {#RVDB}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 606, child="_setup.Rmd"}
+```
+
+```{r, 607, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Este capítulo analiza una clase especial de modelos de regresión que tienen como objetivo explicar una variable dependiente limitada. En particular, se consideran modelos donde la variable dependiente es binaria. Se vera que en tales modelos, la función de regresión se puede interpretar como una función de probabilidad condicional de la variable dependiente binaria.
+
+Se repasarán los siguientes conceptos:
+
+- El modelo de probabilidad lineal
+- El modelo Probit
+- El modelo Logit
+- Estimación de máxima verosimilitud de modelos de regresión no lineal
+
+Por supuesto, también se verá cómo estimar los modelos anteriores usando **R** y se discutirá una aplicación en la que se examinara la cuestión de si existe discriminación racial en el mercado hipotecario de EE. UU.
+
+Los siguientes paquetes y sus dependencias son necesarios para la reproducción de los fragmentos de código presentados a lo largo de este capítulo en su computadora:
+
++ **AER** [@R-AER]
++ **stargazer** [@R-stargazer]
+
+```{r, 608, warning=FALSE, message=FALSE, eval=FALSE}
+install.packages("AER")
+install.packages("stargazer")
+```
+
+Comprobar si el siguiente fragmento de código se ejecuta sin errores.
+
+```{r, 609, warning=FALSE, message=FALSE}
+library(AER)
+library(stargazer)
+```
+
+## Variables dependientes binarias y el modelo de probabilidad lineal
+
+```{r, 610, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC11.1">
+<h3 class = "right"> Concepto clave 11.1 </h3>
+<h3 class = "left"> El modelo de probabilidad lineal </h3>
+
+El modelo de regresión lineal
+
+$$Y_i = \\beta_0 + \\beta_1 X_{1i} + \\beta_2 X_{2i} + \\dots + \\beta_k X_{ki} + u_i$$
+
+con una variable dependiente binaria $Y_i$ se denomina modelo de probabilidad lineal. En el modelo de probabilidad lineal se tiene $$E(Y\\vert X_1,X_2,\\dots,X_k) = P(Y=1\\vert X_1, X_2,\\dots, X_3)$$, donde $$ P(Y = 1 \\vert X_1, X_2, \\dots, X_k) = \\beta_0 + \\beta_1 + X_{1i} + \\beta_2 X_{2i} + \\dots + \\beta_k X_{ki}.$$
+
+Por tanto, $\\beta_j$ puede interpretarse como el cambio en la probabilidad de que $Y_i = 1$, manteniendo constantes los otros regresores $k-1$. Al igual que en la regresión múltiple común, $\\beta_j$ se puede estimar usando MCO y las fórmulas robustas de error estándar se pueden usar para probar hipótesis y calcular intervalos de confianza.
+
+En la mayoría de los modelos de probabilidad lineal, $R^2$ no tiene una interpretación significativa ya que la línea de regresión nunca puede ajustarse perfectamente a los datos si la variable dependiente es binaria y los regresores son continuos. Esto se puede ver en la aplicación a continuación.
+
+Es *esencial* utilizar errores estándar robustos, ya que los $u_i$, en un modelo de probabilidad lineal, son siempre heterocedásticos.
+
+Los modelos de probabilidad lineal se estiman fácilmente en <tt>R</tt> usando la función <tt>lm()</tt>.
+
+</div>
+')
+```
+
+```{r, 611, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El modelo de probabilidad lineal]{11.1}
+
+El modelo de regresión lineal
+
+$$Y_i = \\beta_0 + \\beta_1 + X_{1i} + \\beta_2 X_{2i} + \\dots + \\beta_k X_{ki} + u_i$$
+
+con una variable dependiente binaria $Y_i$ se denomina modelo de probabilidad lineal. En el modelo de probabilidad lineal se tiene $$E(Y\\vert X_1,X_2,\\dots,X_k) = P(Y=1\\vert X_1, X_2,\\dots, X_3)$$, donde $$ P(Y = 1 \\vert X_1, X_2, \\dots, X_k) = \\beta_0 + \\beta_1 + X_{1i} + \\beta_2 X_{2i} + \\dots + \\beta_k X_{ki}.$$
+
+Por tanto, $\\beta_j$ puede interpretarse como el cambio en la probabilidad de que $Y_i=1$, manteniendo constantes los otros regresores $k-1$. Al igual que en la regresión múltiple común, $\\beta_j$ se puede estimar usando MCO y las fórmulas robustas de error estándar se pueden usar para probar hipótesis y calcular intervalos de confianza.\\newline 
+
+En la mayoría de los modelos de probabilidad lineal, $R^2$ no tiene una interpretación significativa ya que la línea de regresión nunca puede ajustarse perfectamente a los datos si la variable dependiente es binaria y los regresores son continuos. Esto se puede ver en la aplicación a continuación.\\newline 
+
+Es *esencial* utilizar errores estándar robustos, ya que los $u_i$, en un modelo de probabilidad lineal, son siempre heterocedásticos.\\newline 
+
+Los modelos de probabilidad lineal se estiman fácilmente en \\texttt{R} usando la función \\texttt{lm()}.
+
+\\end{keyconcepts}
+')
+```
+
+#### Datos hipotecarios {-}
+
+Se debe comenzar cargando el conjunto de datos **HMDA** que proporciona datos relacionados con las solicitudes de hipotecas presentadas en Boston en el año de 1990.
+
+```{r, 612, warning=FALSE, message=FALSE}
+# cargar el paquete `AER` y adjuntar los datos de "HMDA"
+library(AER)
+data(HMDA)
+```
+
+Se continuan inspeccionando las primeras observaciones y luego calculando las estadísticas resumidas.
+
+```{r, 613}
+# inspeccionar los datos
+head(HMDA)
+summary(HMDA)
+```
+
+La variable que interesa modelar es **deny**, un indicador de si la solicitud de hipoteca de un solicitante ha sido aceptada (**deny = no**) o denegada (**deny = yes**). Un regresor que debería tener poder para explicar si una solicitud de hipoteca ha sido denegada es **pirat**, el tamaño de los pagos mensuales totales anticipados del préstamo en relación con los ingresos del solicitante. Es sencillo traducir esto al modelo de regresión simple
+
+\begin{align}
+  deny = \beta_0 + \beta_1 \times P/I\ ratio + u. (\#eq:denymod1)
+\end{align}
+
+Se estima este modelo como cualquier otro modelo de regresión lineal utilizando **lm()**. Antes de hacerlo, la variable **deny** debe convertirse en una variable numérica usando **as.numeric()**, ya que **lm()** no acepta que la *variable dependiente* sea de la clase **factor**. Se debe tener en cuenta que `as.numeric(HMDA$deny)` convertirá **deny = no** en **deny = 1** y **deny = yes** en **deny = 2**, por lo que al usar **as.numeric(HMDA$deny)-1** se obtienen los valores **0** y **1**.
+
+```{r, 614}
+# convertir 'deny' a numérico
+HMDA$deny <- as.numeric(HMDA$deny) - 1
+
+# estimar un modelo de probabilidad lineal simple
+denymod1 <- lm(deny ~ pirat, data = HMDA)
+denymod1
+```
+
+A continuación, se grafican los datos y la línea de regresión.
+
+```{r, 615}
+# graficar los datos
+plot(x = HMDA$pirat, 
+     y = HMDA$deny,
+     main = "Diagrama de dispersión denegación de solicitud de hipoteca y relación pago-ingreso",
+     xlab = "Relación P/I",
+     ylab = "Denegar",
+     pch = 20,
+     ylim = c(-0.4, 1.4),
+     cex.main = 0.8)
+
+# añadir texto y líneas discontinuas horizontales
+abline(h = 1, lty = 2, col = "darkred")
+abline(h = 0, lty = 2, col = "darkred")
+text(2.5, 0.9, cex = 0.8, "Hipoteca denegada")
+text(2.5, -0.1, cex= 0.8, "Hipoteca aprobada")
+
+# agregar la línea de regresión estimada
+abline(denymod1, 
+       lwd = 1.8, 
+       col = "steelblue")
+```
+
+Según el modelo estimado, una relación pago-ingresos de $1$ se asocia con una probabilidad esperada de denegación de la solicitud de hipoteca de aproximadamente $50\%$. El modelo indica que existe una relación positiva entre la relación pago-ingresos y la probabilidad de una solicitud hipotecaria denegada, por lo que es más probable que las personas con una alta relación entre pagos de préstamos e ingresos sean rechazadas.
+
+Se puede usar **coeftest()** para obtener errores estándar robustos para ambas estimaciones de coeficientes.
+
+```{r, 616}
+# imprimir un resumen robusto de coeficientes
+coeftest(denymod1, vcov. = vcovHC, type = "HC1")
+```
+
+La línea de regresión estimada es:
+
+\begin{align}
+\widehat{\text{denegar}} = -\underset{(0.032)}{0.080} + \underset{(0.098)}{0.604} P/I \ ratio. (\#eq:lpm)
+\end{align}
+
+El verdadero coeficiente de $P/I \ ratio$ es estadísticamente diferente de $0$ en el nivel de $1\%$. Su estimación se puede interpretar de la siguiente manera: Un aumento de un punto porcentual en $P/I \ ratio$ conduce a un aumento en la probabilidad de denegación de un préstamo en $0.604 \cdot 0.01 = 0.00604 \approx 0.6\%$.
+
+En este sentido, se aumenta el modelo simple \@ref(eq:denymod1) con un regresor adicional $black$ que equivale a $1$ si el solicitante es afroamericano y equivale a $0$ en caso contrario. Dicha especificación es la línea de base para investigar si existe discriminación racial en el mercado hipotecario: Si ser negro tiene una influencia significativa (positiva) en la probabilidad de denegación de un préstamo cuando se controlan los factores que permiten una evaluación objetiva y digna del crédito de un solicitante, este es un indicador de discriminación.
+
+```{r, 617}
+# cambiar el nombre de la variable 'afam' por coherencia
+colnames(HMDA)[colnames(HMDA) == "afam"] <- "black"
+
+# estimar el modelo
+denymod2 <- lm(deny ~ pirat + black, data = HMDA)
+coeftest(denymod2, vcov. = vcovHC)
+```
+
+La función de regresión estimada es
+
+\begin{align}
+  \widehat{\text{denegar}} =& \, -\underset{(0.029)}{0.091} + \underset{(0.089)}{0.559} P/I \ ratio + \underset{(0.025)}{0.177} black. (\#eq:denymod2)
+\end{align}
+
+El coeficiente de $black$ es positivo y significativamente diferente de cero en el nivel de $0.01\%$. La interpretación es que, manteniendo constante la relación $P/I \ ratio$, ser negro aumenta la probabilidad de denegación de una solicitud de hipoteca en aproximadamente $17.7\%$. Este hallazgo es compatible con la discriminación racial. Sin embargo, podría estar distorsionado por el sesgo de la variable omitida, por lo que la discriminación podría ser una conclusión prematura.
+
+## Regresión Probit y Logit {#RPL}
+
+El modelo de probabilidad lineal tiene un defecto importante: Supone que la función de probabilidad condicional es lineal. Esto no restringe que $P(Y=1\vert X_1,\dots,X_k)$ se encuentre entre $0$ y $1$. Se puede ver esto fácilmente en la reproducción de: $P/I \ ratio \geq 1.75$, \@ref(eq:lpm) predice que la probabilidad de que la denegación de una solicitud de hipoteca sea mayor que $1$. Para aplicaciones con una relación $P/I \ ratio$ cercana a $0$, la probabilidad de negación predicha es incluso negativa, por lo que el modelo no tiene una interpretación significativa.
+
+Esta circunstancia requiere un enfoque que utilice una función no lineal para modelar la función de probabilidad condicional de una variable dependiente binaria. Los métodos más utilizados son la regresión Probit y Logit.
+
+### Regresión Probit {-}
+
+En la regresión Probit, la función de distribución normal estándar acumulada $\Phi(\cdot)$ se usa para modelar la función de regresión cuando la variable dependiente es binaria; es decir, se asume:
+
+\begin{align}
+  E(Y\vert X) = P(Y=1\vert X) = \Phi(\beta_0 + \beta_1 X). (\#eq:probitmodel)
+\end{align}
+
+$\beta_0 + \beta_1 X$ en \@ref(eq:probitmodel) desempeña el papel de un cuantil $z$. Recuerde que $$\Phi(z) = P(Z \leq z) \ , \ Z \sim \mathcal{N}(0,1)$$, tal que el coeficiente Probit $\beta_1$ en \@ref(eq:probitmodel) es el cambio en $z$ asociado con un cambio de una unidad en $X$. Aunque el efecto en $z$ de un cambio en $X$ es lineal, el vínculo entre $z$ y la variable dependiente $Y$ no es lineal ya que $\Phi$ es una función no lineal de $X$.
+
+Dado que la variable dependiente es una función no lineal de los regresores, el coeficiente de $X$ no tiene una interpretación simple. De acuerdo con el Concepto clave 8.1, el cambio esperado en la probabilidad de que $Y = 1$ debido a un cambio en $P/I \ ratio$ se puede calcular de la siguiente manera:
+
+1. Calcular la probabilidad predicha de que $Y = 1$ para el valor original de $X$.
+2. Calcular la probabilidad predicha de que $Y = 1$ para $X + \Delta X$.
+3. Calcular la diferencia entre ambas probabilidades predichas.
+
+Por supuesto, se puede generalizar \@ref(eq:probitmodel) a la regresión Probit con regresores múltiples para mitigar el riesgo de enfrentar sesgos de variables omitidas. Los elementos esenciales de la regresión Probit se resumen en el Concepto clave 11.2.
+
+```{r, 618, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC11.2">
+<h3 class = "right"> Concepto clave 11.2 </h3>
+<h3 class = "left"> Modelo Probit, probabilidades pronosticadas y efectos estimados </h3>
+
+Suponga que $Y$ es una variable binaria. El modelo
+
+$$ Y= \\beta_0 + \\beta_1 + X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k + u $$
+
+con
+
+$$P(Y = 1 \\vert X_1, X_2, \\dots ,X_k) = \\Phi(\\beta_0 + \\beta_1 + X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k)$$
+
+es el modelo de población Probit con múltiples regresores $X_1, X_2, \\dots, X_k$ y $\\Phi(\\cdot)$ es la función de distribución normal estándar acumulativa.
+
+La probabilidad predicha de que $Y = 1$ dado $X_1, X_2, \\dots, X_k$ se puede calcular en dos pasos:
+
+1. Calcular $z = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k$
+
+2. Buscar $\\Phi(z)$ llamando <tt>pnorm()</tt>.
+
+$\\beta_j$ es el efecto sobre $z$ de un cambio de una unidad en la regresión $X_j$, manteniendo constantes todos los demás regresores $k-1$.
+
+El efecto sobre la probabilidad predicha de un cambio en un regresor se puede calcular como en el Concepto clave 8.1.
+
+En <tt>R</tt>, los modelos Probit se pueden estimar usando la función <tt>glm()</tt> del paquete <tt>stats</tt>. Usando el argumento <tt>family</tt> especificando que se quiere usar una función de enlace Probit.
+
+</div>
+')
+```
+
+```{r, 619, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Modelo Probit, probabilidades pronosticadas y efectos estimados]{11.2}
+
+Suponga que $ Y $ es una variable binaria. El modelo
+
+$$ Y= \\beta_0 + \\beta_1 + X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k + u $$
+
+con
+
+$$P(Y = 1 \\vert X_1, X_2, \\dots ,X_k) = \\Phi(\\beta_0 + \\beta_1 + X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k)$$
+
+es el modelo de población Probit con múltiples regresores $X_1, X_2, \\dots, X_k$ y $\\Phi(\\cdot)$ es la función de distribución normal estándar acumulativa.\\newline
+
+La probabilidad predicha de que $Y = 1$ dado $X_1, X_2, \\dots, X_k$ se puede calcular en dos pasos:\\newline
+
+\\begin{enumerate}
+\\item Calcular $z = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k$
+\\item Buscar $\\Phi(z)$ llamando \\texttt{pnorm()}.
+\\end{enumerate}\\vspace{0.5cm}
+
+$\\beta_j$ es el efecto sobre $z$ de un cambio de una unidad en la regresión $X_j$, manteniendo constantes todos los demás regresores $k-1$.\\newline
+
+El efecto sobre la probabilidad predicha de un cambio en un regresor se puede calcular como en el Concepto clave 8.1.\\newline
+
+En \\texttt{R}, los modelos Probit se pueden estimar usando la función \\texttt{glm()} del paquete \\texttt{stats}. Usando el argumento \\texttt{family} especificando que se quiere usar una función de enlace Probit.
+
+\\end{keyconcepts}
+')
+```
+
+Ahora se estima un modelo Probit simple de la probabilidad de denegación de una hipoteca.
+
+```{r, 620}
+# estimar el modelo probit simple
+denyprobit <- glm(deny ~ pirat, 
+                  family = binomial(link = "probit"), 
+                  data = HMDA)
+
+coeftest(denyprobit, vcov. = vcovHC, type = "HC1")
+```
+
+El modelo estimado es
+
+\begin{align}
+  \widehat{P(deny\vert P/I \ ratio}) = \Phi(-\underset{(0.19)}{2.19} + \underset{(0.54)}{2.97} P/I \ ratio). (\#eq:denyprobit)
+\end{align}
+
+Al igual que en el modelo de probabilidad lineal, se encuentra que la relación entre la probabilidad de denegación y la relación pagos-ingresos es positiva y que el coeficiente correspondiente es altamente significativo.
+
+El siguiente fragmento de código reproduce la Figura 11.2 del libro.
+
+```{r, 621, fig.align='center'}
+# graficar datos 
+plot(x = HMDA$pirat, 
+     y = HMDA$deny,
+     main = "Modelo probit de probabilidad de negación, dada la relación P/I",
+     xlab = "Relación P/I",
+     ylab = "Denegar",
+     pch = 20,
+     ylim = c(-0.4, 1.4),
+     cex.main = 0.85)
+
+# añadir texto y líneas discontinuas horizontales
+abline(h = 1, lty = 2, col = "darkred")
+abline(h = 0, lty = 2, col = "darkred")
+text(2.5, 0.9, cex = 0.8, "Hipoteca denegada")
+text(2.5, -0.1, cex= 0.8, "Hipoteca aprobada")
+
+# agregar línea de regresión estimada
+x <- seq(0, 3, 0.01)
+y <- predict(denyprobit, list(pirat = x), type = "response")
+
+lines(x, y, lwd = 1.5, col = "steelblue")
+```
+
+La función de regresión estimada tiene una forma de "S" estirada que es típica del FDPA de una variable aleatoria continua con FDP simétrico como el de una variable aleatoria normal. La función es claramente no lineal y se aplana para valores grandes y pequeños de $P/I \ ratio$. Por tanto, la forma funcional también asegura que las probabilidades condicionales predichas de una negación se encuentren entre $0$ y $1$.
+
+Usar **predict()** para calcular el cambio predicho en la probabilidad de negación cuando $P/I \ ratio$ aumenta de $0.3$ a $0.4$.
+
+```{r, 622}
+# 1. calcular predicciones para la relación P/I = 0.3, 0.4
+predictions <- predict(denyprobit, 
+                       newdata = data.frame("pirat" = c(0.3, 0.4)),
+                       type = "response")
+
+# 2. Calcular la diferencia de probabilidades
+diff(predictions)
+```
+
+Se predice que un aumento en la relación pago-ingreso de $0.3$ a $0.4$ aumentará la probabilidad de negación en aproximadamente $6.2\%$.
+
+Continuando utilizando un modelo Probit aumentado para estimar el efecto de la raza en la probabilidad de que se rechace una solicitud de hipoteca.
+
+```{r, 623}
+denyprobit2 <- glm(deny ~ pirat + black, 
+                   family = binomial(link = "probit"), 
+                   data = HMDA)
+
+coeftest(denyprobit2, vcov. = vcovHC, type = "HC1")
+```
+
+La ecuación del modelo estimado es
+
+\begin{align}
+  \widehat{P(deny\vert P/I \ ratio, black)} = \Phi (-\underset{(0.18)}{2.26} + \underset{(0.50)}{2.74} P/I \ ratio + \underset{(0.08)}{0.71} black). (\#eq:denyprobit2) 
+\end{align}
+
+Si bien todos los coeficientes son muy significativos, tanto los coeficientes estimados de la relación pagos-ingresos como el indicador de ascendencia afroamericana son positivos. Nuevamente, los coeficientes son difíciles de interpretar pero indican que, en primer lugar, los afroamericanos tienen una mayor probabilidad de rechazo que los solicitantes blancos, manteniendo constante la proporción de pagos a ingresos y, en segundo lugar, los solicitantes con una alta proporción de pagos a ingresos enfrentan un mayor riesgo de ser rechazado.
+
+¿Qué tan grande es la diferencia estimada en las probabilidades de denegación entre dos solicitantes hipotéticos con la misma proporción de pagos e ingresos? Como antes, se puede usar **predict()** para calcular esta diferencia.
+
+```{r, 624}
+# 1. Calcular predicciones para la relación P/I = 0.3
+predictions <- predict(denyprobit2, 
+                       newdata = data.frame("black" = c("no", "yes"), 
+                                            "pirat" = c(0.3, 0.3)),
+                       type = "response")
+
+# 2. Calcular la diferencia en probabilidades
+diff(predictions)
+```
+
+En este caso, la diferencia estimada en las probabilidades de negación es de aproximadamente $15.8\%$.
+
+### Regresión Logit {-}
+
+El Concepto clave 11.3 resume la función de regresión Logit.
+
+```{r, 625, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC11.3">
+<h3 class = "right"> Concepto clave 11.3 </h3>
+<h3 class = "left"> Regresión Logit </h3>
+
+La función de regresión Logit poblacional es
+
+\\begin{align*}
+  P(Y=1\\vert X_1, X_2, \\dots, X_k) =& \\, F(\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k) \\\\
+  =& \\, \\frac{1}{1+e^{-(\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k)}}.
+\\end{align*}
+
+La idea es similar a la regresión Probit, excepto que se usa un FDPA diferente: $$F(x) = \\frac{1}{1+e^{-x}}$$ es la FDPA de una variable aleatoria estándar distribuida logísticamente.
+
+</div>
+')
+```
+
+```{r, 626, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Logit Regression]{11.3}
+
+La función de regresión Logit poblacional es
+
+\\begin{align*}
+  P(Y=1\\vert X_1, X_2, \\dots, X_k) =& \\, F(\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k) \\\\
+  =& \\, \\frac{1}{1+e^{-(\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\dots + \\beta_k X_k)}}.
+\\end{align*}
+
+La idea es similar a la regresión Probit, excepto que se usa un FDPA diferente: $$F(x) = \\frac{1}{1+e^{-x}}$$ es la FDPA de una variable aleatoria estándar distribuida logísticamente.
+
+\\end{keyconcepts}
+')
+```
+
+En cuanto a la regresión Probit, no existe una interpretación simple de los coeficientes del modelo y es mejor considerar las probabilidades pronosticadas o las diferencias en las probabilidades pronosticadas. Aquí nuevamente, las estadísticas de $t$ y los intervalos de confianza basados en aproximaciones normales de muestras grandes se pueden calcular como de costumbre.
+
+Es bastante fácil estimar un modelo de regresión Logit usando **R**.
+
+```{r, 627}
+denylogit <- glm(deny ~ pirat, 
+                 family = binomial(link = "logit"), 
+                 data = HMDA)
+
+coeftest(denylogit, vcov. = vcovHC, type = "HC1")
+```
+
+El siguiente fragmento de código produce la gráfica.
+
+```{r, 628, fig.align='center'}
+# graficar datos
+plot(x = HMDA$pirat, 
+     y = HMDA$deny,
+     main = "Modelos Probit y Logit. Modelo de probabilidad de negación, relación P/I dada",
+     xlab = "Relación P / I",
+     ylab = "Denegar",
+     pch = 20,
+     ylim = c(-0.4, 1.4),
+     cex.main = 0.9)
+
+# añadir texto y líneas discontinuas horizontales
+abline(h = 1, lty = 2, col = "darkred")
+abline(h = 0, lty = 2, col = "darkred")
+text(2.5, 0.9, cex = 0.8, "Hipoteca negada")
+text(2.5, -0.1, cex= 0.8, "Hipoteca aprobada")
+
+# agregar una línea de regresión estimada de los modelos Probit y Logit
+x <- seq(0, 3, 0.01)
+y_probit <- predict(denyprobit, list(pirat = x), type = "response")
+y_logit <- predict(denylogit, list(pirat = x), type = "response")
+
+lines(x, y_probit, lwd = 1.5, col = "steelblue")
+lines(x, y_logit, lwd = 1.5, col = "black", lty = 2)
+
+# agrega una leyenda
+legend("topleft",
+       horiz = TRUE,
+       legend = c("Probit", "Logit"),
+       col = c("steelblue", "black"), 
+       lty = c(1, 2))
+```
+
+Ambos modelos producen estimaciones muy similares de la probabilidad de que una solicitud de hipoteca sea denegada dependiendo de la relación pago-ingresos del solicitante.
+
+En este contexto, se amplia el modelo Logit simple de denegación de hipoteca con el regresor adicional $black$.
+
+```{r, 629}
+# estimar una regresión Logit con múltiples regresores
+denylogit2 <- glm(deny ~ pirat + black, 
+                  family = binomial(link = "logit"), 
+                  data = HMDA)
+
+coeftest(denylogit2, vcov. = vcovHC, type = "HC1")
+```
+
+Se obtiene
+
+\begin{align}
+  \widehat{P(deny=1 \vert P/I ratio, black)} = F(-\underset{(0.35)}{4.13} + \underset{(0.96)}{5.37} P/I \ ratio + \underset{(0.15)}{1.27} black). (\#eq:denylogit2)
+\end{align}
+
+En cuanto al modelo Probit \@ref(eq:denyprobit2) todos los coeficientes del modelo son altamente significativos y se obtienen estimaciones positivas para los coeficientes en $P/I \ ratio$ y $black$. A modo de comparación, se calcula la probabilidad de rechazo prevista para dos solicitantes hipotéticos que difieren en la raza y tienen una relación $P/I \ ratio$ de $0.3$.
+
+```{r, 630}
+# 1. Calcular predicciones para la relación P/I = 0.3
+predictions <- predict(denylogit2, 
+                       newdata = data.frame("black" = c("no", "yes"), 
+                                            "pirat" = c(0.3, 0.3)),
+                       type = "response")
+
+predictions
+
+# 2. Calcular la diferencia de probabilidades
+diff(predictions)
+```
+
+Se encuentra que el solicitante blanco enfrenta una probabilidad de denegación de solo $7.5\%$, mientras que el afroamericano es rechazado con una probabilidad de $22.4\%$, una diferencia de $14.9\%$.
+
+#### Comparación de los modelos {-}
+
+El modelo Probit y el modelo Logit ofrecen solo aproximaciones a la función de regresión de población desconocida $E(Y\vert X)$. No es obvio cómo decidir qué modelo utilizar en la práctica. El modelo de probabilidad lineal tiene el claro inconveniente de no poder capturar la naturaleza no lineal de la función de regresión poblacional y puede predecir que las probabilidades se encuentren fuera del intervalo $[0,1]$. Los modelos Probit y Logit son más difíciles de interpretar, pero capturan las no linealidades mejor que el enfoque lineal: Ambos modelos producen predicciones de probabilidades que se encuentran dentro del intervalo $[0,1]$. Las predicciones de los tres modelos suelen estar próximas entre sí. El libro sugiere utilizar el método que sea más fácil de usar en el software estadístico de su elección. Como se ha visto, es igualmente fácil estimar el modelo Probit y Logit usando **R**. Por lo tanto, no se puede dar ninguna recomendación general sobre qué método utilizar.
+
+## Estimación e inferencia en los modelos logit y probit
+
+Hasta ahora no se ha dicho nada sobre *cómo se estiman los modelos Logit y Probit* mediante software estadístico. La razón por la que esto es interesante es que ambos modelos son *no lineales en los parámetros* y, por lo tanto, no pueden estimarse usando MCO. En su lugar, uno se basa en *estimación de máxima verosimilitud* (EMV). Otro enfoque es la estimación por *mínimos cuadrados no lineales* (MCNL).
+
+#### Mínimos cuadrados no lineales {-}
+
+Considere el modelo Probit de regresión múltiple:
+
+\begin{align}
+  E(Y_i\vert X_{1i}, \dots, X_{ki}) = P(Y_i=1\vert X_{1i}, \dots, X_{ki}) = \Phi(\beta_0 + \beta_1 X_{1i} + \dots + \beta_k X_{ki}). (\#eq:multprobit)
+\end{align}
+
+De manera similar a MCO, MCNL estima los parámetros $\beta_0,\beta_1,\dots,\beta_k$ minimizando la suma de errores al cuadrado
+
+$$\sum_{i=1}^n\left[ Y_i - \Phi(b_0 + b_1 X_{1i} + \dots + b_k X_{ki}) \right]^2.$$
+
+La estimación de MCNL es un enfoque coherente que produce estimaciones que normalmente se distribuyen en muestras grandes. En **R** existen funciones como **NLM()** del paquete **stats** que proporcionan algoritmos para resolver problemas de mínimos cuadrados no lineales.
+
+Sin embargo, MCNL es ineficiente, lo que significa que existen técnicas de estimación que tienen una varianza más pequeña.
+
+#### Estimación de máxima verosimilitud {-}
+
+En la EMV se busca estimar los parámetros desconocidos eligiéndolos de manera que se maximice la probabilidad de extraer la muestra observada. Esta probabilidad se mide mediante la función de verosimilitud, la distribución de probabilidad conjunta de los datos tratados en función de los parámetros desconocidos. Dicho de otra manera, las estimaciones de máxima verosimilitud de los parámetros desconocidos son los valores que dan como resultado un modelo que es más probable que produzca los datos observados. Resulta que EMV es más eficiente que MCNL.
+
+Como las estimaciones de máxima verosimilitud se distribuyen normalmente en muestras grandes, la inferencia estadística de los coeficientes en modelos no lineales como la regresión Logit y Probit se puede realizar utilizando las mismas herramientas que se utilizan para los modelos de regresión lineal: Se puede calcular el estadístico $t$ e intervalos de confianza.
+
+Muchos paquetes de software utilizan un algoritmo EMV para la estimación de modelos no lineales. La función **glm()** utiliza un algoritmo llamado *mínimos cuadrados iterativamente reponderados*.
+
+#### Medidas de ajuste {-}
+
+Es importante tener en cuenta que los valores habituales $R^2$ y $\bar{R}^2$ son *inválidos* para los modelos de regresión no lineal. La razón de esto es simple: Ambas medidas asumen que la relación entre la variable dependiente y explicativa(s) es lineal. Obviamente, esto no es válido para los modelos Probit y Logit. Por tanto, $R^2$ no necesita estar entre $0$ y $1$ y no existe una interpretación significativa. Sin embargo, el software estadístico a veces informa estas medidas de todos modos.
+
+Existen muchas medidas de ajuste para los modelos de regresión no lineal y no existe consenso sobre cuál debe informarse. La situación es aún más complicada porque no existe una medida de ajuste que sea significativa en general. Para modelos con una variable de respuesta binaria como $deny$, uno podría usar la siguiente regla: \newline Si $Y_i = 1$ y $\widehat{P(Y_i|X_{i1}, \dots, X_{ik})} > 0.5$ o si $Y_i = 0$ y $\widehat{P(Y_i|X_{i1}, \dots, X_{ik})} < 0.5$, considere el $Y_i$ como se predijo correctamente. De lo contrario, se dice que $Y_i$ se predice incorrectamente. La medida de ajuste es la proporción de observaciones predichas correctamente. La desventaja de este enfoque es que no refleja la calidad de la predicción: Si $\widehat{P(Y_i = 1|X_{i1}, \dots, X_{ik}) = 0.51}$ o $\widehat{P(Y_i =1|X_{i1}, \dots, X_{ik}) = 0.99}$ no se refleja, solo se predice $Y_i = 1$.^[Esto contrasta con el caso de una variable dependiente numérica en la que se utilizan los errores al cuadrado para evaluar la calidad de la predicción.]
+
+Una alternativa a este último son las llamadas medidas pseudo-$R^2$. Para medir la calidad del ajuste, estas medidas comparan el valor de la probabilidad maximizada (log-) del modelo con todos los regresores (el *modelo completo*) con la probabilidad de un modelo sin regresores (*modelo nulo*, regresión sobre una constante).
+
+Por ejemplo, considere una regresión Probit. El $\text{pseudo-}R^2$ viene dado por $$\text{pseudo-}R^2 = 1 - \frac{\ln(f^{max}_{full})}{\ln(f^{max}_{null})}$$ donde $f^{max}_j \in [0,1]$ denota la probabilidad maximizada para el modelo $j$.
+
+El razonamiento detrás de esto es que la probabilidad maximizada aumenta a medida que se agregan regresores adicionales al modelo, de manera similar a la disminución en $SSR$ cuando se agregan regresores en un modelo de regresión lineal. Si el modelo completo tiene una probabilidad maximizada similar a la del modelo nulo, el modelo completo no mejora realmente sobre un modelo que usa solo la información en la variable dependiente, entonces $\text{pseudo-}R^2 \approx 0$. Si el modelo completo se ajusta muy bien a los datos, la probabilidad maximizada debe estar cerca de $1$, de modo que $\ln(f^{max}_{full}) \approx 0$ y $\text{pseudo-}R^2 \approx 1$. Consultar en internet para obtener más información sobre las medidas EMV y pseudo-$R^2$.
+
+**summary()** no reporta $\text{pseudo-}R^2$ para modelos estimados por **glm()**, pero se pueden usar las entradas *desviación residual* (**desviación**) y *desviación nula* (**desviación nula**) en su lugar. Estos se calculan como
+
+$$\text{deviance} = -2 \times \left[\ln(f^{max}_{saturated}) - \ln(f^{max}_{full}) \right]$$
+
+y
+
+$$\text{null deviance} = -2 \times \left[\ln(f^{max}_{saturated}) - \ln(f^{max}_{null}) \right]$$
+
+donde $f^{max}_{saturated}$ es la probabilidad maximizada para un modelo que asume que cada observación tiene su propio parámetro (existen $n + 1$ parámetros para estimar que conducen a un ajuste perfecto). Para modelos con una variable dependiente binaria, se sostiene que $$\text{pseudo-}R^2 = 1 - \frac{\text{deviance}}{\text{null deviance}} = 1- \frac{\ln(f^{max}_{full})}{\ln(f^{max}_{null})}.$$
+
+Ahora se calcula $\text{pseudo-}R^2$ para el modelo Probit aumentado de denegación de hipoteca.
+
+```{r, 631}
+# calcular pseudo-R2 para el modelo probit de denegación de hipoteca
+pseudoR2 <- 1 - (denyprobit2$deviance) / (denyprobit2$null.deviance)
+pseudoR2
+```
+
+Otra forma de obtener $\text{pseudo-}R^2$ es estimar el modelo nulo usando **glm()** y extraer las probabilidades logarítmicas maximizadas tanto para el modelo nulo como para el modelo completo usando la función **logLik()**.
+
+```{r, 632}
+# calcular el modelo nulo
+denyprobit_null <- glm(formula = deny ~ 1, 
+                       family = binomial(link = "probit"), 
+                       data = HMDA)
+
+# calcular la pseudo-R2 usando 'logLik'
+1 - logLik(denyprobit2)[1]/logLik(denyprobit_null)[1]
+```
+
+## Aplicación a los datos de la HMDA de Boston
+
+Los modelos \@ref(eq:denyprobit2) y \@ref(eq:denylogit2) indican que las tasas de denegación son más altas para los solicitantes afroamericanos que mantienen constante la relación pago-ingreso. Ambos resultados podrían estar sujetos a sesgo de variable omitida. Para obtener una estimación más confiable del efecto de ser negro sobre la probabilidad de denegación de una solicitud de hipoteca, se estima un modelo de probabilidad lineal, así como varios modelos Logit y Probit. Por lo tanto, se controlan las variables financieras y las características adicionales del solicitante que probablemente influyan en la probabilidad de denegación y difieran entre los solicitantes blancos y negros.
+
+Los promedios de la muestra se pueden reproducir fácilmente usando las funciones **mean()** (como es habitual para las variables numéricas) y **prop.table()** (para las variables factoriales).
+
+```{r, 633}
+# media de la relación P/I
+mean(HMDA$pirat)
+
+# relación entre gastos e ingresos totales de la vivienda
+mean(HMDA$hirat)
+
+# relación valor del préstamo
+mean(HMDA$lvrat)
+
+# puntaje de crédito del consumidor
+mean(as.numeric(HMDA$chist))
+
+# puntaje de crédito hipotecario
+mean(as.numeric(HMDA$mhist))
+
+# historial de crédito público malo
+mean(as.numeric(HMDA$phist)-1)
+
+# seguro hipotecario denegado
+prop.table(table(HMDA$insurance))
+
+# trabajadores por cuenta propia
+prop.table(table(HMDA$selfemp))
+
+# soltero
+prop.table(table(HMDA$single))
+
+# diploma de escuela secundaria
+prop.table(table(HMDA$hschool))
+
+# tasa de desempleo
+mean(HMDA$unemp)
+
+# condominio
+prop.table(table(HMDA$condomin))
+
+# negro
+prop.table(table(HMDA$black))
+
+# denegar
+prop.table(table(HMDA$deny))
+```
+
+Se recomienda usar la función de ayuda de **R** para obtener más información sobre las variables contenidas en el conjunto de datos **HMDA**.
+
+Antes de estimar los modelos, se debe transformar la relación préstamo-valor (**lvrat**) en una variable factorial, donde
+
+\begin{align*}
+  lvrat = 
+  \begin{cases}
+    \text{low} & \text{if} \ \ lvrat < 0.8, \\
+    \text{medium} & \text{if} \ \ 0.8 \leq lvrat \leq 0.95, \\
+    \text{high} & \text{if} \ \ lvrat > 0.95
+  \end{cases}
+\end{align*}
+
+y convertir ambos puntajes de crédito en variables numéricas.
+
+```{r, 634}
+# definir una relación préstamo-valor baja, media y alta
+HMDA$lvrat <- factor(
+  ifelse(HMDA$lvrat < 0.8, "low",
+  ifelse(HMDA$lvrat >= 0.8 & HMDA$lvrat <= 0.95, "medium", "high")),
+  levels = c("low", "medium", "high"))
+
+# convertir puntajes de crédito a numéricos
+HMDA$mhist <- as.numeric(HMDA$mhist)
+HMDA$chist <- as.numeric(HMDA$chist)
+```
+
+A continuación, se construyen los resultados de las estimaciones.
+
+```{r, 635}
+# estimar los 6 modelos para la probabilidad de negación
+lpm_HMDA <- lm(deny ~ black + pirat + hirat + lvrat + chist + mhist + phist 
+               + insurance + selfemp, data = HMDA)
+
+logit_HMDA <- glm(deny ~ black + pirat + hirat + lvrat + chist + mhist + phist 
+                  + insurance + selfemp, 
+                  family = binomial(link = "logit"), 
+                  data = HMDA)
+
+probit_HMDA_1 <- glm(deny ~ black + pirat + hirat + lvrat + chist + mhist + phist 
+                     + insurance + selfemp, 
+                     family = binomial(link = "probit"), 
+                     data = HMDA)
+
+probit_HMDA_2 <- glm(deny ~ black + pirat + hirat + lvrat + chist + mhist + phist 
+                     + insurance + selfemp + single + hschool + unemp, 
+                     family = binomial(link = "probit"), 
+                     data = HMDA)
+
+probit_HMDA_3 <- glm(deny ~ black + pirat + hirat + lvrat + chist + mhist 
+                     + phist + insurance + selfemp + single + hschool + unemp + condomin 
+                     + I(mhist==3) + I(mhist==4) + I(chist==3) + I(chist==4) + I(chist==5) 
+                     + I(chist==6), 
+                     family = binomial(link = "probit"), 
+                     data = HMDA)
+
+probit_HMDA_4 <- glm(deny ~ black * (pirat + hirat) + lvrat + chist + mhist + phist 
+                     + insurance + selfemp + single + hschool + unemp, 
+                     family = binomial(link = "probit"), 
+                     data = HMDA)
+```
+
+Al igual que en los capítulos anteriores, se almacenan los errores estándar robustos a la heterocedasticidad de los estimadores de coeficientes en un objeto **list** que luego se utiliza como argumento **se** en **stargazer()**.
+
+```{r, 636, eval=FALSE}
+rob_se <- list(sqrt(diag(vcovHC(lpm_HMDA, type = "HC1"))),
+               sqrt(diag(vcovHC(logit_HMDA, type = "HC1"))),
+               sqrt(diag(vcovHC(probit_HMDA_1, type = "HC1"))),
+               sqrt(diag(vcovHC(probit_HMDA_2, type = "HC1"))),
+               sqrt(diag(vcovHC(probit_HMDA_3, type = "HC1"))),
+               sqrt(diag(vcovHC(probit_HMDA_4, type = "HC1"))))
+
+stargazer(lpm_HMDA, logit_HMDA, probit_HMDA_1, 
+          probit_HMDA_2, probit_HMDA_3, probit_HMDA_4,  
+          digits = 3,
+          type = "latex", 
+          header = FALSE,
+          se = rob_se,
+          model.numbers = FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)"))
+```
+
+<!--html_preserve-->
+
+```{r hmdad, 637, message=F, warning=F, results='asis', echo=F, eval=my_output == "html"}
+library(stargazer)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(lpm_HMDA, type = "HC1"))),
+  sqrt(diag(vcovHC(logit_HMDA, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_1, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_2, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_3, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_4, type = "HC1")))
+)
+
+stargazer(lpm_HMDA, logit_HMDA, probit_HMDA_1, probit_HMDA_2, probit_HMDA_3, probit_HMDA_4, 
+          digits = 3,
+          type = "html", 
+          se = rob_se,
+          header = FALSE,          
+          dep.var.caption = "Variable dependiente: Denegación de solicitud de hipoteca",
+          model.numbers = FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)")
+          )
+
+stargazer_html_title("Datos HMDA: Modelos LPM, Probit y Logit", "hmdad")
+```
+
+<!--/html_preserve-->
+
+```{r, 638, message=F, warning=F, results='asis', echo=F, eval=my_output == "latex"}
+library(stargazer)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(lpm_HMDA, type = "HC1"))),
+  sqrt(diag(vcovHC(logit_HMDA, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_1, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_2, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_3, type = "HC1"))),
+  sqrt(diag(vcovHC(probit_HMDA_4, type = "HC1")))
+)
+
+stargazer(lpm_HMDA, logit_HMDA, probit_HMDA_1, probit_HMDA_2, probit_HMDA_3, probit_HMDA_4, 
+          title = "\\label{tab:hmdad} Datos HMDA: Modelos LPM, Probit y Logit",
+          digits = 3,
+          type = "latex",
+          float.env = "sidewaystable",
+          column.sep.width = "-5pt",
+          no.space = T,
+          single.row = T,
+          header = FALSE,
+          se = rob_se,
+          model.numbers = FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)")
+          )
+```
+
+En la tabla \@ref(tab:hmdad), los modelos (1), (2) y (3) son especificaciones de referencia que incluyen varias variables de control financiero. Se diferencian solo en la forma en que modelan la probabilidad de negación. El modelo (1) es un modelo de probabilidad lineal, el modelo (2) es una regresión Logit y el modelo (3) utiliza el enfoque Probit.
+
+En el modelo lineal (1), los coeficientes tienen interpretación directa. Por ejemplo, se estima que un aumento en la calificación crediticia del consumidor en $1$ unidad aumentará la probabilidad de denegación de un préstamo en aproximadamente $0.031$ puntos porcentuales. Tener una relación préstamo-valor alta es perjudicial para la aprobación del crédito: El coeficiente para una relación préstamo-valor superior a $0.95$ es $0.189$, por lo que se estima que los clientes con esta propiedad enfrentan un riesgo de casi $19\%$ mayor de negación que aquellos con una baja relación préstamo-valor, ceteris paribus. El coeficiente estimado de la variable ficticia de raza es de $0.084$, lo que indica que la probabilidad de denegación para los afroamericanos es $8.4\%$ mayor que para los solicitantes blancos con las mismas características, excepto por la raza. Aparte de la relación entre gastos e ingresos de la vivienda y el puntaje de crédito hipotecario, todos los coeficientes son significativos.
+
+Los modelos (2) y (3) proporcionan evidencia similar de que existe discriminación racial en el mercado hipotecario de EE. UU; dado que todos los coeficientes, excepto la relación entre gastos e ingresos de la vivienda (que no es significativamente diferente de cero), son significativos al nivel de $1\%$. Como se discutió anteriormente, la no linealidad hace que la interpretación de las estimaciones de los coeficientes sea más difícil que para el modelo (1). Para hacer una declaración sobre el efecto de ser negro, se necesita calcular la probabilidad de negación estimada para dos individuos que solo difieren en la raza. Para la comparación, se consideran dos individuos que comparten valores medios para todos los regresores numéricos. Para las variables cualitativas se asigna la propiedad que es más representativa para los datos disponibles. Por ejemplo, considere el trabajo por cuenta propia: Se ha visto que aproximadamente $88\%$ de todas las personas de la muestra no son trabajadores por cuenta propia, por lo que se establece **selfemp = no**. Con este enfoque, la estimación del efecto sobre la probabilidad de negación de ser afroamericano del modelo Logit (2) es de aproximadamente $4\%$. El siguiente fragmento de código muestra cómo aplicar este enfoque para los modelos (1) a (7) usando **R**.
+
+```{r, 639}
+# calcular valores de regresión para una persona negra promedio
+new <- data.frame(
+  "pirat" = mean(HMDA$pirat),
+  "hirat" = mean(HMDA$hirat),
+  "lvrat" = "low",
+  "chist" = mean(HMDA$chist),
+  "mhist" = mean(HMDA$mhist),
+  "phist" = "no",
+  "insurance" = "no",
+  "selfemp" = "no",
+  "black" = c("no", "yes"),
+  "single" = "no",
+  "hschool" = "yes",
+  "unemp" = mean(HMDA$unemp),
+  "condomin" = "no")
+
+# diferencia predicha por el LPM
+predictions <- predict(lpm_HMDA, newdata = new)
+diff(predictions)
+
+# diferencia predicha por el modelo logit
+predictions <- predict(logit_HMDA, newdata = new, type = "response")
+diff(predictions)
+
+# diferencia predicha por el modelo probit (3)
+predictions <- predict(probit_HMDA_1, newdata = new, type = "response")
+diff(predictions)
+
+# diferencia predicha por el modelo probit (4)
+predictions <- predict(probit_HMDA_2, newdata = new, type = "response")
+diff(predictions)
+
+# diferencia predicha por el modelo probit (5)
+predictions <- predict(probit_HMDA_3, newdata = new, type = "response")
+diff(predictions)
+
+# diferencia predicha por el modelo probit (6)
+predictions <- predict(probit_HMDA_4, newdata = new, type = "response")
+diff(predictions)
+```
+
+Las estimaciones del impacto sobre la probabilidad de negación de ser negro son similares para los modelos (2) y (3). Es interesante que la magnitud de los efectos estimados es mucho menor que para los modelos Probit y Logit que no controlan por características financieras (ver sección 11.2). Esto indica que estos modelos simples producen estimaciones sesgadas debido a variables omitidas.
+
+Las regresiones (4) a (6) utilizan especificaciones de regresión que incluyen diferentes características del solicitante y variables indicadoras de calificación crediticia, así como interacciones. Sin embargo, la mayoría de los coeficientes correspondientes no son significativos y las estimaciones del coeficiente sobre **negro** obtenidas para estos modelos, así como la diferencia estimada en las probabilidades de negación, no difieren mucho de las obtenidas para especificaciones similares (2) y (3).
+
+Una pregunta interesante relacionada con la discriminación racial se puede investigar utilizando el modelo Probit (6) donde las interacciones **blackyes:pirat** y **blackyes:hirat** se agregan al modelo (4). Si el coeficiente de **blackyes:pirat** fuera diferente de cero, el efecto de la relación pago-ingreso sobre la probabilidad de denegación sería diferente para los solicitantes blancos y negros. De manera similar, un coeficiente distinto de cero en **blackyes:hirat** indicaría que los oficiales de crédito evalúan el riesgo de quiebra asociado con una alta relación préstamo-valor de manera diferente para los solicitantes de hipotecas blancos y negros. Se puede probar si estos coeficientes son conjuntamente significativos al nivel de $5\%$ usando una prueba de $F$.
+
+```{r, 640}
+linearHypothesis(probit_HMDA_4,
+                 test = "F",
+                 c("blackyes:pirat=0", "blackyes:hirat=0"),
+                 vcov = vcovHC, type = "HC1")
+```
+
+Dado que $p\text{-value} \approx 0.77$ para esta prueba, el valor nulo no se puede rechazar. No obstante, se puede rechazar la hipótesis de que no existe discriminación racial en absoluto, ya que la prueba $F$ correspondiente tiene un $p\text{-value}$ de aproximadamente $0.002$.
+
+```{r, 641}
+linearHypothesis(probit_HMDA_4,
+                 test = "F",
+                 c("blackyes=0", "blackyes:pirat=0", "blackyes:hirat=0"),
+                 vcov = vcovHC, type = "HC1")
+```
+
+#### Resumen {-}
+
+Los modelos (1) a (6) proporcionan evidencia de que existe un efecto de ser afroamericano en la probabilidad de denegación de una solicitud de hipoteca: En todas las especificaciones, se estima que el efecto es positivo (entre $4\%$ y $5\%$) y es significativamente diferente de cero en el nivel de $1\%$. Si bien el modelo de probabilidad lineal parece sobrestimar ligeramente este efecto, aún puede usarse como una aproximación a una relación intrínsecamente no lineal.
+
+## Ejercicios {#Ejercicios-11}
+
+```{r, 642, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Datos de supervivencia del Titanic {-}
+
+El capítulo \\@ref(RPL) presentó tres enfoques para modelar la función de expectativa condicional de una variable dependiente binaria: El modelo de probabilidad lineal y la regresión Probit y Logit.
+
+Los ejercicios de este capítulo utilizan datos sobre el destino de los pasajeros del océano lineal *Titanic*. El objetivo es explicar la supervivencia, una variable binaria, por variables socioeconómicas utilizando los enfoques anteriores.
+
+En este ejercicio se comienza con el conjunto de datos agregados <tt>Titanic</tt>. Es parte del paquete <tt>datasets</tt> que es parte de la base de <tt>R</tt>. La siguiente cita de la [descripción](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/Titanic.html) del conjunto de datos motiva el intento de predecir la *probabilidad* de supervivencia:
+
+*El hundimiento del Titanic es un evento famoso y aún se están publicando nuevos libros al respecto. Muchos hechos bien conocidos, desde las proporciones de pasajeros de primera clase hasta la política de "las mujeres y los niños primero", y el hecho de que esa política no fue del todo exitosa para salvar a las mujeres y los niños de la tercera clase, lo que se refleja en la supervivencia a partir de las tarifas para varias clases de pasajeros.*
+
+**Instrucciones:**
+
+  + Asignar los datos del <tt>Titanic</tt> a <tt>Titanic_1</tt> y obtener una descripción general.
+
+  + Visualizar las tasas de supervivencia condicional para la clase de viaje (<tt>Class</tt>), el género (<tt>Sex</tt>) y la edad (<tt>Age</tt>) usando <tt>mosaicplot()</tt>.
+
+<iframe src="DCL/ex11_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>') } else {
+  cat("\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}")
+}
+```
+
+```{r, 643, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Datos de supervivencia del Titanic --- Ctd. {-}
+
+El conjunto de datos del <tt>Titanic</tt> del ejercicio 1 no es útil para el análisis de regresión porque está muy agregado. En este ejercicio se trabajará con <tt>titanic.csv</tt> que está disponible en la URL https://stanford.io/2O9RUCF.
+
+Las columnas de <tt>titanic.csv</tt> contienen las siguientes variables:
+
+  <tt>Survived</tt> --- El indicador de sobrevivido
+    
+  <tt>Pclass</tt> --- Clase de pasajero
+    
+  <tt>Name</tt> --- Nombre del pasajero
+    
+  <tt>Sex</tt> --- Género del pasajero
+    
+  <tt>Age</tt> --- Edad del pasajero
+    
+  <tt>Siblings</tt> --- Número de hermanos a bordo
+    
+  <tt>Parents.Children.Aboard</tt> --- Número de padres e hijos a bordo
+    
+  <tt>fare</tt> --- La tarifa pagada en libras esterlinas
+
+**Instrucciones:**
+
+  + Importar los datos de <tt>titanic.csv</tt> usando la función <tt>read.csv2()</tt>. Guardar el resultado en <tt>Titanic_2</tt>.
+
+  + Asignar los siguientes nombres de columna a <tt>Titanic_2</tt>:
+  
+    <tt>Survived, Class, Name, Sex, Age, Siblings, Parents</tt> y <tt>Fare</tt>.
+
+  + Obtener una descripción general del conjunto de datos. Soltar la columna <tt> Nombre </tt>.
+
+  + Adjuntar los paquetes <tt>corrplot</tt> y <tt>dplyr</tt>. Verificar si existe multicolinealidad en los datos usando <tt>corrplot()</tt>.
+
+<iframe src="DCL/ex11_2.html" frameborder="0" scrolling="no" style="width:100%;height:560px"></iframe>
+
+**Sugerencias:**
+
+  + <tt>read_csv()</tt> adivina la especificación de la columna así como los separadores usados en el archivo <tt>.csv</tt>. Siempre debe verificar si el resultado es correcto.
+
+  + Puede usar <tt>select_if()</tt> del paquete <tt>dplyr</tt> para seleccionar todas las columnas numéricas del conjunto de datos.
+
+</div>')}
+```
+
+```{r, 644, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. Datos de supervivencia del Titanic --- Tasas de supervivencia {-}
+
+Las tablas de contingencia similares a las proporcionadas por el conjunto de datos <tt>Titanic</tt> del ejercicio 1 pueden arrojar algo de luz sobre la distribución de las condiciones de supervivencia y los posibles determinantes de las mismas; por ejemplo, la clase de pasajeros. Las tablas de contingencia se crean fácilmente usando la función <tt>table</tt> que forma parte de la base <tt>R</tt>.
+
+**Instrucciones:**
+
+  + Generar una tabla de contingencia para <tt>Survived</tt> y <tt>Class</tt> usando <tt>table()</tt>. Guardar la tabla en <tt>t_abs</tt>.
+
+  + <tt>t_abs</tt> reporta frecuencias absolutas. Transforme <tt>t_abs</tt> en una tabla que informe las frecuencias relativas (en relación con el número total de observaciones). Guardar el resultado en <tt>t_rel</tt>.
+
+  + Visualizar las frecuencias relativas en <tt>t_rel</tt> usando <tt>barplot()</tt>. Usar diferentes colores para distinguir mejor entre la tasa de supervivencia y la no supervivencia (no importa qué colores use).
+
+<iframe src="DCL/ex11_4_3.html" frameborder="0" scrolling="no" style="width:100%;height:320px"></iframe>
+
+</div>')}
+```
+
+
+```{r, 645, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. Datos de supervivencia del Titanic --- Distribuciones condicionales de <tt>Age</tt> {-}
+
+Las tablas de contingencia son útiles para resumir la distribución de variables categóricas como <tt>Survived</tt> y <tt>Class</tt> en el Ejercicio 3. Sin embargo, no son útiles cuando la variable de interés toma muchos números enteros diferentes (e incluso son imposibles de generar cuando la variable es continua).
+
+En este ejercicio se le pide que genere y visualice estimaciones de densidad de la distribución de <tt>Age</tt> condicionada a <tt>Survived</tt> para ver si existen indicaciones de cómo la edad se relaciona con la posibilidad de supervivencia (a pesar de que el conjunto de datos informa números enteros, aquí se trata <tt>Age</tt> como una variable continua). Por ejemplo, es interesante ver si la política de "las mujeres y los niños primero" fue eficaz.
+
+El conjunto de datos <tt>Titanic_2</tt> de los ejercicios anteriores está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Obtener estimaciones de densidad de kernel de las distribuciones de <tt>Age</tt> tanto para los sobrevivientes como para los fallecidos.
+
+  + Guardar los resultados en <tt>dens_age_surv</tt> (sobrevivió) y <tt>dens_age_died</tt> (murió).
+
+  + Graficar ambas estimaciones de densidad de kernel (¡Superponerlas en una sola gráfica!). Usar diferentes colores de su elección para que las estimaciones sean distinguibles.
+
+<iframe src="DCL/ex11_5_4.html" frameborder="0" scrolling="no" style="width:100%;height:330px"></iframe>
+
+**Sugerencias:**
+
+  + Las estimaciones de densidad de kernel se pueden obtener usando la función <tt>density()</tt>.
+
+  + Utilizar <tt>plot()</tt> y <tt>lines()</tt> para trazar las estimaciones de densidad.
+
+</div>')}
+```
+
+```{r, 646, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Datos de supervivencia del Titanic: un modelo de probabilidad lineal para <tt>Survival</tt> I {-}
+
+¿Cómo influyen las características socioeconómicas de los pasajeros en la probabilidad de supervivencia? En particular, ¿existen diferencias sistemáticas entre las tres clases de pasajeros? ¿Los datos reflejan la política de "los niños y las mujeres primero"?
+
+Es natural comenzar el análisis estimando un modelo de probabilidad lineal simple como (LMP) $$Survived_i = \\beta_0 + \\beta_1 Class2_i + \\beta_2 Class3_i + u_i$$ con variables ficticias $Class2_i$ y $Class3_i$.
+
+El conjunto de datos <tt>Titanic_2</tt> de los ejercicios anteriores está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Asjuntar el paquete <tt>AER</tt>.
+
+  + <tt>Class</tt> es de tipo <tt>int</tt> (integer), convertir <tt>Class</tt> en una variable factorial.
+
+  + Estimar el modelo de probabilidad lineal y guardar el resultado en <tt>surv_mod</tt>.
+
+  + Obtener un resumen robusto de los coeficientes del modelo.
+
+  + Utilizar <tt>surv_mod</tt> para predecir la probabilidad de supervivencia de las tres clases de pasajeros.
+
+<iframe src="DCL/ex11_lpm.html" frameborder="0" scrolling="no" style="width:100%;height:320px"></iframe>
+
+**Sugerencias:**
+
+  + Los modelos de probabilidad lineal se pueden estimar usando <tt>lm()</tt>.
+
+  + Utilizar <tt>predict()</tt> para obtener las predicciones. Recuerde que se debe proporcionar un <tt>data.frame</tt> al argumento <tt>newdata</tt>.
+
+</div>')}
+```
+
+```{r, 647, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+
+<div  class = "DCexercise">
+
+#### 6. Datos de supervivencia del Titanic: un modelo de probabilidad lineal para <tt>Survival</tt> II {-}
+
+Considerar nuevamente el resultado del ejercicio 5:
+
+$$\\widehat{Survived}_i = \\underset{(0.03)}{0.63} - \\underset{(0.05)}{0.16} Class2_i - \\underset{(0.04)}{0.39} Class3_i + u_i $$
+
+(Los coeficientes estimados en este modelo están relacionados con las medias muestrales específicas de la clase de <tt>Survived</tt>. Se solicita que los calcule a continuación).
+
+Los coeficientes altamente significativos indican que la probabilidad de supervivencia disminuye con la clase de pasajeros; es decir, los pasajeros de una clase menos lujosa tienen menos probabilidades de sobrevivir.
+
+Este resultado podría verse afectado por el sesgo de la variable omitida que surge de la correlación de la clase de pasajero con los determinantes de la probabilidad de supervivencia no incluidos en el modelo. Por lo tanto, se aumenta el modelo de manera que incluya todas las variables restantes como regresores.
+
+El conjunto de datos <tt>Titanic_2</tt> así como el modelo <tt>surv_mod</tt> de los ejercicios anteriores están disponibles en el entorno de trabajo. Se adjunta el paquete <tt>AER</tt>.
+
+**Instrucciones:**
+
+  + Utilizar el objeto modelo <tt>surv_mod</tt> para obtener las estimaciones específicas de la clase para la probabilidad de supervivencia. Guardar el resultado en <tt>surv_prob_c1</tt>, <tt>surv_prob_c2</tt> y <tt>surv_prob_c3</tt>.
+
+  + Ajustar el LMP aumentado y asignar el resultado al objeto <tt>LPM_mod</tt>.
+
+  + Obtener un resumen robusto de los coeficientes del modelo.
+
+<iframe src="DCL/ex11_lpm2.html" frameborder="0" scrolling="no" style="width:100%;height:320px"></iframe>
+
+**Sugerencia:**
+
+  + Recuerde que la fórmula <tt>a ~.</tt> especifica una regresión de <tt>a</tt> en todas las demás variables en el conjunto de datos proporcionado como el argumento <tt>data</tt> en <tt>glm()</tt>. 
+
+</div>')}
+```
+
+```{r, 648, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Datos de supervivencia del Titanic --- Regresión logística {-}
+
+El capítulo \\@ref(RPL) presenta la regresión logística, también llamada regresión Logit, que es más adecuada que el LPM para modelar la función de probabilidad condicional de una variable de resultado dicotómica. La regresión logit usa una función de enlace no lineal que restringe los valores ajustados para que se encuentren entre $0$ y $1$: En la regresión logit, las *log-odds* del resultado se modelan como una combinación lineal de los predictores, mientras que el LPM asume que el condicional La función de probabilidad del resultado es lineal.
+
+El conjunto de datos <tt>Titanic_2</tt> del ejercicio 2 está disponible en el entorno de trabajo. Se adjunta el paquete <tt>AER</tt>.
+
+**Instrucciones:**
+
+  + Use <tt>glm()</tt> para estimar el modelo
+
+\\begin{align*}
+\\log\\left(\\frac{P(survived_i = 1)}{1-P(survived_i = 1)}\\right) =& \\, \\beta_0 + \\beta_1 Class2_i + \\beta_2 Ckass3_i + \\beta_3 Sex_i \\\\ +& \\, \\beta_4 Age_i + \\beta_5 Siblings_i + \\beta_6 Perents_i + \\beta_7 Fare_i + u_i.
+\\end{align*}
+
+  + Obtener un resumen robusto de los coeficientes del modelo.
+
+  + El marco de datos <tt>passengers</tt> contiene datos sobre tres pasajeros masculinos hipotéticos que difieren solo en su clase de pasajero (las otras variables se establecen en el promedio de la muestra respectiva). Utilizar <tt>Logit_mod</tt> para predecir la probabilidad de supervivencia de estos pasajeros.
+
+<iframe src="DCL/ex11_3_6.html" frameborder="0" scrolling="no" style="width:100%;height:430px"></iframe>
+
+**Sugerencias:**
+
+  + Recuerde que la fórmula <tt>a ~.</tt> especifica una regresión de <tt>a</tt> en todas las demás variables en el conjunto de datos proporcionado como el argumento <tt>data</tt> en <tt>glm()</tt>.
+
+  + Debe especificar el tipo correcto de predicción en <tt>predict()</tt>.
+
+</div>')}
+```
+
+```{r, 649, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 8. Datos de supervivencia del Titanic --- Regresión probit {-}
+
+Repita el ejercicio 7, pero esta vez calcule el modelo Probit.
+
+\\begin{align*}
+P(Survived_i = 1\\vert Class2_i, Class3_i, \\dots, Fare_i) =& \\, \\Phi (\\beta_0 + \\beta_1 Class2_i + \\beta_2 Class3_i + \\beta_3 Sex_i \\\\ +& \\, \\beta_4 Age_i + \\beta_5 Siblings_i + \\beta_6 Parents_i + \\beta_7 Fare_i + u_i).
+\\end{align*}
+
+El conjunto de datos <tt>Titanic_2</tt> de los ejercicios anteriores así como el modelo Logit <tt>Logit_mod</tt> están disponibles en el entorno de trabajo. Se adjunta el paquete <tt>AER</tt>.
+
+**Instrucciones: **
+
+  + Utilizar <tt>glm()</tt> para estimar el modelo Probit anterior. Guardar el resultado en <tt>Probit_mod</tt>.
+
+  + Obtener un resumen robusto de los coeficientes del modelo.
+
+  + El marco de datos <tt>passengers</tt> contiene datos sobre tres pasajeros masculinos hipotéticos que difieren solo en su clase de pasajero (las otras variables se establecen en el promedio de la muestra respectiva). Utilizar <tt>Probit_mod</tt> para predecir la probabilidad de supervivencia de estos pasajeros.
+
+<iframe src="DCL/ex11_8.html" frameborder="0" scrolling="no" style="width:100%;height:430px"></iframe>
+
+**Sugerencias:**
+
+  + Recuerde que la fórmula <tt>a ~.</tt> especifica una regresión de <tt>a</tt> en todas las demás variables en el conjunto de datos proporcionado como el argumento <tt>data</tt> en <tt>glm()</tt>.
+
+  + Debe especificar el tipo correcto de predicción en <tt>predicts()</tt>.
+
+</div>')}
+```

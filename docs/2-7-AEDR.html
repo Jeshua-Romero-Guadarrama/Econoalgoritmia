@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>2.7 Análisis exploratorio de datos con R | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="2.7 Análisis exploratorio de datos con R | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="2.7 Análisis exploratorio de datos con R | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-21" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="2-6-GR.html"/>
+<link rel="next" href="3-TP.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="AEDR" class="section level2" number="2.7">
+<h2><span class="header-section-number">2.7</span> Análisis exploratorio de datos con <strong>R</strong></h2>
+<p>En esta sección, se ilustrarán brevemente algunas técnicas estándar de análisis exploratorio de datos. Para los lectores que buscan una introducción más detallada a las estadísticas básicas utilizando <strong>R</strong> se recomienda consultar a Dalgaard (2002). Reconsiderando los datos <strong>CPS1985</strong> tomados de Berndt (1991). Después de hacer que los datos estén disponibles a través de <strong>data()</strong>, alguna información básica puede ser consultada mediante la función estructura <strong>str()</strong>:</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="2-7-AEDR.html#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;CPS1985&quot;</span>, <span class="at">package =</span> <span class="st">&quot;AER&quot;</span>)</span>
+<span id="cb85-2"><a href="2-7-AEDR.html#cb85-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(CPS1985)</span>
+<span id="cb85-3"><a href="2-7-AEDR.html#cb85-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    534 obs. of  11 variables:</span></span>
+<span id="cb85-4"><a href="2-7-AEDR.html#cb85-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ wage      : num  5.1 4.95 6.67 4 7.5 ...</span></span>
+<span id="cb85-5"><a href="2-7-AEDR.html#cb85-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ education : num  8 9 12 12 12 13 10 12 16 12 ...</span></span>
+<span id="cb85-6"><a href="2-7-AEDR.html#cb85-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ experience: num  21 42 1 4 17 9 27 9 11 9 ...</span></span>
+<span id="cb85-7"><a href="2-7-AEDR.html#cb85-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ age       : num  35 57 19 22 35 28 43 27 33 27 ...</span></span>
+<span id="cb85-8"><a href="2-7-AEDR.html#cb85-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ ethnicity : Factor w/ 3 levels &quot;cauc&quot;,&quot;hispanic&quot;,..: 2 1 1 1 1 1 1 1 1 1 ...</span></span>
+<span id="cb85-9"><a href="2-7-AEDR.html#cb85-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ region    : Factor w/ 2 levels &quot;south&quot;,&quot;other&quot;: 2 2 2 2 2 2 1 2 2 2 ...</span></span>
+<span id="cb85-10"><a href="2-7-AEDR.html#cb85-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ gender    : Factor w/ 2 levels &quot;male&quot;,&quot;female&quot;: 2 2 1 1 1 1 1 1 1 1 ...</span></span>
+<span id="cb85-11"><a href="2-7-AEDR.html#cb85-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ occupation: Factor w/ 6 levels &quot;worker&quot;,&quot;technical&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</span></span>
+<span id="cb85-12"><a href="2-7-AEDR.html#cb85-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ sector    : Factor w/ 3 levels &quot;manufacturing&quot;,..: 1 1 1 3 3 3 3 3 1 3 ...</span></span>
+<span id="cb85-13"><a href="2-7-AEDR.html#cb85-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ union     : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 1 1 2 1 1 1 1 ...</span></span>
+<span id="cb85-14"><a href="2-7-AEDR.html#cb85-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ married   : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 2 1 1 2 1 1 1 2 1 ...</span></span></code></pre></div>
+<p>Esto revela que el objeto “marco de datos” (<strong>data.frame</strong>) comprende 533 observaciones sobre 11 variables, incluida la variable numérica sueldo (<strong>wage</strong>), las variables enteras experiencia (<strong>experience</strong>), educación (<strong>education</strong>) y edad (<strong>age</strong>), así como siete factores, cada uno de los cuales comprende de dos a seis niveles.</p>
+<p>En lugar de utilizar la vista de tipo lista que proporciona <strong>str()</strong>, a menudo es útil inspeccionar la parte superior (o la parte inferior) de un marco de datos en su representación rectangular. Para ello, existen las funciones de conveniencia <strong>head()</strong> y <strong>tail()</strong>, devolviendo (por defecto) la primera y las últimas seis filas, respectivamente. Por lo tanto:</p>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="2-7-AEDR.html#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(CPS1985)</span>
+<span id="cb86-2"><a href="2-7-AEDR.html#cb86-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       wage education experience age ethnicity region gender occupation</span></span>
+<span id="cb86-3"><a href="2-7-AEDR.html#cb86-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     5.10         8         21  35  hispanic  other female     worker</span></span>
+<span id="cb86-4"><a href="2-7-AEDR.html#cb86-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1100  4.95         9         42  57      cauc  other female     worker</span></span>
+<span id="cb86-5"><a href="2-7-AEDR.html#cb86-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     6.67        12          1  19      cauc  other   male     worker</span></span>
+<span id="cb86-6"><a href="2-7-AEDR.html#cb86-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     4.00        12          4  22      cauc  other   male     worker</span></span>
+<span id="cb86-7"><a href="2-7-AEDR.html#cb86-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     7.50        12         17  35      cauc  other   male     worker</span></span>
+<span id="cb86-8"><a href="2-7-AEDR.html#cb86-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5    13.07        13          9  28      cauc  other   male     worker</span></span>
+<span id="cb86-9"><a href="2-7-AEDR.html#cb86-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             sector union married</span></span>
+<span id="cb86-10"><a href="2-7-AEDR.html#cb86-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    manufacturing    no     yes</span></span>
+<span id="cb86-11"><a href="2-7-AEDR.html#cb86-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1100 manufacturing    no     yes</span></span>
+<span id="cb86-12"><a href="2-7-AEDR.html#cb86-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2    manufacturing    no      no</span></span>
+<span id="cb86-13"><a href="2-7-AEDR.html#cb86-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3            other    no      no</span></span>
+<span id="cb86-14"><a href="2-7-AEDR.html#cb86-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4            other    no     yes</span></span>
+<span id="cb86-15"><a href="2-7-AEDR.html#cb86-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5            other   yes      no</span></span>
+<span id="cb86-16"><a href="2-7-AEDR.html#cb86-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(CPS1985)</span>
+<span id="cb86-17"><a href="2-7-AEDR.html#cb86-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      wage education experience age ethnicity region gender occupation</span></span>
+<span id="cb86-18"><a href="2-7-AEDR.html#cb86-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 528 11.79        16          6  28      cauc  other female  technical</span></span>
+<span id="cb86-19"><a href="2-7-AEDR.html#cb86-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 529 11.36        18          5  29      cauc  other   male  technical</span></span>
+<span id="cb86-20"><a href="2-7-AEDR.html#cb86-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 530  6.10        12         33  51     other  other female  technical</span></span>
+<span id="cb86-21"><a href="2-7-AEDR.html#cb86-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 531 23.25        17         25  48     other  other female  technical</span></span>
+<span id="cb86-22"><a href="2-7-AEDR.html#cb86-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 532 19.88        12         13  31      cauc  south   male  technical</span></span>
+<span id="cb86-23"><a href="2-7-AEDR.html#cb86-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 533 15.38        16         33  55      cauc  other   male  technical</span></span>
+<span id="cb86-24"><a href="2-7-AEDR.html#cb86-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            sector union married</span></span>
+<span id="cb86-25"><a href="2-7-AEDR.html#cb86-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 528         other   yes      no</span></span>
+<span id="cb86-26"><a href="2-7-AEDR.html#cb86-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 529         other    no      no</span></span>
+<span id="cb86-27"><a href="2-7-AEDR.html#cb86-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 530         other    no     yes</span></span>
+<span id="cb86-28"><a href="2-7-AEDR.html#cb86-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 531         other   yes     yes</span></span>
+<span id="cb86-29"><a href="2-7-AEDR.html#cb86-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 532         other   yes     yes</span></span>
+<span id="cb86-30"><a href="2-7-AEDR.html#cb86-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 533 manufacturing    no     yes</span></span></code></pre></div>
+<p>Otra forma útil de obtener una descripción general rápida de un conjunto de datos es utilizar el método para marcos de datos (<strong>data.frame</strong>) de la función <strong>summary()</strong>, que proporciona un resumen para cada una de las variables. Como el tipo de resumen depende de la clase de la variable respectiva, más adelante se inspeccionarán los métodos <strong>summary()</strong> por separado para varios tipos de variables en <strong>CPS1985</strong>. Por tanto, la salida de <strong>summary(CPS1985)</strong> se omite aquí.</p>
+<p>Como los datos de <strong>CPS1985</strong> se emplean repetidamente en lo siguiente, se evitan comandos largos como <strong>CPS1985$education</strong> adjuntando el conjunto de datos. Además, para compactar la producción posterior, se abrevian dos niveles de ocupación de “<strong>technical</strong>” a “<strong>techn</strong>” y de “<strong>management</strong>” a “<strong>mgmt</strong>.”</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="2-7-AEDR.html#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(CPS1985<span class="sc">$</span>occupation)[<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">6</span>)] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;techn&quot;</span>, <span class="st">&quot;mgmt&quot;</span>)</span>
+<span id="cb87-2"><a href="2-7-AEDR.html#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="fu">attach</span>(CPS1985)</span></code></pre></div>
+<p>Ahora se puede acceder a las variables por sus nombres. Se procede a ilustrar el análisis exploratorio de variables únicas y pares de variables, distinguiendo entre variables numéricas, factores y combinaciones de los mismos. Comenzamos con el tipo más simple, una sola variable numérica.</p>
+<div id="una-variable-numérica" class="section level3 unnumbered">
+<h3>Una variable numérica</h3>
+<p>Primero se vera la distribución de salarios en la muestra:</p>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="2-7-AEDR.html#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wage)</span>
+<span id="cb88-2"><a href="2-7-AEDR.html#cb88-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span id="cb88-3"><a href="2-7-AEDR.html#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1.000   5.250   7.780   9.024  11.250  44.500</span></span></code></pre></div>
+<p>Esto proporciona el resumen de los <em>cinco números de Tukey</em> más el salario medio. La media y la mediana también se podrían haber obtenido utilizando:</p>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="2-7-AEDR.html#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(wage)</span>
+<span id="cb89-2"><a href="2-7-AEDR.html#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 9.024064</span></span>
+<span id="cb89-3"><a href="2-7-AEDR.html#cb89-3" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(wage)</span>
+<span id="cb89-4"><a href="2-7-AEDR.html#cb89-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 7.78</span></span></code></pre></div>
+<p>Asimismo, <strong>fivenum()</strong> calcula el resumen de cinco números. Similarmente, <strong>min()</strong> y <strong>max()</strong> habrían dado el mínimo y el máximo. Las cantidades arbitrarias se pueden calcular mediante la función <strong>quantile()</strong>.</p>
+<p>Para las medidas de propagación o disperción, existen las funciones:</p>
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="2-7-AEDR.html#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(wage)</span>
+<span id="cb90-2"><a href="2-7-AEDR.html#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 26.41032</span></span>
+<span id="cb90-3"><a href="2-7-AEDR.html#cb90-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(wage)</span>
+<span id="cb90-4"><a href="2-7-AEDR.html#cb90-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 5.139097</span></span></code></pre></div>
+<p>Las funciones devuelven la varianza y la desviación estándar, respectivamente.</p>
+<p>Los resúmenes gráficos también son útiles. Para variables numéricas como <strong>wage</strong>, las visualizaciones de densidad (a través de histogramas o suavizado de kernel) y los diagramas de caja son adecuados. Los diagramas de caja se considerarán a continuación en relación con los paneles de dos variables obtenidas a través de:</p>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="2-7-AEDR.html#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># histogramas de salarios</span></span>
+<span id="cb91-2"><a href="2-7-AEDR.html#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(wage, <span class="at">freq =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/132-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb92-1"><a href="2-7-AEDR.html#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="co"># logaritmos con densidad superpuesta</span></span>
+<span id="cb92-2"><a href="2-7-AEDR.html#cb92-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log</span>(wage), <span class="at">freq =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb92-3"><a href="2-7-AEDR.html#cb92-3" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">density</span>(<span class="fu">log</span>(wage)), <span class="at">col =</span> <span class="dv">4</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/133-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>El código anterior muestra las densidades de sueldo y su logaritmo (es decir, áreas bajo curvas iguales a <span class="math inline">\(1\)</span>, resultante de <strong>freq = FALSE</strong>; de lo contrario, se habrían representado frecuencias absolutas). Otros argumentos permiten un ajuste fino de la selección de las rupturas en el histograma. Por ejemplo, en el histograma del panel derecho se agregó una estimación de la densidad del kernel obtenida usando <strong>density()</strong>. Claramente, la distribución de los logaritmos está menos sesgada que la de los datos brutos. Se debe tener en cuenta que <strong>density()</strong> solo calcula las coordenadas de densidad y no proporciona una gráfica; por lo tanto, la estimación se agrega a través de <strong>lines()</strong></p>
+</div>
+<div id="una-variable-categórica" class="section level3 unnumbered">
+<h3>Una variable categórica</h3>
+<p>Para datos categóricos, no tiene sentido calcular medias y varianzas; en su lugar, se necesita una tabla que indique las frecuencias con las que ocurren las categorías. Si <strong>R</strong> dice que una determinada variable es categórica (al convertirla en un “<strong>factor</strong>”), elige automáticamente un resumen apropiado:</p>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="2-7-AEDR.html#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(occupation)</span>
+<span id="cb93-2"><a href="2-7-AEDR.html#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   worker    techn services   office    sales     mgmt </span></span>
+<span id="cb93-3"><a href="2-7-AEDR.html#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      156      105       83       97       38       55</span></span></code></pre></div>
+<p>Esto también podría haber sido calculado por <strong>table(occupation)</strong>. Si se desean frecuencias relativas (porcentajes) en lugar de absolutas (números), existe la función <strong>prop.table()</strong>:</p>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="2-7-AEDR.html#cb94-1" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">table</span>(occupation)</span>
+<span id="cb94-2"><a href="2-7-AEDR.html#cb94-2" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(tab)</span>
+<span id="cb94-3"><a href="2-7-AEDR.html#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; occupation</span></span>
+<span id="cb94-4"><a href="2-7-AEDR.html#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     worker      techn   services     office      sales       mgmt </span></span>
+<span id="cb94-5"><a href="2-7-AEDR.html#cb94-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.29213483 0.19662921 0.15543071 0.18164794 0.07116105 0.10299625</span></span></code></pre></div>
+<p>Las variables categóricas generalmente se visualizan mejor mediante gráficos de barras. Si se van a destacar las mayorías, los gráficos circulares también pueden ser útiles. Por lo tanto:</p>
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="2-7-AEDR.html#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico de barras de ocupación </span></span>
+<span id="cb95-2"><a href="2-7-AEDR.html#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(tab)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/136-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="2-7-AEDR.html#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico circular de ocupación</span></span>
+<span id="cb96-2"><a href="2-7-AEDR.html#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pie</span>(tab)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/137-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>El código anterior proporciona el gráfico de barras y gráfico circular de <strong>occupation</strong>. Se debe tener en cuenta que ambas funciones esperan las frecuencias tabuladas como entrada. Además, llamando <strong>occupation</strong> es equivalente a <strong>barplot(table(occupation))</strong>, dado que es una variable categórica.</p>
+</div>
+<div id="dos-variables-categóricas" class="section level3 unnumbered">
+<h3>Dos variables categóricas</h3>
+<p>La relación entre dos variables categóricas generalmente se resume en una tabla de contingencia. Esto puede ser creado por <strong>xtabs()</strong>, una función con una interfaz de fórmula, o por <strong>table()</strong>, una función que toma un número arbitrario de variables para la tabulación cruzada (y no solo una como se muestra arriba).</p>
+<p>Se consideran los factores ocupación (<strong>occupation</strong>) y género (<strong>gender</strong>) para ilustrar el punto anterior:</p>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="2-7-AEDR.html#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xtabs</span>(<span class="sc">~</span> gender <span class="sc">+</span> occupation, <span class="at">data =</span> CPS1985)</span>
+<span id="cb97-2"><a href="2-7-AEDR.html#cb97-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         occupation</span></span>
+<span id="cb97-3"><a href="2-7-AEDR.html#cb97-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gender   worker techn services office sales mgmt</span></span>
+<span id="cb97-4"><a href="2-7-AEDR.html#cb97-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   male      126    53       34     21    21   34</span></span>
+<span id="cb97-5"><a href="2-7-AEDR.html#cb97-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   female     30    52       49     76    17   21</span></span></code></pre></div>
+<p>La tabla anterior puede ser creada de forma equivalente por <strong>table(gender, occupation)</strong>. Una visualización simple es un diagrama de mosaico (Hartigan y Kleiner 1981; Friendly 1994), que puede verse como una generalización de diagramas de barras apilados. El gráfico que se muestra a continuación (también conocido como “gráfico de columna vertebral,” es una variante de la pantalla de mosaico estándar), obtenido a través de:</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="2-7-AEDR.html#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico de mosaico (gráfico de columna vertebral) de género versus ocupación.</span></span>
+<span id="cb98-2"><a href="2-7-AEDR.html#cb98-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gender <span class="sc">~</span> occupation, <span class="at">data =</span> CPS1985)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/139-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>El gráfico muestra que la proporción de hombres y mujeres cambia considerablemente a lo largo de los niveles de ocupación. Además del sombreado que resalta la distribución condicional de género dada la ocupación, los anchos de las barras visualizan la distribución marginal de ocupación, lo que indica que hay comparativamente muchos trabajadores y pocos vendedores.</p>
+</div>
+<div id="dos-variables-numéricas" class="section level3 unnumbered">
+<h3>Dos variables numéricas</h3>
+<p>Se ejemplifica el análisis exploratorio de la relación entre dos variables numéricas utilizando sueldo (<strong>wage</strong>) y educación (<strong>education</strong>). Una medida de resumen para dos variables numéricas es el coeficiente de correlación, implementado mediante la función <strong>cor()</strong>. Sin embargo, el coeficiente de correlación estándar (Pearson) no es necesariamente significativo para variables positivas y muy sesgadas como sueldo (<strong>wage</strong>). Por lo tanto, también se calcula una variante no paramétrica, la correlación de Spearman, que está disponible en <strong>cor()</strong> como una opción mediante los métodos:</p>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="2-7-AEDR.html#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">log</span>(wage), education)</span>
+<span id="cb99-2"><a href="2-7-AEDR.html#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3803983</span></span>
+<span id="cb99-3"><a href="2-7-AEDR.html#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">log</span>(wage), education, <span class="at">method =</span> <span class="st">&quot;spearman&quot;</span>)</span>
+<span id="cb99-4"><a href="2-7-AEDR.html#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3813425</span></span></code></pre></div>
+<p>Ambas medidas son virtualmente idénticas e indican solo una pequeña cantidad de correlación aquí, vea también el diagrama de dispersión correspondiente:</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="2-7-AEDR.html#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="co"># diagrama de dispersión de salarios (en logaritmos) versus educación</span></span>
+<span id="cb100-2"><a href="2-7-AEDR.html#cb100-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">log</span>(wage) <span class="sc">~</span> education)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/141-1.png" width="80%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="una-variable-numérica-y-una-categórica" class="section level3 unnumbered">
+<h3>Una variable numérica y una categórica</h3>
+<p>Es común tener variables tanto numéricas como categóricas en un marco de datos. Por ejemplo, aquí se tiene sueldo (<strong>wage</strong>) y género (<strong>gender</strong>), y puede haber cierto interés en la distribución de sueldo por género. Una función adecuada para resúmenes numéricos es <strong>tapply()</strong>. Se aplica, para una variable numérica como su primer argumento y una (lista de) variable(s) categórica(s) como su segundo argumento, la función especificada como el tercer argumento. Por lo tanto, los salarios medios condicionados al género están disponibles utilizando:</p>
+<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="2-7-AEDR.html#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(<span class="fu">log</span>(wage), gender, mean)</span>
+<span id="cb101-2"><a href="2-7-AEDR.html#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     male   female </span></span>
+<span id="cb101-3"><a href="2-7-AEDR.html#cb101-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2.165286 1.934037</span></span></code></pre></div>
+<p>Usando comandos similares, se pueden obtener medidas descriptivas o incluso resúmenes completos (simplemente reemplace <strong>mean</strong> por <strong>summary</strong>) se pueden calcular.</p>
+<p>Las presentaciones gráficas adecuadas son diagramas de caja paralelos y diagramas de cuantiles-cuantiles (QQ), se muestran a continuación. Recuerde que una gráfica de caja (o “gráfica de caja y bigotes”) es un resumen gráfico burdo de una distribución empírica. El cuadro indica “bisagras” (aproximadamente los cuartiles superior e inferior) y la mediana.</p>
+<p>Los “bigotes” (líneas) indican las observaciones más grandes y más pequeñas que se encuentran a una distancia de <span class="math inline">\(1.5\)</span> veces el tamaño de la caja desde la bisagra más cercana (<span class="math inline">\(1.5\)</span> desviaciones estandar). Cualquier observación que caiga fuera de este rango se muestra por separado y puede ser considerada extrema o atípica (en una muestra aproximadamente normal). Se debe tener en cuenta que existen varias variantes de diagramas de caja en la literatura.</p>
+<p>Los comandos <strong>plot(y ~ x)</strong> y <strong>boxplot(y ~ x)</strong> producen la misma gráfica paralela de boxplot si <strong>X</strong> es un “<strong>factor</strong>”; por lo tanto:</p>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="2-7-AEDR.html#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="co"># diagrama de caja de salarios estratificados por género.</span></span>
+<span id="cb102-2"><a href="2-7-AEDR.html#cb102-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">log</span>(wage) <span class="sc">~</span> gender)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/143-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>El gráfico muestra que las formas generales de ambas distribuciones son bastante similares y que los hombres disfrutan de una ventaja sustancial, especialmente en el rango medio. La última característica también se destaca por el gráfico QQ resultante de:</p>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="2-7-AEDR.html#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co"># diagrama QQ de salarios estratificados por género</span></span>
+<span id="cb103-2"><a href="2-7-AEDR.html#cb103-2" aria-hidden="true" tabindex="-1"></a>mwage <span class="ot">&lt;-</span> <span class="fu">subset</span>(CPS1985, gender <span class="sc">==</span> <span class="st">&quot;male&quot;</span>)<span class="sc">$</span>wage</span>
+<span id="cb103-3"><a href="2-7-AEDR.html#cb103-3" aria-hidden="true" tabindex="-1"></a>fwage <span class="ot">&lt;-</span> <span class="fu">subset</span>(CPS1985, gender <span class="sc">==</span> <span class="st">&quot;female&quot;</span>)<span class="sc">$</span>wage</span>
+<span id="cb103-4"><a href="2-7-AEDR.html#cb103-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-5"><a href="2-7-AEDR.html#cb103-5" aria-hidden="true" tabindex="-1"></a><span class="fu">qqplot</span>(mwage, </span>
+<span id="cb103-6"><a href="2-7-AEDR.html#cb103-6" aria-hidden="true" tabindex="-1"></a>    fwage, </span>
+<span id="cb103-7"><a href="2-7-AEDR.html#cb103-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">xlim =</span> <span class="fu">range</span>(wage), </span>
+<span id="cb103-8"><a href="2-7-AEDR.html#cb103-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ylim =</span> <span class="fu">range</span>(wage),</span>
+<span id="cb103-9"><a href="2-7-AEDR.html#cb103-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">xaxs =</span> <span class="st">&quot;i&quot;</span>, </span>
+<span id="cb103-10"><a href="2-7-AEDR.html#cb103-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">yaxs =</span> <span class="st">&quot;i&quot;</span>, </span>
+<span id="cb103-11"><a href="2-7-AEDR.html#cb103-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">xlab =</span> <span class="st">&quot;male&quot;</span>, </span>
+<span id="cb103-12"><a href="2-7-AEDR.html#cb103-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">ylab =</span> <span class="st">&quot;female&quot;</span>)</span>
+<span id="cb103-13"><a href="2-7-AEDR.html#cb103-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-14"><a href="2-7-AEDR.html#cb103-14" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/144-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>En el gráfico casi todos los puntos están por debajo de la diagonal (correspondientes a distribuciones idénticas en ambas muestras). Esto indica que, para la mayoría de los cuantiles, los salarios de los hombres suelen ser más altos que los de las mujeres.</p>
+<p>Se termina esta sección separando los datos:</p>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="2-7-AEDR.html#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">detach</span>(CPS1985)</span></code></pre></div>
+</div>
+<div id="ejercicios" class="section level3 unnumbered">
+<h3>Ejercicios</h3>
+<ol style="list-style-type: decimal">
+<li><p>Cree una matriz cuadrada, digamos <span class="math inline">\(A\)</span>, con entradas <span class="math inline">\(a_{ii} = 2\)</span>, <span class="math inline">\(i = 2\)</span>, <span class="math inline">\(. . .\)</span> , <span class="math inline">\(n - 1\)</span>, <span class="math inline">\(a_{11} = a_{nn} = 1\)</span>, <span class="math inline">\(a_{i,i+1} = a_{i,i-1} = 1\)</span> y <span class="math inline">\(a_{ij} = 0\)</span>. (¿Dónde ocurre esta matriz en econometría?)</p></li>
+<li><p>“<strong>PARADE</strong>” es la revista dominical que complementa la edición de los domingos o fines de semana de unos <span class="math inline">\(500\)</span> diarios de los Estados Unidos de América (se encuentra en el paquete <strong>AER</strong>). Una característica anual importante es un artículo que proporciona información sobre unos <span class="math inline">\(120\)</span>-<span class="math inline">\(150\)</span> ciudadanos estadounidenses seleccionados “al azar,” indicando su profesión, ciudad natal y estado, así como sus ingresos anuales.
+El conjunto de datos <strong>Parade2005</strong> contienen la versión de 2005, modificada por una variable que indica el estatus de celebridad (motivada por un sobremuestreo sustancial de celebridades en estos datos). Para el conjunto de datos <strong>Parade2005</strong>:</p></li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Determine las ganancias medias en California. Explique el resultado.</li>
+<li>Determine el número de personas que residen en Idaho (¿Qué dice esto sobre el conjunto de datos?).</li>
+<li>Determine la media y la mediana de los ingresos de las celebridades. Explique el resultado.</li>
+<li>Obtenga un diagrama de caja de <strong>log(earnings)</strong> estratificado por <strong>celebrity</strong>. Explique el resultado.</li>
+</ol>
+<ol start="3" style="list-style-type: decimal">
+<li><p>Para el conjunto de datos <strong>Parade2005</strong> del ejercicio anterior, obtenga una densidad estimada de kernel de las ganancias para el conjunto de datos completo. Será necesario transformar los datos a logaritmos (¿por qué?). Comente el resultado. Asegúrese de probar algunos argumentos para <strong>density()</strong>, en particular, el complemento ancho de banda (<strong>bw</strong>).</p></li>
+<li><p>Considere el conjunto de datos <strong>CPS1988</strong>, tomados de Bierens y Ginther (2001) (estos datos se utilizarán para estimar una ecuación de ganancias en próximos capítulos).</p></li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Obtenga diagramas de dispersión del logaritmo del salario real (<strong>wage</strong>) versus experiencia (<strong>experience</strong>) y versus educación (<strong>education</strong>).</li>
+<li>De hecho, <strong>education</strong> corresponde a años de escolaridad y, por ende, toma solo un número limitado de valores. Transformar educación en un factor y obtener diagramas de caja paralelos de la variable <strong>wage</strong> estratificada por los niveles de <strong>education</strong>. Repetir para <strong>experience</strong>.</li>
+<li>El conjunto de datos contiene cuatro factores adicionales: <strong>ethnicity</strong>, <strong>smsa</strong>, <strong>region</strong> y <strong>parttime</strong>. Obtenga visualizaciones gráficas adecuadas de <strong>log(wage)</strong> versus cada uno de estos factores.</li>
+</ol>
+
+</div>
+</div>
+<!-- </div> -->
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="2-6-GR.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="3-TP.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_02.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

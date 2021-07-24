@@ -1,0 +1,1745 @@
+# Funciones de regresión no lineal {#FRNL}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 460, child="_setup.Rmd"}
+```
+
+```{r, 461, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Hasta ahora se asume que la función de regresión era lineal; es decir, se ha tratado el parámetro de pendiente de la función de regresión como una constante. Lo cual implica que el efecto en $Y$ de un cambio de una unidad en $X$ no depende del nivel de $X$. Sin embargo, si el efecto de un cambio en $X$ sobre $Y$ depende del valor de $X$, se debería usar una función de regresión no lineal.
+
+Al igual que en el capítulo anterior, los paquetes **AER** [@R-AER] y **stargazer** [@R-stargazer] son necesarios para la reproducción del código presentado en este capítulo. Compruebe si el fragmento de código a continuación se ejecuta sin ningún mensaje de error.
+
+```{r, 462, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(stargazer)
+```
+
+## Una estrategia general para modelar funciones de regresión no lineal
+
+Es momento de hechar un vistazo a un ejemplo en que el uso de una función de regresión no lineal es más adecuado para estimar la relación de la población entre el regresor, $X$, y el regresante, $Y$: La relación entre los ingresos de los distritos escolares y sus puntajes de prueba.
+
+```{r dataset, 463, results='hide', echo=TRUE, message=FALSE}
+# preparar los datos
+library(AER)                                                     
+data(CASchools)
+CASchools$size <- CASchools$students/CASchools$teachers
+CASchools$score <- (CASchools$read + CASchools$math) / 2       
+```
+
+Se comienza el análisis calculando la correlación entre ambas variables.
+
+```{r, 464}
+cor(CASchools$income, CASchools$score)
+```
+
+Aquí, los ingresos y los puntajes de las pruebas están relacionados positivamente: Los distritos escolares con ingresos por encima del promedio tienden a obtener puntajes por encima del promedio. ¿Una función de regresión lineal modela los datos de manera adecuada? Por tanto, se deben graficar los datos y agregar una línea de regresión lineal.
+
+```{r, 465, fig.align = 'center'}
+# ajustar un modelo lineal simple
+linear_model<- lm(score ~ income, data = CASchools)
+
+# trazar las observaciones
+plot(CASchools$income, CASchools$score,
+     col = "steelblue",
+     pch = 20,
+     xlab = "Ingresos del distrito (miles de dólares)", 
+     ylab = "Resultado de la prueba",
+     cex.main = 0.9,
+     main = "Puntuación de la prueba frente a los ingresos del distrito y una función de regresión lineal MCO")
+
+# agregar la línea de regresión al gráfico
+abline(linear_model, 
+       col = "red", 
+       lwd = 2)
+```
+
+La línea de regresión lineal parece sobrestimar la verdadera relación cuando los ingresos son muy altos o muy bajos y la subestima para el grupo de ingresos medios.
+
+Afortunadamente, MCO no solo maneja funciones lineales de los regresores. Por ejemplo, se pueden modelar las puntuaciones de las pruebas en función de los ingresos y el cuadrado de los ingresos. El modelo de regresión correspondiente es
+
+$$TestScore_i = \beta_0 + \beta_1 \times income_i + \beta_2 \times income_i^2 + u_i,$$ llamado *modelo de regresión cuadrática*; esto es, $income^2$ se trata como una variable explicativa adicional. Por tanto, el modelo cuadrático es un caso especial de un modelo de regresión multivariante. Al ajustar el modelo con **lm()** se tiene que usar el operador **^** junto con la función **I()** para agregar el término cuadrático como un regresor adicional al argumento **formula**. Esto se debe a que la fórmula de regresión que se pasa por la función **formula** se convierte en un objeto de la clase **formula**. Para objetos de esta clase, los operadores **+**, **-**, \textbf{*} y **^** tienen una interpretación no aritmética. **I()** garantiza que se utilicen como operadores aritméticos, consultar **?I**,
+
+```{r, 466}
+# ajustar el modelo cuadrático
+quadratic_model <- lm(score ~ income + I(income^2), data = CASchools)
+
+# obtener el resumen del modelo
+coeftest(quadratic_model, vcov. = vcovHC, type = "HC1")
+```
+
+La salida indica que la función de regresión estimada es
+
+$$\widehat{TestScore}_i = \underset{(2.90)}{607.3} + \underset{(0.27)}{3.85} \times income_i - \underset{(0.0048)}{0.0423} \times income_i^2.$$
+
+Este modelo permite probar la hipótesis de que la relación entre los puntajes de las pruebas y los ingresos del distrito es lineal frente a la alternativa de que es cuadrática. Esto corresponde a la prueba
+
+$$H_0: \beta_2 = 0 \ \ \text{vs.} \ \  H_1: \beta_2\neq0,$$
+
+ya que $\beta_2=0$ corresponde a una ecuación lineal simple y $\beta_2\neq0$ implica una relación cuadrática. Se encuentra que $t=(\hat\beta_2 - 0)/SE(\hat\beta_2) = -0.0423/0.0048 = -8.81$, por lo que el valor de la hipótesis nula se rechaza en cualquier nivel común de significancia y se concluye que la relación no es lineal. Esto es consistente con la impresión obtenida de la gráfica.
+
+Ahora se dibuja el mismo diagrama de dispersión que para el modelo lineal y se agrega la línea de regresión para el modelo cuadrático. Debido a que **abline()** solo puede dibujar líneas rectas, no se puede usar aquí. **lines()** es una función que permite dibujar líneas no rectas, ver `?lines`. La llamada más básica de **lines()** es **lines(x_values, y_values)** donde **x_values** y **y_values** son vectores de misma longitud que proporcionan las coordenadas de los puntos que se conectarán *secuencialmente* por una línea. Esto hace que sea necesario ordenar los pares de coordenadas de acuerdo con los valores X. Aquí se usa la función **order()** para ordenar los valores ajustados de **score** de acuerdo con las observaciones de **income**.
+
+```{r, 467, fig.align="center"}
+# graficar un diagrama de dispersión de las observaciones para los ingresos y la puntuación de la prueba
+plot(CASchools$income, CASchools$score,
+     col  = "steelblue",
+     pch = 20,
+     xlab = "Ingresos del distrito (miles de dólares)",
+     ylab = "Resultado de la prueba",
+     main = "Funciones de regresión lineal y cuadrática estimadas")
+
+# agregar una función lineal a la gráfica
+abline(linear_model, col = "black", lwd = 2)
+
+# agregar función cuadrática a la gráfica
+order_id <- order(CASchools$income)
+
+lines(x = CASchools$income[order_id], 
+      y = fitted(quadratic_model)[order_id],
+      col = "red", 
+      lwd = 2) 
+```
+
+Se puede ver que la función cuadrática se ajusta a los datos mucho mejor que la función lineal.
+
+## Funciones no lineales de una única variable independiente {#FNLUVI}
+
+### Polinomios {-}
+
+El enfoque utilizado para obtener un modelo cuadrático se puede generalizar a modelos polinomiales de grado arbitrario $r$,
+
+$$Y_i = \beta_0 + \beta_1 X_i + \beta_2 X_i^2 + \cdots + \beta_r X_i^r + u_i.$$
+
+Un modelo cúbico, por ejemplo, se puede estimar de la misma forma que el modelo cuadrático; solo se tiene que usar un polinomio de grado $r = 3$ en **income**. Esto se hace convenientemente usando la función **poly()**.
+
+```{r cubic, 468}
+# estimar un modelo cúbico
+cubic_model <- lm(score ~ poly(income, degree = 3, raw = TRUE), data = CASchools)
+```
+
+**poly()** genera polinomios ortogonales que son ortogonales a la constante por defecto. Aquí, se establece **raw = TRUE** de modo que los polinomios sin procesar se evalúen, consultar `?Poly`.
+
+En la práctica, surgirá la cuestión de qué orden polinómico debería elegirse. Primero, de manera similar a $r = 2$, se puede probar la hipótesis nula de que la relación verdadera es lineal contra la hipótesis alternativa de que la relación es un polinomio de grado $r$:
+
+$$ H_0: \beta_2=0, \ \beta_3=0,\dots,\beta_r=0 \ \ \ \text{vs.} \ \ \ H_1: \text{at least one} \ \beta_j\neq0, \ j=2,\dots,r $$
+
+Esta es una hipótesis nula conjunta con restricciones de $r-1$, por lo que puede probarse utilizando la prueba $F$ presentada en el Capítulo \@ref(PHICRM). **linearHypothesis()** se puede utilizar para realizar tales pruebas. Por ejemplo, se puede probar la hipótesis nula de un modelo lineal contra la alternativa de un polinomio de grado máximo $r = 3$ como sigue.
+
+```{r, 469, warning=F, message=F}
+# probar la hipótesis de un modelo lineal contra alternativas cuadráticas o polinominales
+
+# configurar la matriz de hipótesis
+R <- rbind(c(0, 0, 1, 0),
+            c(0, 0, 0, 1))
+
+# hacer la prueba
+linearHypothesis(cubic_model,
+                 hypothesis.matrix = R,
+                 white.adj = "hc1")
+```
+
+Se proporciona una matriz de hipótesis como argumento **hypothesis.matrix**. Esto es útil cuando los coeficientes tienen nombres largos, como es el presente caso debido al uso de **poly()**, o cuando las restricciones incluyen múltiples coeficientes. La forma en que **linearHypothesis()** interpreta la matriz de hipótesis $\mathbf{R}$ se ve mejor usando álgebra matricial:
+
+Para las dos restricciones lineales anteriores, se tiene:
+\begin{align*}
+  \mathbf{R}\boldsymbol{\beta} =& \mathbf{s} \\
+  \begin{pmatrix}
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1
+  \end{pmatrix}
+  \begin{pmatrix}
+    \beta_0 \\
+    \beta_1 \\
+    \beta_2 \\
+    \beta_3 \\
+  \end{pmatrix} =&
+  \begin{pmatrix}
+   0 \\
+   0
+  \end{pmatrix} \\
+  \begin{pmatrix}
+    \beta_2 \\
+    \beta_3
+  \end{pmatrix}= &
+  \begin{pmatrix}
+    0 \\
+    0
+  \end{pmatrix}.
+\end{align*}
+
+**linearHypothesis()** usa el vector cero para $\mathbf{s}$ por defecto, ver `?linearHypothesis`.
+
+El valor de $p$ para es muy pequeño, por lo que se rechaza la hipótesis nula. Sin embargo, esto no indica *qué* $r$ elegir. En la práctica, un enfoque para determinar el grado del polinomio es utilizar *pruebas secuenciales*:
+
+1. Estimar un modelo polinomial para un valor máximo $r$.
+2. Utilizar una prueba $t$ para probar $\beta_r = 0$. *El rechazo* de la hipótesis nula significa que $X^r$ pertenece a la ecuación de regresión.
+3. *La aceptación* de la hipótesis nula en el paso 2 implica que $X^r$ se puede eliminar del modelo. Continuar repitiendo el paso 1 con el orden $r-1$ y probar si $\beta_{r-1}=0$. Si la prueba es rechazada, usar un modelo polinomial de orden $r-1$.
+4. Si las pruebas del paso 3 son rechazadas, continuar con el procedimiento hasta que el coeficiente de la potencia más alta sea estadísticamente significativo.
+
+No existe una pauta inequívoca sobre cómo elegir $r$ en el paso uno. Sin embargo, como se señala en @stock2015, los datos económicos a menudo son fluidos, por lo que es apropiado elegir órdenes pequeños como $2$, $3$ o $4$.
+
+Se demostrará cómo aplicar pruebas secuenciales con el ejemplo del modelo cúbico.
+
+```{r, 470}
+summary(cubic_model)
+```
+
+El modelo cúbico estimado almacenado en **cubic_model** es
+
+$$ \widehat{TestScore}_i = \underset{(5.83)}{600.1} + \underset{(0.86)}{5.02} \times income -\underset{(0.03)}{0.96} \times income^2 - \underset{(0.00047)}{0.00069} \times income^3. $$
+
+La estadística $t$ sobre $income^3$ es $1.42$, por lo que el valor nulo de que la relación es cuadrática no puede rechazarse, incluso en el nivel de $10\% $. Esto es contrario a la estrategia de usar errores estándar robustos en todo momento, por lo que también se usará una estimación robusta de varianza-covarianza para reproducir estos resultados.
+
+```{r, 471}
+# probar la hipótesis utilizando errores estándar robustos
+coeftest(cubic_model, vcov. = vcovHC, type = "HC1")
+```
+
+Los errores estándar informados han cambiado. Además, el coeficiente de **income^3** ahora es significativo en el nivel de $5\%$. Esto significa que se rechaza la hipótesis de que la función de regresión es cuadrática frente a la alternativa de que es cúbica. Además, también se puede probar si los coeficientes de **income^2** e **income^3** son conjuntamente significativos utilizando una versión robusta de la prueba $F$.
+
+```{r f-test, 472}
+# realizar una prueba F robusta
+linearHypothesis(cubic_model, 
+                 hypothesis.matrix = R,
+                 vcov. = vcovHC, type = "HC1")
+```
+
+Con un valor de $p$ de $9.043e^{-16}$, es decir, mucho menos de $0.05$, la hipótesis nula de linealidad se rechaza a favor de la alternativa de que la relación es *cuadrática* o *cúbica*.
+
+#### Interpretación de coeficientes en modelos de regresión no lineal {-}
+
+Los coeficientes de la regresión polinomial no tienen una interpretación simple. ¿Por qué? Piense en un modelo cuadrático: No es útil pensar en el coeficiente de $X$ como el cambio esperado en $Y$ asociado con un cambio en $X$ manteniendo constantes los otros regresores porque $X^2$ cambia conforme $X$ varía. Este es también el caso de otras desviaciones de la linealidad, por ejemplo, en modelos en los que los regresores y/o la variable dependiente se transforman logarítmicamente. Una forma de abordar esto es calcular el efecto estimado en $Y$ asociado con un cambio en $X$ para uno o más valores de $X$. Esta idea se resume en el Concepto clave 8.1.
+
+```{r, 473, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC8.1">
+<h3 class = "right"> Concepto clave 8.1 </h3>          
+<h3 class = "left"> El efecto esperado en $Y$ de un cambio en $X_1$ en un modelo de regresión no lineal </h3>
+
+Considere el modelo de regresión poblacional no lineal
+
+$$ Y_i = f(X_{1i}, X_{2i}, \\dots, X_{ki}) + u_i \\ , \\ i=1,\\dots,n,$$
+
+donde $f(X_{1i}, X_{2i}, \\dots, X_{ki})$ es la función de regresión poblacional y $u_i$ es el término de error.
+
+Denote por $\\Delta Y$ el cambio esperado en $Y$ asociado con $\\Delta X_1$, el cambio en $X_1$ mientras se mantiene constante $X_2, \\cdots , X_k$. En otras palabras, el cambio esperado en $Y$ es la diferencia
+
+$$\\Delta Y = f(X_1 + \\Delta X_1, X_2, \\cdots, X_k) - f(X_1, X_2, \\cdots, X_k).$$
+
+El estimador de esta diferencia poblacional desconocida es la diferencia entre los valores predichos para estos dos casos. Sea $\\hat{f}(X_1, X_2, \\cdots, X_k)$ el valor predicho de $Y$ basado en el estimador $\\hat{f}$ de la función de regresión poblacional. Entonces el cambio predicho en $Y$ es
+
+$$\\Delta \\widehat{Y} = \\hat{f}(X_1 + \\Delta X_1, X_2, \\cdots, X_k) - \\hat{f}(X_1, X_2, \\cdots, X_k).$$
+</p>
+</div>
+')
+```
+
+```{r, 474, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El efecto esperado en $Y$ de un cambio en $X_1$ en un modelo de regresión no lineal]{8.1}
+
+Considere el modelo de regresión poblacional no lineal
+
+$$ Y_i = f(X_{1i}, X_{2i}, \\dots, X_{ki}) + u_i \\ , \\ i=1,\\dots,n,$$
+
+donde $f(X_{1i}, X_{2i}, \\dots, X_{ki})$ es la función de regresión poblacional y $u_i$ es el término de error.
+
+Denote por $\\Delta Y$ el cambio esperado en $Y$ asociado con $\\Delta X_1$, el cambio en $X_1$ mientras se mantiene constante $X_2, \\cdots , X_k$. En otras palabras, el cambio esperado en $Y$ es la diferencia
+
+$$\\Delta Y = f(X_1 + \\Delta X_1, X_2, \\cdots, X_k) - f(X_1, X_2, \\cdots, X_k).$$
+
+El estimador de esta diferencia poblacional desconocida es la diferencia entre los valores predichos para estos dos casos. Sea $\\hat{f}(X_1, X_2, \\cdots, X_k)$ el valor predicho de $Y$ basado en el estimador $\\hat{f}$ de la función de regresión poblacional. Entonces el cambio predicho en $Y$ es
+
+$$\\Delta \\widehat{Y} = \\hat{f}(X_1 + \\Delta X_1, X_2, \\cdots, X_k) - \\hat{f}(X_1, X_2, \\cdots, X_k).$$
+\\end{keyconcepts}
+')
+```
+
+Por ejemplo, se puede preguntar lo siguiente: ¿Cuál es el cambio predicho en los puntajes de las pruebas asociado con un cambio de una unidad (es decir, $\$1000$) en los ingresos, según la función de regresión cuadrática estimada?
+
+$$\widehat{TestScore} = 607.3 + 3.85 \times income - 0.0423 \times income^2\ ?$$
+
+Dado que la función de regresión es cuadrática, este efecto depende del ingreso *inicial* del distrito. Por tanto, se consideran dos casos:
+
+1. Un aumento en los ingresos del distrito de $10$ a $11$ (es decir, de $\$10000$ per cápita a $\$11000$).
+
+2. Un aumento en los ingresos del distrito de $40$ a $41$ (es decir, de $\$40000$ per cápita a $\$41000$).
+
+Para obtener el $\Delta \widehat{Y}$ asociado con un cambio en el ingreso de $10$ a $11$, se usa la siguiente fórmula:
+
+$$\Delta \widehat{Y} = \left(\hat{\beta}_0 + \hat{\beta}_1 \times 11 + \hat{\beta}_2 \times 11^2\right) - \left(\hat{\beta}_0 + \hat{\beta}_1 \times 10 + \hat{\beta}_2 \times 10^2\right) $$
+
+Para calcular $\widehat{Y}$ usando **R**, se puede usar **predict()**.
+
+```{r quadratic, 475}
+# calcular y asignar el modelo cuadrático
+quadriatic_model <- lm(score ~ income + I(income^2), data = CASchools)
+
+# configurar datos para la predicción
+new_data <- data.frame(income = c(10, 11))
+
+# hacer la predicción
+Y_hat <- predict(quadriatic_model, newdata = new_data)
+
+# calcular la diferencia
+diff(Y_hat)
+```
+
+De manera análoga, se puede calcular el efecto de un cambio en los ingresos del distrito de $40$ a $41$:
+
+```{r, 476}
+# configurar datos para la predicción
+new_data <- data.frame(income = c(40, 41))
+
+# hacer la predicción
+Y_hat <- predict(quadriatic_model, newdata = new_data)
+
+# calcula la diferencia
+diff(Y_hat)
+```
+
+Entonces, para el modelo cuadrático, el cambio esperado en $TestScore$ inducido por un aumento en $income$ de $10$ a $11$ es aproximadamente $2.96$ puntos, pero un aumento en $income$ de $40$ a $41$ aumenta la puntuación prevista en solo $0.42$. Por lo tanto, la pendiente de la función de regresión cuadrática estimada es *más pronunciada* en los niveles de ingresos bajos que en los niveles más altos.
+
+### Logaritmos {-}
+
+Otra forma de especificar una función de regresión no lineal es usar el logaritmo natural de $Y$ y/o $X$.
+
+Los logaritmos convierten los cambios en las variables en cambios porcentuales. Esto es conveniente, ya que muchas relaciones se expresan naturalmente en términos de porcentajes.
+
+Existen tres casos diferentes en los que se pueden utilizar logaritmos.
+
+1. Transformar $X$ con su logaritmo, pero no $Y$.
+
+2. De manera análoga, se podría transformar $Y$ a su logaritmo, pero dejar $X$ en su nivel original.
+
+3. Tanto $Y$ como $X$ se transforman a sus logaritmos.
+
+La interpretación de los coeficientes de regresión es diferente en cada caso.
+
+#### Caso I: $X$ está en logaritmo, $Y$ no. {-}
+
+El modelo de regresión entonces es $$Y_i = \beta_0 + \beta_1 \times \ln(X_i) + u_i \text{, } i=1,...,n. $$, similar a la regresión polinomial, no se tiene que crear una nueva variable antes de usar **lm()**. Simplemente se puede ajusta el argumento **lm()** de la función **formula** para decirle a **R** que se debe usar la transformación logarítmica de una variable.
+
+```{r, 477}
+# estimar un modelo lineal-log (logarítmico de nivel)
+LinearLog_model <- lm(score ~ log(income), data = CASchools)
+
+# calcular resumen robusto
+coeftest(LinearLog_model, 
+         vcov = vcovHC, type = "HC1")
+```
+
+Por tanto, la función de regresión estimada es
+
+$$\widehat{TestScore} = 557.8 + 36.42 \times \ln(income).$$
+
+Resulta importante dibujar una gráfica de esta función.
+
+```{r, 478, fig.align="center"}
+# dibujar un diagrama de dispersión
+plot(score ~ income, 
+     col = "steelblue",
+     pch = 20,
+     data = CASchools,
+     main = "Línea de regresión logarítmica lineal")
+
+# agregar la línea de regresión logarítmica lineal
+order_id  <- order(CASchools$income)
+
+lines(CASchools$income[order_id],
+      fitted(LinearLog_model)[order_id], 
+      col = "red", 
+      lwd = 2)
+```
+
+Se puede interpretar $\hat{\beta}_1$ de la siguiente manera: Un aumento de $1\%$ en los ingresos está asociado con un aumento en los puntajes de las pruebas de $0.01 \times 36.42 = 0.36$ puntos. Para obtener el efecto estimado de un cambio de una unidad en el ingreso (es decir, un cambio en las unidades originales, miles de dólares) en los puntajes de las pruebas, se puede utilizar el método presentado en el Concepto clave 8.1.
+
+```{r, 479}
+# configurar nuevos datos
+new_data <- data.frame(income = c(10, 11, 40, 41))
+
+# predecir los resultados
+Y_hat <- predict(LinearLog_model, newdata = new_data)
+
+# calcula la diferencia esperada
+Y_hat_matrix <- matrix(Y_hat, nrow = 2, byrow = TRUE)
+Y_hat_matrix[, 2] - Y_hat_matrix[, 1]
+```
+
+Al establecer **nrow = 2** y **byrow = TRUE** en **matrix()** se asegura que **Y_hat_matrix** es una matriz de $2\times2$ rellenada por filas con las entradas de **Y_hat**.
+
+El modelo estimado establece que para un aumento de ingresos de $\$10000$ a $\$11000$, los puntajes de las pruebas aumentan en una cantidad esperada de $3.47$ puntos. Cuando los ingresos aumentan de $\$40000$ a $\$41000$, el aumento esperado en los puntajes de las pruebas es de solo $0.90$ puntos.
+
+#### Caso II: $Y$ está en logaritmo, $X$ no {-}
+
+Existen casos en los que es útil hacer una regresión $\ln(Y)$.
+
+El modelo de regresión correspondiente entonces es
+
+$$ \ln(Y_i) = \beta_0 + \beta_1 \times X_i + u_i , \ \ i=1,...,n. $$
+
+```{r, 480}
+# estimar un modelo log-lineal
+LogLinear_model <- lm(log(score) ~ income, data = CASchools)
+
+# obtener un resumen robusto de coeficientes
+coeftest(LogLinear_model, 
+         vcov = vcovHC, type = "HC1")
+```
+
+La función de regresión estimada es $$\widehat{\ln(TestScore)} = 6.439 + 0.00284 \times income.$$ Se espera que un aumento en los ingresos del distrito en $\$1000$ aumente los puntajes de las pruebas en $100\times 0.00284 \% = 0.284\%$. 
+
+Cuando la variable dependiente está en logaritmo, uno no puede simplemente usar $e^{\log(\cdot)}$ para transformar las predicciones de nuevo a la escala original.
+
+#### Caso III: $Y$ y $X$ están en logaritmos {-}
+
+El modelo de regresión log-log es 
+
+$$\ln(Y_i) = \beta_0 + \beta_1 \times \ln(X_i) + u_i, \ \ i=1,...,n.$$
+
+```{r log log, 481}
+# estimate the log-log model
+LogLog_model <- lm(log(score) ~ log(income), data = CASchools)
+
+# imprimir un resumen robusto de coeficientes en la consola
+coeftest(LogLog_model, 
+         vcov = vcovHC, type = "HC1")
+```
+
+Por tanto, la función de regresión estimada es $$\widehat{\ln(TestScore)} = 6.336 + 0.0554 \times \ln(income).$$ En un modelo log-log, se asocia un cambio de $1\%$ en $X$ con un cambio estimado de $\hat\beta_1 \%$ en $Y$.
+
+```{r, 482, fig.align="center"}
+# generar un diagrama de dispersión
+plot(log(score) ~ income, 
+     col = "steelblue", 
+     pch = 20, 
+     data = CASchools,
+     main = "Función de regresión lineal-logarítmica")
+
+# agregar la línea de regresión log-lineal
+order_id  <- order(CASchools$income)
+
+lines(CASchools$income[order_id], 
+      fitted(LogLinear_model)[order_id], 
+      col = "red", 
+      lwd = 2)
+
+# agregar la línea de regresión log-log
+lines(sort(CASchools$income), 
+      fitted(LogLog_model)[order(CASchools$income)], 
+      col = "green", 
+      lwd = 2)
+
+# agregar una leyenda
+legend("bottomright",
+       legend = c("modelo log-lineal "," modelo log-log"),
+       lwd = 2,
+       col = c("red", "green"))
+```
+
+El Concepto clave 8.2 resume los tres modelos de regresión logarítmica.
+
+```{r, 483, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC8.2">
+<h3 class = "right"> Concepto clave 8.2 </h3>          
+<h3 class = "left"> Logaritmos en regresión: Tres casos </h3>
+
+<p> Los logaritmos se pueden usar para transformar la variable dependiente $Y$ o la variable independiente $X$, o ambas (la variable que se transforma debe ser positiva). 
+
+La siguiente tabla resume estos tres casos y la interpretación del coeficiente de regresión $\\beta_1$. En cada caso, $\\beta_1$, se puede estimar aplicando MCO después de tomar el o los logaritmos de la variable dependiente y/o independiente. </p>
+
+<table>
+<thead>
+<tr class="header">
+<th align="left">Caso</th>
+<th align="left">Especificación del modelo</th>
+<th align="left">Interpretación de $\\beta_1$</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">$(I)$</td>
+<td align="left">$Y_i = \\beta_0 + \\beta_1 \\ln(X_i) + u_i$</td>
+<td align="left">Un cambio de $1\\%$ en $X$ está asociado con un cambio en $Y$ de $0.01 \\times \\beta_1$.</td>
+</tr>
+<tr class="even">
+<td align="left">$(II)$</td>
+<td align="left">$\\ln(Y_i) = \\beta_0 + \\beta_1 X_i + u_i$</td>
+<td align="left">Un cambio en $X$ por una unidad ($\\Delta X = 1$) está asociado con un cambio de $100 \\times \\beta_1 \\%$ en $Y$.</td>
+</tr>
+<tr class="odd">
+<td align="left">$(III)$</td>
+<td align="left">$\\ln(Y_i) = \\beta_0 + \\beta_1 \\ln(X_i) + u_i$</td>
+<td align="left">Un cambio de $1\\%$ en $X$ está asociado con un cambio $\\beta_1\\%$ en $Y$, por lo que $\\beta_1$ es la elasticidad de $Y$ respecto a $X$.</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+')
+```
+
+```{r, 484, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Logaritmos en regresión: Tres casos]{8.2}
+    \\begin{tabularx}{\\textwidth}{llX}
+    \\textbf{Caso}  & \\textbf{Especificación del modelo} & \\textbf{Interpretación de $\\beta_1$} \\\\
+    $(I)$ & $Y_i = \\beta_0 + \\beta_1 \\ln(X_i) + u_i$ & Un cambio de $1\\%$ en $X$ está asociado con un cambio en $Y$ de \\newline $0.01 \\times \\beta_1$. \\\\
+ $(II)$  & $\\ln(Y_i) = \\beta_0 + \\beta_1 X_i + u_i$ & Un cambio en $X$ por una unidad ($\\Delta X = 1$) está asociado con un cambio de \\newline $100 \\times \\beta_1 \\%$ en $Y$. \\\\
+    $(III)$ & $\\ln(Y_i) = \\beta_0 + \\beta_1 \\ln(X_i) + u_i$ & Un cambio de $1\\%$ en $X$ está asociado con un cambio $\\beta_1\\%$ en $Y$, por lo que \\newline $\\beta_1$ es la elasticidad de $Y$ respecto a $X$. \\\\
+    \\end{tabularx}
+\\end{keyconcepts}
+')
+```
+
+Por supuesto, también se puede estimar un modelo *polylog* como
+
+$$ TestScore_i = \beta_0 + \beta_1 \times \ln(income_i) + \beta_2 \times \ln(income_i)^2 + \beta_3 \times \ln(income_i)^3 + u_i $$
+
+que modela la variable dependiente $TestScore$ mediante un polinomio de tercer grado del regresor $income$ transformado logarítmicamente.
+
+```{r poly log, 485}
+# estimar el modelo polylog
+polyLog_model <- lm(score ~ log(income) + I(log(income)^2) + I(log(income)^3), 
+                    data = CASchools)
+
+# imprimir un resumen robusto en la consola
+coeftest(polyLog_model, 
+         vcov = vcovHC, type = "HC1")
+```
+
+Comparando por $\bar{R}^2$ se puede encontrar que, dejando fuera el modelo log-lineal, todos los modelos tienen un ajuste similar. En la clase de modelos polinomiales, la especificación cúbica tiene la $\bar{R}^2$ más alta, mientras que la especificación de registro lineal es la mejor de los modelos de registro.
+
+```{r, 486}
+# calcular el R^2 ajustado para los modelos no lineales
+adj_R2 <-rbind("quadratic" = summary(quadratic_model)$adj.r.squared,
+               "cubic" = summary(cubic_model)$adj.r.squared,
+               "LinearLog" = summary(LinearLog_model)$adj.r.squared,
+               "LogLinear" = summary(LogLinear_model)$adj.r.squared,
+               "LogLog" = summary(LogLog_model)$adj.r.squared,
+               "polyLog" = summary(polyLog_model)$adj.r.squared)
+
+# asignar nombres de columna
+colnames(adj_R2) <- "adj_R2"
+
+adj_R2
+```
+
+Comparar ahora el modelo cúbico y el modelo logarítmico lineal trazando las correspondientes funciones de regresión estimadas.
+
+```{r, 487, fig.align='center'}
+# generar un diagrama de dispersión
+plot(score ~ income, 
+     data = CASchools,
+     col = "steelblue", 
+     pch = 20,
+     main = "Funciones de regresión cúbica y logarítmica lineal")
+
+# agregar la línea de regresión logarítmica lineal
+order_id  <- order(CASchools$income)
+
+lines(CASchools$income[order_id],
+      fitted(LinearLog_model)[order_id], 
+      col = "darkgreen", 
+      lwd = 2)
+
+# agregar la línea de regresión cúbica
+lines(x = CASchools$income[order_id], 
+      y = fitted(cubic_model)[order_id],
+      col = "darkred", 
+      lwd = 2) 
+```
+
+Ambas líneas de regresión parecen casi idénticas. En conjunto, el modelo logarítmico lineal puede ser preferible, ya que es más parsimonioso en términos de regresores: No incluye polinomios de mayor grado.
+
+## Interacciones entre variables independientes
+
+Existen preguntas de investigación en las que es interesante saber cómo el efecto sobre $Y$ de un cambio en una variable independiente, depende del valor de otra variable independiente. Por ejemplo, se puede preguntar si los distritos con muchos estudiantes de inglés se benefician de manera diferente de una disminución en el tamaño de las clases que aquellos con pocos estudiantes de inglés. Para evaluar esto usando un modelo de regresión múltiple, se incluye un término de interacción. Se consideran tres casos:
+
+1. Interacciones entre dos variables binarias.
+
+2. Interacciones entre una variable binaria y una continua.
+
+3. Interacciones entre dos variables continuas.
+
+Las siguientes subsecciones discuten estos casos brevemente y demuestran cómo realizar tales regresiones en **R**.
+
+#### Interacciones entre dos variables binarias {-}
+
+Tomando dos variables binarias $D_1$ y $D_2$, así como el modelo de regresión de población
+
+$$ Y_i = \beta_0 + \beta_1 \times D_{1i} + \beta_2 \times D_{2i} + u_i. $$
+
+Se asume que:
+
+\begin{align*}
+  Y_i=& \, \ln(Ganancias_i),\\
+  D_{1i} =& \,
+   \begin{cases}
+      1 & \text{si $i^{ésimo}$ la persona tiene un título universitario,} \\
+      0 & \text{de otro modo}.
+    \end{cases} \\
+  D_{2i} =& \, 
+    \begin{cases}
+      1 & \text{si $i^{ésimo}$ la persona es mujer,} \\
+      0 & \text{si $i^{ésimo}$ la persona es hombre}.
+    \end{cases}
+\end{align*}
+
+Se sabe que $\beta_1$ mide la diferencia promedio en $\ln(Ganancias)$ entre personas con y sin título universitario y $\beta_2$ es la diferencia de género en $\ln(Ganancias)$, ceteris paribus. Este modelo *no permite determinar si existe un efecto específico del género al tener un título universitario* y, de ser así, *qué tan fuerte es este efecto*. Es fácil llegar a una especificación de modelo que permita investigar esto:
+
+$$ Y_i = \beta_0 + \beta_1 \times D_{1i} + \beta_2 \times D_{2i} + \beta_3 \times (D_{1i} \times D_{2i}) + u_i $$
+
+$(D_{1i} \times D_{2i})$ se llama un término de interacción y $\beta_3$ mide la diferencia en el efecto de tener un título universitario para mujeres versus hombres.
+
+```{r, 488, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC8.3">
+<h3 class = "right"> Concepto clave 8.3 </h3>          
+<h3 class = "left"> Un método para interpretar coeficientes en regresión con variables binarias </h3>
+
+Calcular los valores esperados de $Y$ para cada conjunto posible descrito por el conjunto de variables binarias. Comparar los valores esperados.
+
+Los coeficientes se pueden expresar como valores esperados o como la diferencia entre al menos dos valores esperados.
+
+</div>
+')
+```
+
+```{r, 489, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Un método para interpretar coeficientes en regresión con variables binarias]{8.3}
+
+Calcular los valores esperados de $Y$ para cada conjunto posible descrito por el conjunto de variables binarias. Comparar los valores esperados.
+
+Los coeficientes se pueden expresar como valores esperados o como la diferencia entre al menos dos valores esperados.
+
+\\end{keyconcepts}
+')
+```
+
+Siguiendo el Concepto clave 8.3 se tiene que
+
+\begin{align*}
+  E(Y_i\vert D_{1i}=0, D_{2i} = d_2) =& \, \beta_0 + \beta_1 \times 0 + \beta_2 \times d_2 + \beta_3 \times (0 \times d_2) \\
+  =& \, \beta_0 + \beta_2 \times d_2.
+\end{align*}
+
+Si $D_ {1i}$ cambia de $0$ a $1$ se tiene
+
+\begin{align*}
+  E(Y_i\vert D_{1i}=1, D_{2i} = d_2) =& \, \beta_0 + \beta_1 \times 1 + \beta_2 \times d_2 + \beta_3 \times (1 \times d_2) \\
+  =& \, \beta_0 + \beta_1 + \beta_2 \times d_2 + \beta_3 \times d_2.
+\end{align*}
+
+Por lo tanto, el efecto general es
+
+$$ E(Y_i\vert D_{1i}=1, D_{2i} = d_2) - E(Y_i\vert D_{1i}=0, D_{2i} = d_2) = \beta_1 + \beta_3 \times d_2 $$
+
+por lo que el efecto es una diferencia de los valores esperados.
+
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés {-}
+
+Ahora sea
+
+\begin{align*}
+  HiSTR =& \, 
+    \begin{cases}
+      1, & \text{si $STR \geq 20$} \\
+      0, & \text{de otro modo}.
+    \end{cases} \\
+  \\
+  HiEL =& \,
+    \begin{cases}
+      1, & \text{si $PctEL \geq 10$} \\
+      0, & \text{de otro modo}.
+    \end{cases}
+\end{align*}
+
+Se puede usar **R** para construir las variables anteriores de la siguiente manera:
+
+```{r, 490}
+# adjuntar HiSTR a CASchools
+CASchools$HiSTR <- as.numeric(CASchools$size >= 20)
+
+# adjuntar HiEL a CASchools
+CASchools$HiEL <- as.numeric(CASchools$english >= 10)
+```
+
+Se procede a estimar el modelo
+
+\begin{align}
+TestScore = \beta_0 + \beta_1 \times HiSTR + \beta_2 \times HiEL + \beta_3 \times (HiSTR \times HiEL) + u_i. (\#eq:im)
+\end{align}
+
+Existen varias formas de agregar el término de interacción al argumento **formula** cuando se usa **lm()**, pero la forma más intuitiva es usar \textbf{HiEL*HiSTR}.^[Anexando \textbf{HiEL*HiSTR} a la fórmula agregará **HiEL**, **HiSTR** y **su interacción** como regresores, mientras que **HiEL: HiSTR** solo agrega el término de interacción.]
+
+```{r, 491}
+# estimar el modelo con un término de interacción binaria
+bi_model <- lm(score ~ HiSTR * HiEL, data = CASchools)
+
+# imprimir un resumen sólido de los coeficientes
+coeftest(bi_model, vcov. = vcovHC, type = "HC1")
+```
+
+El modelo de regresión estimado es 
+
+$$\widehat{TestScore} = \underset{(1.39)}{664.1} - \underset{(1.93)}{1.9} \times HiSTR - \underset{(2.33)}{18.3} \times HiEL - \underset{(3.12)}{3.3} \times (HiSTR \times HiEL)$$ 
+
+y predice que el efecto de pasar de un distrito escolar con una proporción baja de alumnos por maestro a un distrito con una alta proporción de alumnos por maestro, dependiendo del porcentaje alto o bajo de estudiantes de inglés, es de $-1.9-3.3\times HiEL$. Entonces, para los distritos con una baja proporción de estudiantes de inglés ($HiEL = 0$), el efecto estimado es una disminución de $1.9$ puntos en los puntajes de las pruebas, mientras que para los distritos con una gran fracción de estudiantes de inglés ($HiEL = 1$), la disminución prevista en los puntajes de las pruebas asciende a $1.9 + 3.3 = 5.2$ puntos.
+
+También se puede utilizar el modelo para estimar la puntuación media de la prueba para cada combinación posible de las variables binarias incluidas.
+
+```{r, 492}
+# medias estimadas para todas las combinaciones de HiSTR y HiEL
+
+# 1.
+predict(bi_model, newdata = data.frame("HiSTR" = 0, "HiEL" = 0))
+
+# 2.
+predict(bi_model, newdata = data.frame("HiSTR" = 0, "HiEL" = 1))
+
+# 3.
+predict(bi_model, newdata = data.frame("HiSTR" = 1, "HiEL" = 0))
+
+# 4.
+predict(bi_model, newdata = data.frame("HiSTR" = 1, "HiEL" = 1))
+```
+
+Ahora se verifica que estas predicciones son diferencias en las estimaciones de coeficientes presentadas en la ecuación \@ref(eq:im):
+
+\begin{align*}
+\widehat{TestScore} = \hat\beta_0 = 664.1 \quad &\Leftrightarrow \quad HiSTR = 0, \, HIEL = 0\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_2 = 664.1 - 18.3 = 645.8 \quad &\Leftrightarrow \quad HiSTR = 0, \, HIEL = 1\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_1 = 664.1 - 1.9 = 662.2 \quad &\Leftrightarrow \quad HiSTR = 1, \, HIEL = 0\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_1 + \hat\beta_2 + \hat\beta_3  = 664.1 - 1.9 - 18.3 - 3.3 = 640.6 \quad &\Leftrightarrow \quad HiSTR = 1, \, HIEL = 1
+\end{align*}
+
+#### Interacciones entre una variable continua y una binaria {-}
+
+Ahora suponga que $X_i$ denota los años de experiencia laboral de la persona $i$, que es una variable continua. Se tiene que:
+
+\begin{align*}
+  Y_i =& \, \ln(Ganancias_i), \\
+  \\
+  X_i =& \, \text{experiencia laboral de la persona }i, \\
+  \\
+  D_i =& \,  
+    \begin{cases}
+      1, & \text{si $i^{ésimo}$ persona tiene un título universitario} \\
+      0, & \text{de otro modo}.
+    \end{cases}
+\end{align*}
+
+Por tanto, el modelo de línea base es
+
+$$ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + u_i, $$
+
+un modelo de regresión múltiple que permite estimar el beneficio promedio de tener un título universitario manteniendo constante la experiencia laboral, así como el efecto promedio sobre los ingresos de un cambio en la experiencia laboral manteniendo constante el título universitario.
+
+Al agregar el término de interacción $X_i \times D_i$ permite que el efecto de un año adicional de experiencia laboral difiera entre individuos con y sin título universitario,
+
+$$ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + \beta_3  (X_i \times D_i) + u_i. $$
+
+Aquí, $\beta_3$ es la diferencia esperada en el efecto de un año adicional de experiencia laboral para graduados universitarios versus no graduados. Otra posible especificación es:
+
+$$ Y_i = \beta_0 + \beta_1 X_i + \beta_2 (X_i \times D_i) + u_i. $$
+
+Este modelo establece que el impacto esperado de un año adicional de experiencia laboral en los ingresos difiere para los graduados universitarios y los no graduados, pero que graduarse por sí solo no aumenta los ingresos.
+
+Las tres funciones de regresión se pueden visualizar mediante líneas rectas. El Concepto clave 8.4 resume las diferencias.
+
+```{r, 493, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC8.4">
+<h3 class = "right"> Concepto clave 8.4 </h3>          
+<h3 class = "left"> Interacciones entre variables binarias y continuas </h3>
+
+Un término de interacción como $X_i \\times D_i$ (donde $X_i$ es continuo y $D_i$ es binario) permite que la pendiente dependa de la variable binaria $D_i$. Existen tres posibilidades:
+
+1. Diferente intersección y misma pendiente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 D_i + u_i $$
+
+2. Diferente intersección y diferente pendiente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 D_i + \\beta_3 \\times (X_i \\times D_i) + u_i $$
+
+3. Misma intersección y pendiente diferente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 (X_i \\times D_i) + u_i $$
+</div>
+')
+```
+
+```{r, 494, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Interacciones entre variables binarias y continuas]{8.4}
+
+Un término de interacción como $X_i \\times D_i$ (donde $X_i$ es continuo y $D_i$ es binario) permite que la pendiente dependa de la variable binaria $D_i$. Existen tres posibilidades:\\newline
+
+\\begin{enumerate}
+\\item Diferente intersección y misma pendiente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 D_i + u_i $$
+\\item Diferente intersección y diferente pendiente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 D_i + \\beta_3 \\times (X_i \\times D_i) + u_i $$
+\\item Misma intersección y pendiente diferente:
+$$ Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 (X_i \\times D_i) + u_i $$
+\\end{enumerate}
+
+\\end{keyconcepts}
+')
+```
+
+El siguiente fragmento de código demuestra cómo replicar los resultados utilizando datos artificiales.
+
+```{r, 495, fig.align='center'}
+# generar datos artificiales
+set.seed(1)
+
+X <- runif(200,0, 15)
+D <- sample(0:1, 200, replace = T)
+Y <- 450 +  150 * X + 500 * D + 50 * (X * D) + rnorm(200, sd = 300)
+
+# dividir el área de graficado de manera congruente
+m <- rbind(c(1, 2), c(3, 0))
+graphics::layout(m)
+
+# estimar los modelos y graficar las líneas de regresión
+
+# 1. (modelo de línea base)
+plot(X, log(Y),
+     pch = 20,
+     col = "steelblue",
+     main = "Diferentes intercepciones, Misma pendiente")
+
+mod1_coef <- lm(log(Y) ~ X + D)$coefficients
+
+abline(coef = c(mod1_coef[1], mod1_coef[2]), 
+       col = "red",
+       lwd = 1.5)
+
+abline(coef = c(mod1_coef[1] + mod1_coef[3], mod1_coef[2]), 
+       col = "green",
+       lwd = 1.5)
+       
+# 2. (modelo de línea base + término de interacción)
+plot(X, log(Y),
+     pch = 20,
+     col = "steelblue",
+     main = "Diferentes interceptos, Diferentes pendientes")
+
+mod2_coef <- lm(log(Y) ~ X + D + X:D)$coefficients
+
+abline(coef = c(mod2_coef[1], mod2_coef[2]), 
+       col = "red",
+       lwd = 1.5)
+
+abline(coef = c(mod2_coef[1] + mod2_coef[3], mod2_coef[2] + mod2_coef[4]), 
+       col = "green",
+       lwd = 1.5)
+
+# 3. (omisión de D como regresor + término de interacción)
+plot(X, log(Y),
+     pch = 20,
+     col = "steelblue",
+     main = "Mismo intercepto, Diferentes pendientes")
+
+mod3_coef <- lm(log(Y) ~ X + X:D)$coefficients
+
+abline(coef = c(mod3_coef[1], mod3_coef[2]), 
+       col = "red",
+       lwd = 1.5)
+
+abline(coef = c(mod3_coef[1], mod3_coef[2] + mod3_coef[3]), 
+       col = "green",
+       lwd = 1.5)
+```
+
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés {-}
+
+Usando una especificación de modelo como la segunda discutida en el Concepto clave 8.3 (pendiente diferente, intersección diferente) se puede responder a la pregunta de si el efecto en los puntajes de las pruebas de disminuir la proporción de estudiantes por maestro depende de si hay muchos o pocos estudiantes de inglés. Estimando el modelo de regresión:
+
+$$ \widehat{TestScore_i} = \beta_0 + \beta_1 \times size_i + \beta_2 \times HiEL_i + \beta_2 (size_i \times HiEL_i) + u_i. $$
+
+```{r, 496}
+# estimar el modelo
+bci_model <- lm(score ~ size + HiEL + size * HiEL, data = CASchools)
+
+# imprimir un resumen sólido de coeficientes en la consola
+coeftest(bci_model, vcov. = vcovHC, type = "HC1")
+```
+
+El modelo de regresión estimado es 
+
+$$ \widehat{TestScore} = \underset{(11.87)}{682.2} - \underset{(0.59)}{0.97} \times size + \underset{(19.51)}{5.6} \times HiEL - \underset{(0.97)}{1.28} \times (size \times HiEL). $$  
+
+La línea de regresión estimada para distritos con una fracción baja de estudiantes de inglés ($HiEL_i=0$) es 
+
+$$ \widehat{TestScore} = 682.2 - 0.97\times size_i. $$
+
+Para los distritos con una alta fracción de estudiantes de inglés, se tiene:
+
+\begin{align*} 
+  \widehat{TestScore} =& \, 682.2 + 5.6 - 0.97\times size_i - 1.28 \times size_i \\
+   =& \, 687.8 - 2.25 \times size_i.
+\end{align*}
+
+El aumento previsto en los puntajes de las pruebas después de una reducción de la proporción de estudiantes por maestro en $1$ unidad es de aproximadamente $0.97$ puntos en distritos donde la fracción de estudiantes de inglés es baja, pero $2.25$ en distritos con una alta proporción de estudiantes de inglés. A partir del coeficiente del término de interacción $size \times HiEL$, se puede ver que la diferencia entre ambos efectos es de $1.28$ puntos.
+
+El siguiente fragmento de código grafica ambas líneas que pertenecen al modelo. Para hacer observaciones con $HiEL = 0$ distinguibles de aquellas con $HiEL = 1$, usando diferentes colores.
+
+```{r, 497, fig.align = 'center'}
+# identificar observaciones con PctEL> = 10
+id <- CASchools$english >= 10
+
+# graficar observaciones con HiEL = 0 como puntos rojos
+plot(CASchools$size[!id], CASchools$score[!id],
+     xlim = c(0, 27),
+     ylim = c(600, 720),
+     pch = 20,
+     col = "red",
+     main = "",
+     xlab = "Tamaño de la clase",
+     ylab = "Resultado de la prueba")
+
+# graficar observaciones con HiEL = 1 como puntos verdes
+points(CASchools$size[id], CASchools$score[id],
+     pch = 20,
+     col = "green")
+
+# leer los coeficientes estimados de bci_model
+coefs <- bci_model$coefficients
+
+# dgraficar la línea de regresión estimada para HiEL = 0
+abline(coef = c(coefs[1], coefs[2]),
+       col = "red",
+       lwd = 1.5)
+
+# graficar la línea de regresión estimada para HiEL = 1
+abline(coef = c(coefs[1] + coefs[3], coefs[2] + coefs[4]),
+       col = "green", 
+       lwd = 1.5 )
+
+# agregar una leyenda a la trama
+legend("topright", 
+       pch = c(20, 20), 
+       col = c("red", "green"), 
+       legend = c("HiEL = 0", "HiEL = 1"))
+```
+
+#### Interacciones entre dos variables continuas {-}
+
+Considere un modelo de regresión con $Y$ las ganancias logarítmicas y dos regresores continuos $X_1$, los años de experiencia laboral, y $X_2$, los años de escolaridad. Se quiere estimar el efecto sobre los salarios de un año adicional de experiencia laboral en función de un nivel de escolaridad determinado. Este efecto se puede evaluar al incluir el término de interacción $(X_{1i} \times X_{2i})$ en el modelo:
+
+$$ \Delta Y_i = \beta_0 + \beta_1 \times X_{1i} + \beta_2 \times X_{2i} + \beta_3 \times (X_{1i} \times X_{2i}) + u_i $$
+
+Siguiendo el Concepto clave 8.1 se puede encontrar que el efecto en $Y$ de un cambio en $X_1$ dado $X_2$ es:
+
+$$ \frac{\Delta Y}{\Delta X_1} = \beta_1 + \beta_3 X_2. $$
+
+En el ejemplo de ingresos, un $\beta_3$ positivo implica que el efecto sobre los ingresos logarítmicos de un año adicional de experiencia laboral crece linealmente con los años de escolaridad. Viceversa, se tiene $$ \frac{\Delta Y}{\Delta X_2} = \beta_2 + \beta_3 X_1 $$ como el efecto sobre los ingresos logarítmicos de un año adicional de escolaridad manteniendo constante la experiencia laboral.
+
+En total, se puede encontrar que $\beta_3$ mide el efecto de un aumento unitario en $X_1$ y $X_2$ *más allá de* los efectos de aumentar $X_1$ y $X_2$ solo en una unidad. El cambio general en $Y$ es por lo tanto
+
+\begin{align}
+Y_i = (\beta_1 + \beta_3 X_2) \Delta X_1 + (\beta_2 + \beta_3 X_1) \Delta X_2 + \beta_3\Delta X_1 \Delta X_2. (\#eq:generalinteraction)
+\end{align}
+
+El Concepto clave 8.5 resume las interacciones entre dos regresores en regresión múltiple.
+
+```{r, 498, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC8.5">
+<h3 class = "right"> Concepto clave 8.5 </h3>          
+<h3 class = "left"> Interacciones en regresión múltiple </h3>
+
+El término de interacción entre los dos regresores $X_1$ y $X_2$ viene dado por su producto $X_1 \\times X_2$. 
+
+Agregar dicho término de interacción como regresor al modelo $$ Y_i = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + u_i $$ permite que el efecto en $Y$ de un cambio en $X_2$ dependa del valor de $X_1$ y viceversa. Así, el coeficiente $\\beta_3$ en el modelo $$ Y_i = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\beta_3 (X_1 \\times X_2) + u_i $$ mide el efecto de un aumento unitario en $X_1$ <it>y</it> $X_2$ por encima y más allá de la suma de ambos efectos individuales. Esto es válido para regresores *continuos* y *binarios*.
+
+</div>
+')
+```
+
+```{r, 499, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Interacciones en regresión múltiple]{8.5}
+
+El término de interacción entre los dos regresores $X_1$ y $X_2$ viene dado por su producto $X_1 \\times X_2$. 
+
+Agregar dicho término de interacción como regresor al modelo $$ Y_i = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + u_i $$ permite que el efecto en $Y$ de un cambio en $X_2$ dependa del valor de $X_1$ y viceversa. Así, el coeficiente $\\beta_3$ en el modelo $$ Y_i = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 + \\beta_3 (X_1 \\times X_2) + u_i $$ mide el efecto de un aumento unitario en $X_1$ \\textit{y} $X_2$ por encima y más allá de la suma de ambos efectos individuales. Esto es válido para regresores \\textit{continuos} y \\textit{binarios}.
+
+\\end{keyconcepts}
+')
+```
+
+#### Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés
+
+Ahora se necesita examinar la interacción entre las variables continuas de la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés.
+
+```{r, 500}
+# estimar el modelo de regresión, incluida la interacción entre 'PctEL' y 'size'
+cci_model <- lm(score ~ size + english + english * size, data = CASchools) 
+
+# imprimir un resumen en la consola
+coeftest(cci_model, vcov. = vcovHC, type = "HC1")
+```
+
+La ecuación del modelo estimada es 
+
+$$ \widehat{TestScore} = \underset{(11.76)}{686.3} - \underset{(0.59)}{1.12} \times STR - \underset{(0.37)}{0.67} \times PctEL + \underset{(0.02)}{0.0012} \times (STR\times PctEL). $$
+
+Para la interpretación, se consideran los cuartiles de $PctEL$.
+
+```{r, 501}
+summary(CASchools$english)
+```
+
+De acuerdo con \@ref(eq:generalinteraction), si $PctEL$ se encuentra en su valor mediano de $8.78$, se predice que la pendiente de la función de regresión que relaciona los puntajes de las pruebas y la proporción alumno-maestro será $-1.12 + 0.0012 \times 8.78 = -1.11$. Esto implica que el aumento de la proporción de estudiantes por maestro en una unidad deteriora los puntajes de las pruebas en $1.11$ puntos. Para el cuantil $75\%$, el cambio estimado en $TestScore$ de un aumento de una unidad en $STR$ se estima en $-1.12 + 0.0012 \times 23.0 = -1.09$, por lo que la pendiente es algo menor. La interpretación es que para un distrito escolar con una participación del $23\%$ de estudiantes de inglés, se espera que una reducción de la proporción de estudiantes por maestro en una unidad aumente los puntajes de las pruebas en solo $1.09$ puntos.
+
+Sin embargo, el resultado de **summary()** indica que la diferencia del efecto para la mediana y el cuantil $75\%$ no es estadísticamente significativa. $H_0: \beta_3 = 0$ no puede rechazarse en el nivel de significancia de $5\%$ (el valor $p$ es $0.95$).
+
+#### Ejemplo: La demanda de revistas económicas {-}
+
+En esta sección se replica el ejemplo empírico \textit{La demanda de revistas económicas}. La pregunta central es: ¿Qué tan elástica es la demanda por parte de las bibliotecas de revistas económicas? La idea aquí es analizar la relación entre el número de suscripciones a una revista en las bibliotecas de EE. UU. y el precio de suscripción de la revista. El estudio utiliza el conjunto de datos **Journals** que se proporciona con el paquete **AER** y contiene observaciones para revistas económicas de $180$ para el año 2000. Puede usar la función de ayuda (`?Journals`) para obtener más información sobre los datos después de cargar el paquete.
+
+```{r, 502}
+# cargar el paquete y conjunto de datos
+library(AER)
+data("Journals")
+```
+
+Se mide el precio como "precio por cita" y se calcula la antigüedad de la revista y el número de caracteres manualmente. Para mantener la coherencia, también se cambia el nombre de las variables.
+
+```{r, 503}
+# definir y renombrar variables
+Journals$PricePerCitation <- Journals$price/Journals$citations
+Journals$Age <- 2000 - Journals$foundingyear
+Journals$Characters <- Journals$charpp * Journals$pages/10^6
+Journals$Subscriptions <- Journals$subs
+```
+
+El rango de "precio por cita" es bastante amplio:
+
+```{r, 504}
+# calcular estadísticas resumidas para el precio por cita
+summary(Journals$PricePerCitation)
+```
+
+El precio más bajo observado es de solo $0.5$¢ por cita, mientras que el precio más alto es de más de $20$¢ por cita.
+
+Ahora se estiman cuatro especificaciones de modelo diferentes. Todos los modelos son modelos log-log. Esto es útil porque permite interpretar directamente los coeficientes como elasticidades, ver Concepto clave 8.2. $(I)$ sobre un modelo lineal. Para aliviar un posible sesgo de variable omitida, $(II)$ aumenta $(I)$ por las covariables $\ln(Age)$ y $\ln(Characters)$. El modelo más grande $(III)$ intenta capturar las no linealidades en la relación de $\ln(Subscriptions)$ y $\ln(PricePerCitation)$ usando una función de regresión cúbica de $\ln(PricePerCitation)$ y también agrega el término de interacción $(PricePerCitation \times Age)$ mientras que la especificación $(IV)$ no incluye el término cúbico.
+
+\begin{align*}
+  (I)\quad \ln(Subscriptions_i) =& \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + u_i \\
+  \\
+  (II)\quad \ln(Subscriptions_i) =& \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_4 \ln(Age_i) + \beta_6 \ln(Characters_i) + u_i \\
+  \\
+  (III)\quad \ln(Subscriptions_i) =& \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_2 \ln(PricePerCitation_i)^2 \\
+  +& \, \beta_3 \ln(PricePerCitation_i)^3 + \beta_4 \ln(Age_i) + \beta_5 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] \\ +& \, \beta_6 \ln(Characters_i) + u_i \\
+  \\
+  (IV)\quad \ln(Subscriptions_i) =& \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_4 \ln(Age_i) + \beta_6 \ln(Characters_i) + u_i
+\end{align*}
+
+```{r, 505}
+# Estimar modelos (I) - (IV)
+Journals_mod1 <- lm(log(Subscriptions) ~ log(PricePerCitation), 
+                    data = Journals)
+
+Journals_mod2 <- lm(log(Subscriptions) ~ log(PricePerCitation) 
+                    + log(Age) + log(Characters), 
+                    data = Journals)
+
+Journals_mod3 <- lm(log(Subscriptions) ~ 
+                    log(PricePerCitation) + I(log(PricePerCitation)^2) 
+                    + I(log(PricePerCitation)^3) + log(Age) 
+                    + log(Age):log(PricePerCitation) + log(Characters), 
+                    data = Journals)
+
+Journals_mod4 <- lm(log(Subscriptions) ~ 
+                    log(PricePerCitation) + log(Age) 
+                    + log(Age):log(PricePerCitation) + 
+                    log(Characters), 
+                    data = Journals)
+```
+
+Usando **summary()**, se obtienen los siguientes modelos estimados:
+
+\begin{align*}
+  (I)\quad \widehat{\ln(Subscriptions_i)} =& \, 4.77 - 0.53 \ln(PricePerCitation_i) \\
+  \\
+  (II)\quad \widehat{\ln(Subscriptions_i)} =& \, 3.21 - 0.41 \ln(PricePerCitation_i) + 0.42 \ln(Age_i) + 0.21 \ln(Characters_i) \\
+  \\
+  (III)\quad \widehat{\ln(Subscriptions_i)} =& \, 3.41 - 0.96 \ln(PricePerCitation_i) + 0.02 \ln(PricePerCitation_i)^2 \\
+  &+ 0.004 \ln(PricePerCitation_i)^3 + 0.37 \ln(Age_i) \\
+  &+ 0.16 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] \\ &+ 0.23 \ln(Characters_i) \\
+  \\
+  (IV)\quad \widehat{\ln(Subscriptions_i)} =& \, 3.43 - 0.90 \ln(PricePerCitation_i) + 0.37 \ln(Age_i) \\ 
+  &+ 0.14 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] + 0.23 \ln(Characters_i)
+\end{align*}
+
+Se usa una prueba $F$ para probar si las transformaciones de $\ln(PricePerCitation)$ en el modelo $(III)$ son estadísticamente significativas.
+
+```{r, 506}
+# Prueba F de significancia de términos cúbicos
+linearHypothesis(Journals_mod3, 
+                 c("I(log(PricePerCitation)^2)=0", "I(log(PricePerCitation)^3)=0"),
+                 vcov. = vcovHC, type = "HC1")
+```
+
+Claramente, no se puede rechazar la hipótesis nula $H_0: \beta_3=\beta_4=0$ en el modelo $(III)$.
+
+Ahora se muestra cómo se puede usar la función **stargazer()** para generar una representación tabular de los cuatro modelos.
+
+```{r, 507, eval=FALSE}
+# load the stargazer package
+library(stargazer)
+
+# recopilar errores estándar robustos en una lista
+rob_se <- list(sqrt(diag(vcovHC(Journals_mod1, type = "HC1"))),
+               sqrt(diag(vcovHC(Journals_mod2, type = "HC1"))),
+               sqrt(diag(vcovHC(Journals_mod3, type = "HC1"))),
+               sqrt(diag(vcovHC(Journals_mod4, type = "HC1"))))
+
+# generar una tabla LaTeX usando stargazer
+stargazer(Journals_mod1, Journals_mod2, Journals_mod3, Journals_mod4,
+          se = rob_se,
+          digits = 3,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)"))
+```
+
+<!--html_preserve-->
+
+```{r, 508, results='asis', echo=F, purl=F, message=FALSE, warning=FALSE, eval=my_output == "html"}
+# carga el paquete stargazer
+library(stargazer)
+
+# recopilar errores estándar robustos en una lista
+rob_se <- list(
+  sqrt(diag(vcovHC(Journals_mod1, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod2, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod3, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod4, type = "HC1")))
+)
+
+# generar una tabla LaTeX usando Stargazer
+stargazer(Journals_mod1, Journals_mod2, Journals_mod3, Journals_mod4,
+          type = "html", 
+          model.numbers = FALSE,
+          header = FALSE,
+          dep.var.caption = "Variable dependiente: Logaritmo de suscripciones",
+          se = rob_se,
+          digits = 3,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)")
+          )
+
+stargazer_html_title("Modelos de regresión no lineal de suscripciones a revistas", "nrmojs")
+```
+
+<!--/html_preserve-->
+
+```{r, 509, results='asis', echo=F, purl=F, message=FALSE, warning=FALSE, eval=my_output == "latex"}
+library(stargazer)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(Journals_mod1, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod2, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod3, type = "HC1"))),
+  sqrt(diag(vcovHC(Journals_mod4, type = "HC1")))
+)
+
+stargazer(Journals_mod1, Journals_mod2, Journals_mod3, Journals_mod4,
+          type = "latex", 
+          float.env = "sidewaystable",
+          dep.var.caption = "Variable dependiente: Logaritmo de suscripciones",
+          title = "\\label{tab:nrmojs} Modelos de regresión no lineal de suscripciones a revistas",
+          model.numbers = FALSE,
+          header=FALSE,
+          se = rob_se,
+          digits = 3,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)")
+          )
+```
+
+El siguiente fragmento de código reproduce diversos gráficos.
+
+```{r, 510}
+# dividir el área de graficado
+m <- rbind(c(1, 2), c(3, 0))
+graphics::layout(m)
+
+# gráfico de dispersión
+plot(Journals$PricePerCitation, 
+     Journals$Subscriptions, 
+     pch = 20, 
+     col = "steelblue",
+     ylab = "Suscripciones",
+     xlab = "ln(Precio por cita)",
+     main = "(a)")
+
+# diagrama de dispersión log-log y línea de regresión estimada (I)
+plot(log(Journals$PricePerCitation), 
+     log(Journals$Subscriptions), 
+     pch = 20, 
+     col = "steelblue",
+     ylab = "ln(Suscripciones)",
+     xlab = "ln(Precio por cita)",
+     main = "(b)")
+
+abline(Journals_mod1,
+       lwd = 1.5)
+
+# diagrama de dispersión log-log y líneas de regresión (IV) para Age = 5 y Age = 80
+plot(log(Journals$PricePerCitation), 
+     log(Journals$Subscriptions), 
+     pch = 20, 
+     col = "steelblue",
+     ylab = "ln(Suscripciones)",
+     xlab = "ln(Precio por cita)",
+     main = "(c)")
+
+JM4C <-Journals_mod4$coefficients
+
+# Age = 80
+abline(coef = c(JM4C[1] + JM4C[3] * log(80), 
+                JM4C[2] + JM4C[5] * log(80)),
+       col = "darkred",
+       lwd = 1.5)
+
+# Age = 5
+abline(coef = c(JM4C[1] + JM4C[3] * log(5), 
+                JM4C[2] + JM4C[5] * log(5)),
+       col = "darkgreen",
+       lwd = 1.5)
+```
+
+Como puede verse en los gráficos (a) y (b), la relación entre las suscripciones y el precio de la cita es adversa y no lineal. La transformación logarítmica de ambas variables la hace aproximadamente lineal. El gráfico (c) muestra que la elasticidad del precio de las suscripciones a revistas depende de la edad de la revista: La línea roja muestra la relación estimada para $Age = 80$ mientras que la línea verde representa la predicción del modelo $(IV)$ para $Age = 5$.
+
+¿Qué conclusión se pueden obtener?
+
+1. Se concluye que la demanda de revistas es más elástica para revistas jóvenes que para revistas antiguas.
+
+2. Para el modelo $(III)$ no se puede rechazar la hipótesis nula de que los coeficientes en $\ln(PricePerCitation)^2$ y $\ln(PricePerCitation)^3$ son ambos cero usando una prueba $F$. Esta es una evidencia compatible con una relación lineal entre las suscripciones logarítmicas y el precio logarítmico.
+
+3. La demanda es mayor para las revistas con más caracteres, manteniendo constante el precio y la edad.
+
+En conjunto, las estimaciones sugieren que la demanda es muy inelástica; es decir, la demanda de revistas económicas de las bibliotecas es bastante insensible al precio: Utilizando el modelo $(IV)$, incluso para una revista joven ($Age = 5$) la estimación de la elasticidad del precio es $-0.899+0.374\times\ln(5)+0.141\times\left[\ln(1)\times\ln(5)\right] \approx -0.3$ , por lo que un aumento del precio en $1\%$ Se predice que reducirá la demanda en solo $0.3\%$.
+
+Este hallazgo no sorprende, ya que proporcionar las publicaciones más recientes es una necesidad para las bibliotecas.
+
+## Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro
+
+En esta sección se discutirán tres preguntas específicas sobre la relación entre los puntajes de las pruebas y la proporción alumno-maestro:
+
+1. ¿El efecto en las calificaciones de las pruebas de disminuir la proporción de estudiantes por maestro depende de la fracción de estudiantes de inglés cuando se controlan las idiosincrasias económicas de los diferentes distritos?
+
+2. ¿Depende este efecto de la proporción de alumnos por maestro?
+
+3. *¿Qué tan fuerte* es el efecto de disminuir la proporción de estudiantes por maestro (en dos estudiantes por maestro) si se toman en cuenta las características económicas y las no linealidades?
+
+Para responder a estas preguntas, se consideran un total de siete modelos, algunos de los cuales son especificaciones de regresión no lineal de los tipos que se han discutido anteriormente. Como medidas de los antecedentes económicos de los estudiantes, se consideran adicionalmente los regresores $lunch$ y $\ln(income)$. Se usa el logaritmo de $income$ porque el análisis del Capítulo \@ref(FNLUVI) mostró que la relación no lineal entre $income$ y $TestScores$ es aproximadamente logarítmica. No se incluye el gasto por alumno ($expenditure$) porque hacerlo implicaría que el gasto varía con la proporción alumno-maestro.
+
+#### Modelos de regresión no lineal de puntajes de prueba {-}
+
+Las especificaciones del modelo consideradas son:
+
+\begin{align}
+ TestScore_i =& \beta_0 + \beta_1 size_i + \beta_4 english_i + \beta_9 lunch_i + u_i \\
+ TestScore_i =& \beta_0 + \beta_1 size_i + \beta_4 english_i + \beta_9 lunch_i + \beta_{10} \ln(income_i) + u_i \\
+  TestScore_i =& \beta_0 + \beta_1 size_i + \beta_5 HiEL_i + \beta_6 (HiEL_i\times size_i) + u_i \\
+  TestScore_i =& \beta_0 + \beta_1 size_i + \beta_5 HiEL_i + \beta_6 (HiEL_i\times size_i) + \beta_9 lunch_i + \beta_{10} \ln(income_i) + u_i \\
+  TestScore_i =& \beta_0 + \beta_1 size_i + \beta_2 size_i^2 + \beta_5 HiEL_i + \beta_9 lunch_i + \beta_{10} \ln(income_i) + u_i \\
+  TestScore_i =& \beta_0 + \beta_1 size_i + \beta_2 size_i^2 + \beta_3 size_i^3 + \beta_5 HiEL_i + \beta_6 (HiEL\times size) \\  &+ \beta_7 (HiEL_i\times size_i^2) + \beta_8 (HiEL_i\times size_i^3) + \beta_9 lunch_i + \beta_{10} \ln(income_i) + u_i \\
+  TestScore_i =& \beta_0 + \beta_1 size_i + \beta_2 size_i^2 + \beta_3 size_i^3 + \beta_4 english + \beta_9 lunch_i + \beta_{10} \ln(income_i) + u_i
+\end{align}
+
+```{r, 511, tidy=TRUE}
+# estimar todos los modelos
+TestScore_mod1 <- lm(score ~ size + english + lunch, data = CASchools)
+
+TestScore_mod2 <- lm(score ~ size + english + lunch + log(income), data = CASchools)
+
+TestScore_mod3 <- lm(score ~ size + HiEL + HiEL:size, data = CASchools)
+
+TestScore_mod4 <- lm(score ~ size + HiEL + HiEL:size + lunch + log(income), data = CASchools)
+
+TestScore_mod5 <- lm(score ~ size + I(size^2) + I(size^3) + HiEL + lunch + log(income), data = CASchools)
+
+TestScore_mod6 <- lm(score ~ size + I(size^2) + I(size^3) + HiEL + HiEL:size + HiEL:I(size^2) + HiEL:I(size^3) + lunch + log(income), data = CASchools)
+
+TestScore_mod7 <- lm(score ~ size + I(size^2) + I(size^3) + english + lunch + log(income), data = CASchools)
+```
+
+Se puede usar **summary()** para evaluar el ajuste de los modelos. Usando **stargazer()** también se puede obtener una representación tabular de todas las salidas de regresión y que es más conveniente para la comparación de los modelos.
+
+```{r, 512, eval=FALSE, message=FALSE, warning=FALSE}
+# recopilar errores estándar robustos en una lista
+rob_se <- list(sqrt(diag(vcovHC(TestScore_mod1, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod2, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod3, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod4, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod5, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod6, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_mod7, type = "HC1"))))
+
+# generar una tabla LaTeX de salidas de regresión
+stargazer(TestScore_mod1, 
+          TestScore_mod2, 
+          TestScore_mod3, 
+          TestScore_mod4, 
+          TestScore_mod5, 
+          TestScore_mod6, 
+          TestScore_mod7,
+          digits = 3,
+          dep.var.caption = "Variable dependiente: Puntaje de la prueba",
+          se = rob_se,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)"))
+```
+
+<!--html_preserve-->
+
+```{r, 513, echo=F, results='asis', warning=FALSE, message=FALSE, eval = my_output == "html"}
+rob_se <- list(
+  sqrt(diag(vcovHC(TestScore_mod1, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod2, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod3, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod4, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod5, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod6, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod7, type = "HC1")))
+)
+
+stargazer(TestScore_mod1, 
+          TestScore_mod2, 
+          TestScore_mod3, 
+          TestScore_mod4, 
+          TestScore_mod5, 
+          TestScore_mod6, 
+          TestScore_mod7,
+          digits = 3,
+          dep.var.caption = "Variable dependiente: Puntaje de la prueba",
+          se = rob_se,
+          type = "html", 
+          model.numbers = FALSE,
+          header=FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)")
+          )
+
+stargazer_html_title("Modelos no lineales de puntajes de prueba", "nmots")
+```
+
+<!--/html_preserve-->
+
+```{r, 514, echo=F, results='asis', warning= FALSE, message=FALSE, eval = my_output == "latex"}
+rob_se <- list(
+  sqrt(diag(vcovHC(TestScore_mod1, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod2, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod3, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod4, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod5, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod6, type = "HC1"))),
+  sqrt(diag(vcovHC(TestScore_mod7, type = "HC1")))
+)
+
+stargazer(TestScore_mod1, 
+          TestScore_mod2, 
+          TestScore_mod3, 
+          TestScore_mod4, 
+          TestScore_mod5, 
+          TestScore_mod6, 
+          TestScore_mod7,
+          dep.var.caption = "Variable dependiente: Puntaje de la prueba",
+          title = "\\label{tab:nmots} Modelos no lineales de puntajes de prueba",
+          digits = 3,
+          se = rob_se,
+          type = "latex", 
+          float.env = "sidewaystable",
+          model.numbers = FALSE,
+          omit.stat = c("f","ser"),
+          header=FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)")
+          )
+```
+
+Es momento de resumir lo que se puede concluir a partir de los resultados presentados en la Tabla \@ref(tab:nmots).
+
+En primer lugar, el coeficiente de $size$ es estadísticamente significativo en los siete modelos. Sumando $\ln(income)$ al modelo (1) se encuentra que el coeficiente correspondiente es estadísticamente significativo a $1\%$ mientras que todos los demás coeficientes permanecen en su nivel de significancia. Además, la estimación del coeficiente de $size$ es aproximadamente $0.27$ puntos más grande, lo que puede ser un signo de sesgo atenuado de variable omitida. Considerando que esta es una razón para incluir $\ln(income)$ como regresor también en otros modelos.
+
+Las regresiones (3) y (4) tienen como objetivo evaluar el efecto de permitir una interacción entre $size$ y $HiEL$, sin y con variables de control económico. En ambos modelos, tanto el coeficiente del término de interacción como el coeficiente de la variable ficticia no son estadísticamente significativos. Por lo tanto, incluso con controles económicos no se puede rechazar la hipótesis nula de que el efecto de la proporción de estudiantes por maestro en los puntajes de las pruebas es el mismo para los distritos con una proporción alta y los distritos con una proporción baja de estudiantes que aprenden inglés.
+
+La regresión (5) incluye un término cúbico para la relación alumno-maestro y omite la interacción entre $size$ y $HiEl$. Los resultados indican que existe un efecto no lineal de la proporción alumno-maestro en los puntajes de las pruebas (¿Puede verificar esto usando una prueba $F$ de $H_0: \beta_2=\beta_3=0$?)
+
+En consecuencia, la regresión (6) explora más a fondo si la fracción de estudiantes de inglés afecta la proporción de estudiantes por maestro al usar $HiEL \times size$ y las interacciones $HiEL \times size^2$ y $HiEL \times size^3$. Todas las pruebas de $t$ individuales indican que existen efectos significativos. Se puede verificar esto usando una prueba $F$ robusta de $H_0: \beta_6=\beta_7=\beta_8=0$. 
+
+```{r, 515}
+# comprobar la importancia conjunta de los términos de interacción
+linearHypothesis(TestScore_mod6, 
+                 c("size:HiEL=0", "I(size^2):HiEL=0", "I(size^3):HiEL=0"),
+                 vcov. = vcovHC, type = "HC1")
+```
+
+Se puede encontrar que el valor nulo se puede rechazar al nivel de $5\%$ y se concluye que la función de regresión difiere para los distritos con un porcentaje alto y bajo de estudiantes de inglés.
+
+La especificación (7) usa una medida continua para la proporción de estudiantes de inglés en lugar de una variable ficticia (y por lo tanto no incluye términos de interacción). Se pueden observar solo pequeños cambios en las estimaciones de coeficientes en los otros regresores y, por lo tanto, se concluye que los resultados observados para la especificación (5) no son sensibles a la forma en que se mide el porcentaje de estudiantes de inglés.
+
+Se continua produciendo una gráfica para la interpretación de las especificaciones no lineales (2), (5) y (7).
+
+```{r, 516, fig.align='center'}
+# gráfico de dispersión
+plot(CASchools$size, 
+     CASchools$score, 
+     xlim = c(12, 28),
+     ylim = c(600, 740),
+     pch = 20, 
+     col = "gray", 
+     xlab = "Proporción alumno-maestro", 
+     ylab = "Resultado de la prueba")
+
+# agregar una leyenda
+legend("top", 
+       legend = c("Regresión lineal (2)", 
+                  "Regresión cúbica (5)", 
+                  "Regresión cúbica (7)"),
+       cex = 0.8,
+       ncol = 3,
+       lty = c(1, 1, 2),
+       col = c("blue", "red", "black"))
+
+# datos para usar con predict()
+new_data <- data.frame("size" = seq(16, 24, 0.05), 
+                       "english" = mean(CASchools$english),
+                       "lunch" = mean(CASchools$lunch),
+                       "income" = mean(CASchools$income),
+                       "HiEL" = mean(CASchools$HiEL))
+
+# agregar función de regresión estimada para el modelo (2)
+fitted <- predict(TestScore_mod2, newdata = new_data)
+
+lines(new_data$size, 
+      fitted,
+      lwd = 1.5,
+      col = "blue")
+
+# agregar función de regresión estimada para el modelo (5)
+fitted <- predict(TestScore_mod5, newdata = new_data)
+
+lines(new_data$size, 
+      fitted, 
+      lwd = 1.5,
+      col = "red")
+
+# agregar función de regresión estimada para el modelo (7)
+fitted <- predict(TestScore_mod7, newdata = new_data)
+
+lines(new_data$size, 
+      fitted, 
+      col = "black",
+      lwd = 1.5,
+      lty = 2)
+```
+
+Para la figura anterior, todos los regresores excepto $size$ se establecen en sus promedios muestrales. Se puede ver que las regresiones cúbicas (5) y (7) son casi idénticas. Indican que la relación entre los puntajes de las pruebas y la proporción alumno-maestro solo tiene una pequeña cantidad de no linealidad ya que no se desvían mucho de la función de regresión de (2).
+
+El siguiente fragmento de código reproduce otra gráfica. Se usa **plot()** y **points()** para colorear las observaciones dependiendo de $HiEL$. Una vez más, las líneas de regresión se dibujan en función de las predicciones que utilizan promedios muestrales promedio de todos los regresores, excepto $size$.
+
+```{r, 517, fig.align='center'}
+# graficar un diagrama de dispersión
+
+# observaciones con HiEL = 0
+plot(CASchools$size[CASchools$HiEL == 0], 
+     CASchools$score[CASchools$HiEL == 0], 
+     xlim = c(12, 28),
+     ylim = c(600, 730),
+     pch = 20, 
+     col = "gray", 
+     xlab = "Proporción alumno-maestro", 
+     ylab = "Resultado de la prueba")
+
+# observaciones con HiEL = 1
+points(CASchools$size[CASchools$HiEL == 1], 
+       CASchools$score[CASchools$HiEL == 1],
+       col = "steelblue",
+       pch = 20)
+
+# agrega una leyenda
+legend("top", 
+       legend = c("Regresión (6) con HiEL=0", "Regresión (6) con HiEL=1"),
+       cex = 0.7,
+       ncol = 2,
+       lty = c(1, 1),
+       col = c("green", "red"))
+
+# datos para usar con 'predict()'
+new_data <- data.frame("size" = seq(12, 28, 0.05), 
+                       "english" = mean(CASchools$english),
+                       "lunch" = mean(CASchools$lunch),
+                       "income" = mean(CASchools$income),
+                       "HiEL" = 0)
+
+# agregar la función de regresión estimada para el modelo (6) con HiEL = 0
+fitted <- predict(TestScore_mod6, newdata = new_data)
+
+lines(new_data$size, 
+      fitted, 
+      lwd = 1.5,
+      col = "green")
+
+# agregar la función de regresión estimada para el modelo (6) con HiEL = 1
+new_data$HiEL <- 1
+
+fitted <- predict(TestScore_mod6, newdata = new_data)
+
+lines(new_data$size, 
+      fitted, 
+      lwd = 1.5,
+      col = "red")
+```
+
+El resultado de la regresión muestra que el modelo (6) encuentra coeficientes estadísticamente significativos en los términos de interacción $HiEL:size$, $HiEL:size^2$ y $HiEL:size^3$; es decir, existe evidencia de que la prueba de conexión de la relación no lineal de los puntajes y la proporción de estudiantes por maestro depende de la fracción de estudiantes que aprenden inglés en el distrito. Sin embargo, la figura anterior muestra que esta diferencia no es de importancia práctica y es un buen ejemplo de por qué se debe tener cuidado al interpretar modelos no lineales: Aunque las dos funciones de regresión se ven diferentes, se puede ver que la pendiente de ambas funciones es casi idéntica para la proporción alumno-maestro entre $17$ y $23$. Dado que este rango incluye casi el $90\%$ de todas las observaciones, se puede estar seguro de que se pueden descuidar las interacciones no lineales entre la fracción de estudiantes de inglés y la proporción de estudiantes por maestro.
+
+Uno podría tener la tentación de objetar ya que ambas funciones muestran pendientes opuestas para proporciones alumno-maestro por debajo de $15$ y más allá de $24$. Existen al menos posibles objeciones:
+
+1. Existen pocas observaciones con valores bajos y altos de la relación alumno-maestro, por lo que hay poca información para explotar al estimar el modelo. Esto significa que la función estimada es menos precisa en las colas del conjunto de datos.
+
+2. El comportamiento descrito anteriormente de la función de regresión es una advertencia típica cuando se usan funciones cúbicas, ya que generalmente muestran un comportamiento extremo para valores de regresores extremos. Piense en la gráfica de $f(x) = x^3$.
+
+Por lo tanto, no se encuentra evidencia clara de una relación entre el tamaño de la clase y los puntajes de las pruebas en el porcentaje de estudiantes de inglés en el distrito.
+
+#### Resumen {-}
+
+Ahora se pueden responder a las tres preguntas planteadas al comienzo de esta sección.
+
+1. En los modelos lineales, el porcentaje de estudiantes de inglés tiene poca influencia en el efecto en los puntajes de las pruebas al cambiar la proporción de estudiantes por maestro. Este resultado sigue siendo válido si se controlan los antecedentes económicos de los estudiantes. Si bien la especificación cúbica (6) proporciona evidencia de que el efecto de la proporción alumno-maestro en la puntuación de la prueba depende de la proporción de estudiantes de inglés, la fuerza de este efecto es insignificante.
+
+2. Al controlar por los antecedentes económicos de los estudiantes, se encuentra evidencia de no linealidades en la relación entre la proporción de estudiantes por maestro y los puntajes de las pruebas.
+
+3. La especificación lineal (2) predice que una reducción de la proporción de estudiantes por maestro en dos estudiantes por maestro conduce a una mejora en los puntajes de las pruebas de aproximadamente $-0.73 \times (-2) = 1.46$ puntos. Dado que el modelo es lineal, este efecto es independiente del tamaño de la clase. Suponga que la proporción de estudiantes por maestro es de $20$. Por ejemplo, el modelo no lineal (5) predice que la reducción aumenta los puntajes de las pruebas en $$64.33\cdot18+18^2\cdot(-3.42)+18^3\cdot(0.059) - (64.33\cdot20+20^2\cdot(-3.42)+20^3\cdot(0.059)) \approx 3.3$$ puntos. Si la proporción es de $22$, una reducción a $20$ conduce a una mejora prevista en las puntuaciones de las pruebas de $$64.33\cdot20+20^2\cdot(-3.42)+20^3\cdot(0.059) - (64.33\cdot22+22^2\cdot(-3.42)+22^3\cdot(0.059)) \approx 2.4$$ puntos. Esto sugiere que el efecto es más fuerte en clases más pequeñas.
+
+## Ejercicios {#Ejercicios-8}
+
+```{r, 518, echo=F, purl=F, results='asis'}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Correlación y (no) linealidad I {-}
+ 
+Considere el modelo de regresión lineal simple estimado $$\\widehat{medv_i} = 34.554 - 0.95\\times lstat_i,$$
+
+donde <tt>medv</tt> (el valor medio de la vivienda en el suburbio) y <tt>lstat</tt> (el porcentaje de hogares con un nivel socioeconómico bajo en el suburbio) son variables del ya conocido conjunto de datos <tt>Boston</tt>.
+
+El objeto <tt>lm()</tt> para el modelo anterior está disponible como <tt>mod</tt> en el entorno de trabajo. Se ha cargado el paquete <tt>MASS</tt>.
+
+**Instrucciones:**
+
+  + Calcular el coeficiente de correlación entre <tt>medv</tt> y <tt>lstat</tt> y guardarlo en <tt>corr</tt>.
+  
+  + Graficar <tt>medv</tt> contra <tt>lstat</tt> y agregar la línea de regresión usando el objeto modelo <tt>mod</tt>. ¿Que puede notar?
+
+<iframe src="DCL/ex8_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+        
+**Sugerencias:**
+        
+  + Puede usar <tt>cor()</tt> para calcular la correlación entre variables.
+      
+  + Puede usar <tt>plot()</tt> y <tt>abline()</tt> para visualizar los resultados de la regresión.
+      
+</div>')
+} else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 519, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Correlación y (no) linealidad II {-}
+
+En el ejercicio anterior se vio un ejemplo donde la correlación entre la variable dependiente <tt>medv</tt> y el regresor <tt>medv</tt> no es útil para elegir la forma funcional de la regresión, ya que la correlación captura solo la relación lineal.
+
+Como alternativa, considere la especificación no lineal
+
+$$medv_i = \\beta_0 + \\beta_1\\times\\log(lstat_i) + u_i.$$
+
+Se ha cargado el paquete <tt>MASS</tt>.
+      
+**Instrucciones:**
+        
+  + Realizar la regresión desde arriba y asigne el resultado a <tt>log_mod</tt>.
+      
+  + Visualizar sus resultados usando un diagrama de dispersión y agregar la línea de regresión. En comparación con el ejercicio anterior, ¿qué nota ahora?
+
+<iframe src="DCL/ex8_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+  
+  + Utilizar <tt>lm()</tt> para realizar la regresión.
+
+  + Utilizar <tt>plot()</tt> y <tt>abline()</tt> para visualizar los resultados de la regresión.
+  
+</div>')
+}
+```
+
+```{r, 520, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. El orden polinómico óptimo --- Prueba secuencial {-}
+
+Recuerde el siguiente modelo del ejercicio anterior $$medv_i = \\beta_0 + \\beta_1\\times\\log(lstat_i) + u_i.$$
+
+Se vio que esta especificación de modelo parece ser una opción razonable. Sin embargo, un polinomio de orden superior en $\\log(lstat_i)$ puede ser más adecuado para explicar $medv$.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>MASS</tt>.
+      
+**Instrucciones:**
+        
+  + Determinar el orden óptimo de un modelo polylog usando pruebas secuenciales. Utilizar un orden polinomial máximo de $r = 4$ y el nivel de significancia $\\alpha=0.05$. Se recomienda el uso de un bucle <tt>for()</tt> y se le recomienda el siguiente enfoque:
+
+    1. Calcular un modelo, suponiendo <tt>mod</tt>, que comienza con el orden polinomial más alto.
+    2. Guardar el valor $p$ (usar errores estándar robustos) del parámetro relevante y compararlo con el nivel de significancia $\\alpha$
+    3. Si no puede rechazar la hipótesis nula, repetir los pasos 1 y 2 para el siguiente orden polinomial más bajo; de lo contrario, detener el ciclo e imprimir el orden polinomial.
+
+  + Calcular $R^2$ del modelo seleccionado y asignarlo a <tt>R2</tt>.
+
+<iframe src="DCL/ex8_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El índice del bucle <tt>for()</tt> debe comenzar en 4 y terminar en 1.
+
+  + El uso de <tt>poly()</tt> en el argumento <tt>formula</tt> de <tt>lm()</tt> es una forma genérica de incorporar órdenes superiores de una determinada variable en el modelo. Además de la variable, se debe especificar el grado del polinomio mediante el argumento <tt>degree</tt> y establecer <tt>raw = TRUE</tt>.
+
+  + Usar <tt>coeftest()</tt> junto con el argumento <tt>vcov.</tt> para obtener valores $p$ (¡usar errores estándar robustos!). Utilizar la estructura del objeto resultante para extraer el valor $p$ relevante.
+
+  + Una instrucción <tt>if()</tt> puede ser útil para verificar si se cumple la condición para la aceptación del nulo en el paso 3.
+
+  + Un bucle <tt>for()</tt> se detiene usando <tt>break</tt>.
+
+  + Usar <tt>summary()</tt> para obtener $R^2$. Puede extraerlo agregando <tt>$r.squared</tt> a la llamada de la función.
+
+</div>') 
+}
+
+```
+
+```{r, 521, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. El efecto estimado de un cambio de unidad {-}
+
+Reconsidere el modelo polylog del ejercicio anterior que fue seleccionado por el enfoque de prueba secuencial. Como este modelo es logarítmico y de forma cuadrática, no se puede simplemente leer el efecto estimado de un cambio de unidad (es decir, uno por ciento) en <tt>lstat</tt> del resumen de coeficientes porque este efecto depende del nivel de <tt>lstat</tt>. Se puede calcular esto manualmente.
+
+El modelo polylog <tt>mod_pl</tt> seleccionado está disponible en el entorno de trabajo. Se ha cargado el paquete <tt>MASS</tt>.
+      
+**Instrucciones:**
+
+Suponga que se está interesado en el efecto en <tt>medv</tt> de un aumento en <tt>lstat</tt> de $10\\%$ a $11\\%$.
+
+  + Configurar un <tt>data.frame</tt> con las observaciones relevantes de <tt>lstat</tt>.
+
+  + Utilizar las nuevas observaciones para predecir los valores correspondientes de <tt>medv</tt>.
+
+  + Calcular el efecto esperado con la ayuda de <tt>diff()</tt>.
+
+<iframe src="DCL/ex8_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+- Se puede usar <tt>predict()</tt> junto con los nuevos datos para obtener los valores predichos de <tt>medv</tt>. Se debe tener en cuenta que los nombres de las columnas del <tt>data.frame</tt> deben coincidir con los nombres de los regresores cuando se usa <tt>predict()</tt>.
+
+- <tt>diff()</tt> espera un vector. Calcula las diferencias entre todas las entradas de este vector.
+
+</div>') 
+}
+
+```
+
+```{r, 522, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Interacciones entre variables independientes I {-}
+
+Considere el siguiente modelo de regresión
+
+$$medv_i=\\beta_0+\\beta_1\\times chas_i+\\beta_2\\times old_i+\\beta_3\\times (chas_i\\cdot old_i)+u_i$$
+
+donde $chas_i$ y $old_i$ son variables ficticias. El primero toma el valor $1$, si el río Charles (un río corto en las proximidades de Boston) pasa por el suburbio $i$ y es $0$ en caso contrario. Este último indica una alta proporción de edificios antiguos y está construido como
+
+\\begin{align}
+old_i = & \\,
+    \\begin{cases}
+      1 & \\text{si $age_i\\geq 95$},\\\\
+      0 & \\text{de otro modo}.
+    \\end{cases}
+\\end{align}
+
+siendo $age_i$ la proporción de unidades ocupadas por sus propietarios construidas antes de 1940 en el suburbio $i$.
+
+Se han cargado los paquetes <tt>MASS</tt> y <tt>AER</tt>.
+      
+**Instrucciones:**
+        
+  + Generar y agregar la variable binaria <tt>old</tt> al conjunto de datos <tt>Boston</tt>.
+
+  + Realizar la regresión indicada anteriormente y asignar el resultado a <tt>mod_bb</tt>.
+
+  + Obtener un resumen robusto de coeficientes del modelo. ¿Cómo interpreta los resultados?
+
+<iframe src="DCL/ex8_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El operador <tt>>=</tt> puede usarse para generar un vector lógico. Transformar un vector lógico al tipo numérico a través de <tt>as.numeric()</tt>.
+
+  + En <tt>lm()</tt> existen dos formas de incluir términos de interacción usando el argumento <tt>formula</tt>:
+
+      1. <tt>Var1*Var2</tt> para agregar <tt>Var1</tt>, <tt>Var2</tt> y el término de interacción correspondiente a la vez
+
+      2. <tt>Var1:Var2</tt> para agregar manualmente el término de interacción (lo que, por supuesto, requiere que se agreguen los términos restantes manualmente también)
+
+</div>')}
+```
+
+```{r, 523, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Interacciones entre variables independientes II {-}
+
+Ahora considere el modelo de regresión
+
+$$medv_i=\\beta_0+\\beta_1\\times indus_i+\\beta_2\\times old_i+\\beta_3\\times (indus_i\\cdot old_i)+u_i$$
+
+con $old_i$ definido como en el ejercicio anterior y $indus_i$ siendo la proporción de acres comerciales no minoristas en el suburbio $i$.
+
+El vector <tt>old</tt> del ejercicio anterior se ha agregado al conjunto de datos. Se ha cargado el paquete <tt>MASS</tt>.
+
+**Instrucciones:**
+        
+  + Estimar el modelo de regresión anterior y asignar el resultado a <tt>mod_bc</tt>.
+
+  + Extraer los coeficientes estimados del modelo y asígnarlos a <tt>params</tt>.
+
+  + Graficar <tt>medv</tt> contra <tt>indus</tt> y agregar las líneas de regresión para ambos estados de la variable binaria $old$.
+
+<iframe src="DCL/ex8_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Utilizar la estructura de <tt>mod_bc</tt> la salida generada por <tt>coef()</tt> para extraer los coeficientes estimados.
+
+  + Además de pasar un objeto <tt>lm()</tt> a <tt>abline()</tt> también se puede especificar la intercepción y la pendiente manualmente usando los argumentos <tt>a</tt> y <tt>b</tt>, respectivamente.
+
+</div>') 
+}
+```

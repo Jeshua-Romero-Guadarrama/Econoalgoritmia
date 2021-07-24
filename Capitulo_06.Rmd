@@ -1,0 +1,1458 @@
+# Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple {#PHICMRLS}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 329, child="_setup.Rmd"}
+```
+
+```{r, 330, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Este capítulo continúa con el tratamiento del modelo de regresión lineal simple. Las siguientes subsecciones discuten cómo se puede usar el conocimiento sobre la distribución muestral del estimador MCO para hacer declaraciones sobre su incertidumbre.
+
+Estas subsecciones cubren los siguientes temas:
+
+- Prueba de hipótesis sobre coeficientes de regresión.
+
+- Intervalos de confianza para coeficientes de regresión.
+
+- Regresión cuando $X$ es una variable ficticia.
+
+- Heteroscedasticidad y Homoscedasticidad.
+
+Los paquetes **AER** [@R-AER] y **scales** [@R-scales] son necesarios para la reproducción de los fragmentos de código presentados a lo largo de este capítulo. El paquete **scales** proporciona métodos genéricos adicionales de escalado de gráficos. Asegúrese de que ambos paquetes estén instalados antes de continuar. La forma más segura de hacerlo es verificando si el siguiente fragmento de código se ejecuta sin errores.
+
+```{r, 331, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(scales)
+```
+
+## Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente
+
+Usando el hecho de que $\hat{\beta}_1$ se distribuye aproximadamente normalmente en muestras grandes (ver [Concepto clave 4.4](#La_distribución_muestral_del_estimador_de_MCO)), se pueden probar hipótesis sobre el valor verdadero $\beta_1$ como en el Capítulo \@ref(PMM).
+
+```{r, 332, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC5.1">
+<h3 class = "right"> Concepto clave 5.1 </h3>
+<h3 class = "left"> Forma general del estadístico $t$</h3>
+Recuerde del Capítulo \\@ref(RER) que un estadístico $t$ general tiene la forma
+
+$$ t = \\frac{\\text{valor estimado} - \\text{valor hipotético}}{\\text{error estándar del estimador}}.$$
+</div>
+')
+```
+
+```{r, 333, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Forma general del estadístico $t$]{5.1}
+Recuerde del Capítulo \\@ref(RER) que un estadístico $t$ general tiene la forma
+
+$$ t = \\frac{\\text{valor estimado} - \\text{valor hipotético}}{\\text{error estándar del estimador}}.$$
+\\end{keyconcepts}
+')
+```
+
+```{r, 334, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC5.2">
+<h3 class = "right"> Concepto clave 5.2 </h3>
+<h3 class = "left"> Prueba de hipótesis sobre $\\beta_1$ </h3>
+
+Para probar la hipótesis $H_0: \\beta_1 = \\beta_{1,0}$, se deben realizar los siguientes pasos:
+
+1. Calcular el error estándar de $\\hat{\\beta}_1$, $SE(\\hat{\\beta}_1)$
+
+$$ SE(\\hat{\\beta}_1) = \\sqrt{ \\hat{\\sigma}^2_{\\hat{\\beta}_1} } \\ \\ , \\ \\ 
+  \\hat{\\sigma}^2_{\\hat{\\beta}_1} = \\frac{1}{n} \\times \\frac{\\frac{1}{n-2} \\sum_{i=1}^n (X_i - \\overline{X})^2 \\hat{u_i}^2 }{ \\left[ \\frac{1}{n} \\sum_{i=1}^n (X_i - \\overline{X})^2 \\right]^2}. $$
+
+2. Calcular el estadístico $t$
+
+$$ t = \\frac{\\hat{\\beta}_1 - \\beta_{1,0}}{ SE(\\hat{\\beta}_1) }. $$
+
+3. Dada una alternativa de dos lados ($H_1:\\beta_1 \\neq \\beta_{1,0}$), se rechaza en el nivel $5\\%$ si $|t^{act}| > 1.96$ o, de manera equivalente, si el valor de $p$ es menor que $0.05$. 
+<br>
+Se debe recordar la definición del valor $p$:
+
+  \\begin{align*}
+    p \\text{-value} =& \\, \\text{Pr}_{H_0} \\left[ \\left| \\frac{ \\hat{\\beta}_1 - \\beta_{1,0} }{ SE(\\hat{\\beta}_1) } \\right| > \\left|        \\frac{ \\hat{\\beta}_1^{act} - \\beta_{1,0} }{ SE(\\hat{\\beta}_1) } \\right| \\right] \\\\
+    =& \\, \\text{Pr}_{H_0} (|t| > |t^{act}|) \\\\
+    \\approx& \\, 2 \\cdot \\Phi(-|t^{act}|)
+  \\end{align*}  
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; La última transformación se debe a la aproximación normal para muestras grandes.
+
+</div>
+')
+```
+
+```{r, 335, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Prueba de hipótesis sobre $\\beta_1$]{5.2}
+
+Para probar la hipótesis $H_0: \\beta_1 = \\beta_{1,0}$, se deben realizar los siguientes pasos:\\newline
+
+\\begin{enumerate}
+\\item Calcular el error estándar de $\\hat{\\beta}_1$, $SE(\\hat{\\beta}_1)$
+
+$$ SE(\\hat{\\beta}_1) = \\sqrt{ \\hat{\\sigma}^2_{\\hat{\\beta}_1} } \\ \\ , \\ \\ 
+  \\hat{\\sigma}^2_{\\hat{\\beta}_1} = \\frac{1}{n} \\times \\frac{\\frac{1}{n-2} \\sum_{i=1}^n (X_i - \\overline{X})^2 \\hat{u_i}^2 }{ \\left[ \\frac{1}{n} \\sum_{i=1}^n (X_i - \\overline{X})^2 \\right]^2}. $$
+
+\\item Calcular el estadístico $t$
+
+$$ t = \\frac{\\hat{\\beta}_1 - \\beta_{1,0}}{ SE(\\hat{\\beta}_1) }. $$
+
+\\item Dada una alternativa de dos lados ($H_1:\\beta_1 \\neq \\beta_{1,0}$), se rechaza en el nivel $5\\%$ si $|t^{act}| > 1.96$ o, de manera equivalente, si el valor de $p$ es menor que $0.05$.\\newline
+
+Se debe recordar la definición del valor $p$:
+
+  \\begin{align*}
+    p \\text{-value} =& \\, \\text{Pr}_{H_0} \\left[ \\left| \\frac{ \\hat{\\beta}_1 - \\beta_{1,0} }{ SE(\\hat{\\beta}_1) } \\right| > \\left|        \\frac{ \\hat{\\beta}_1^{act} - \\beta_{1,0} }{ SE(\\hat{\\beta}_1) } \\right| \\right] \\\\
+    =& \\, \\text{Pr}_{H_0} (|t| > |t^{act}|) \\\\
+    =& \\, 2 \\cdot \\Phi(-|t^{act}|)
+  \\end{align*}  
+
+La última transformación se debe a la aproximación normal para muestras grandes.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+Al considerar nuevamente la regresión MCO almacenada en **linear_model** del Capítulo \@ref(RLR) que dio la línea de regresión
+
+$$\widehat{TestScore} \ = \underset{(9.47)}{698.9} - \underset{(0.49)}{2.28} \times STR \ , \ R^2=0.051 \ , \ SER=18.6.$$
+
+Copie y ejecute el siguiente fragmento de código si el objeto de modelo anterior no está disponible en su entorno de trabajo.
+
+```{r, 336, message=F, warning=F}
+# cargar el conjunto de datos `CASchools`
+library(AER)
+data(CASchools)
+
+# agregar la proporción de alumnos por maestro
+CASchools$STR <- CASchools$students/CASchools$teachers
+
+# agregar puntaje promedio de prueba
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+# estimar el modelo
+linear_model <- lm(score ~ STR, data = CASchools)          
+```
+
+Para probar una hipótesis sobre el parámetro de pendiente (el coeficiente de $STR$), se necesita $SE(\hat{\beta}_1)$, el error estándar del estimador puntual respectivo. Como es común en la literatura, los errores estándar se presentan entre paréntesis debajo de las estimaciones puntuales.
+
+El Concepto clave 5.1 revela que es bastante engorroso calcular el error estándar y, por lo tanto, el estadístico $t$ a mano. La pregunta que debería hacerse ahora mismo es: ¿se pueden obtener estos valores con el mínimo esfuerzo utilizando **R**? Si se puede. Primero se usa **summary()** para obtener un resumen de los coeficientes estimados en **linear_model**.
+
+**Nota**: A lo largo del curso, se informan errores estándar sólidos. Considere que es instructivo mantener las cosas simples al principio y, por lo tanto, comenzar con ejemplos simples que no permiten una inferencia sólida. Los errores estándar que son robustos a la heterocedasticidad se introducen en el Capítulo \@ref(HH) donde se demuestra cómo se pueden calcular usando **R**. En el Capítulo \@ref(EECD) tiene lugar una discusión de los errores estándar robustos de heterocedasticidad-autocorrelación.
+
+```{r, 337, warning=F, message=F}
+# imprimir el resumen de los coeficientes en la consola
+summary(linear_model)$coefficients
+```
+
+La segunda columna del resumen de los coeficientes informa $SE(\hat\beta_0)$ y $SE(\hat\beta_1)$. Además, en la tercera columna **t value**, se encuentra el estadístico $t^{act}$ adecuado para las pruebas de hipótesis separadas $H_0: \beta_0=0$ y $H_0: \beta_1=0$. Además, la salida nos proporciona valores de $p$ correspondientes a ambas pruebas frente a las alternativas de dos caras $H_1:\beta_0\neq0$ respectivamente $H_1:\beta_1\neq0$ en la cuarta columna de la tabla.
+
+Es momento de echar un vistazo más de cerca a la prueba de
+
+$$H_0: \beta_1=0 \ \ \ vs. \ \ \ H_1: \beta_1 \neq 0.$$ 
+
+Se tiene que 
+
+$$ t^{act} = \frac{-2.279808 - 0}{0.4798255} \approx - 4.75. $$
+
+¿Qué dice esto sobre la importancia del coeficiente estimado? Se rechaza la hipótesis nula en el nivel de significancia de $5\%$ ya que $|t^{act}| > 1.96$. Es decir, la estadística de prueba observada cae en la región de rechazo como $p\text{-value} = 2.78\cdot 10^{-6} < 0.05$. Se concluye que el coeficiente es significativamente diferente de cero. En otras palabras, se rechaza la hipótesis de que el tamaño de la clase *no influye* en los resultados de las pruebas de los estudiantes al nivel de $5\%$.
+
+Tenga en cuenta que aunque la diferencia es insignificante en el presente caso, como se verá más adelante, **summary()** no realiza la aproximación normal, sino que calcula los valores de $p$ usando la distribución $t$ en su lugar. Generalmente, los grados de libertad de la distribución de $t$ supuesta se determinan de la siguiente manera:
+
+$$ \text{DF} = n - k - 1 $$
+
+donde $n$ es el número de observaciones utilizadas para estimar el modelo y $k$ es el número de regresores, excluyendo la intersección. En este caso, se tienen $n = 420$ observaciones y el único regresor es $STR$ entonces $k = 1$. La forma más sencilla de determinar los grados de libertad del modelo es
+
+```{r, 338}
+# determinar grados de libertad residuales
+linear_model$df.residual
+```
+
+Por lo tanto, para la distribución muestral asumida de $\hat\beta_1$ se tienen
+
+$$\hat\beta_1 \sim t_{418}$$
+
+Tal que el valor $p$ para una prueba de significancia bilateral se puede obtener ejecutando el siguiente código:
+
+```{r, 339}
+2 * pt(-4.751327, df = 418)
+```
+
+El resultado está muy cerca del valor proporcionado por **summary()**. Sin embargo, dado que $n$ es suficientemente grande, también se podría usar la densidad normal estándar para calcular el valor de $p$:
+
+```{r, 340}
+2 * pnorm(-4.751327)
+```
+
+De hecho, la diferencia es insignificante. Estos hallazgos indican que, si $H_0: \beta_1 = 0$ es cierto y se tuviera que repetir todo el proceso de recopilar observaciones y estimar el modelo, ¡observar un $\hat\beta_1 \geq |-2.28|$ es muy poco probable!
+
+Usando **R** se puede visualizar cómo se hace tal declaración cuando se usa la aproximación normal. Esto refleja los principios descritos en el siguiente código, aunque es algo más largo que los ejemplos habituales y parece poco atractivo, pero hay mucha repetición, dado que se agregan matices de color y anotaciones en ambas colas de la distribución normal. Se debe recordar ejecutar el código paso a paso para ver cómo se aumenta el gráfico con las anotaciones.
+
+```{r, 341, fig.align='center'}
+# Graficar la normal estándar en el soporte [-6,6]
+t <- seq(-6, 6, 0.01)
+
+plot(x = t, 
+     y = dnorm(t, 0, 1), 
+     type = "l", 
+     col = "steelblue", 
+     lwd = 2, 
+     yaxs = "i", 
+     axes = F, 
+     ylab = "", 
+     main = expression("Cálculo del valor p de una prueba bilateral cuando "~t^act~" = -4.75"), 
+     cex.lab = 0.7,
+     cex.main = 1)
+
+tact <- -4.75
+
+axis(1, at = c(0, -1.96, 1.96, -tact, tact), cex.axis = 0.7)
+
+# sombrear las regiones críticas usando polygon():
+
+# región crítica en la cola izquierda
+polygon(x = c(-6, seq(-6, -1.96, 0.01), -1.96),
+        y = c(0, dnorm(seq(-6, -1.96, 0.01)), 0), 
+        col = 'orange')
+
+# región crítica en cola derecha
+
+polygon(x = c(1.96, seq(1.96, 6, 0.01), 6),
+        y = c(0, dnorm(seq(1.96, 6, 0.01)), 0), 
+        col = 'orange')
+
+# Agregar flechas y textos que indiquen regiones críticas y el valor p
+arrows(-3.5, 0.2, -2.5, 0.02, length = 0.1)
+arrows(3.5, 0.2, 2.5, 0.02, length = 0.1)
+
+arrows(-5, 0.16, -4.75, 0, length = 0.1)
+arrows(5, 0.16, 4.75, 0, length = 0.1)
+
+text(-3.5, 0.22, 
+     labels = expression("0.025"~"="~over(alpha, 2)),
+     cex = 0.7)
+text(3.5, 0.22, 
+     labels = expression("0.025"~"="~over(alpha, 2)),
+     cex = 0.7)
+
+text(-5, 0.18, 
+     labels = expression(paste("-|",t[act],"|")), 
+     cex = 0.7)
+text(5, 0.18, 
+     labels = expression(paste("|",t[act],"|")), 
+     cex = 0.7)
+
+# Agregar palos que indiquen valores críticos en el nivel 0.05, t^act y -t^act 
+rug(c(-1.96, 1.96), ticksize  = 0.145, lwd = 2, col = "darkred")
+rug(c(-tact, tact), ticksize  = -0.0451, lwd = 2, col = "darkgreen")
+```
+
+El valor $p$ es el área bajo la curva a la izquierda de $-4.75$ más el área bajo la curva a la derecha de $4.75$. Como ya se sabe por los cálculos anteriores, este valor es muy pequeño.
+
+## Intervalos de confianza para coeficientes de regresión {#ICCR}
+
+Como ya se sabe, las estimaciones de los coeficientes de regresión $\beta_0$ y $\beta_1$ están sujetas a incertidumbre de muestreo, consultar el Capítulo \@ref(RLR). Por lo tanto, *nunca* se estimará exactamente el valor real de dichos parámetros a partir de datos de muestra en una aplicación empírica. Sin embargo, se pueden construir intervalos de confianza para la intersección y el parámetro de pendiente.
+
+Un intervalo de confianza de $95\%$ para $\beta_i$ tiene dos definiciones equivalentes:
+
+- El intervalo es el conjunto de valores para los que no se puede rechazar una prueba de hipótesis al nivel de $5\% $.
+- El intervalo tiene una probabilidad de $95\%$ de contener el valor real de $\beta_i$. Entonces, en el $95\%$ de todas las muestras que podrían extraerse, el intervalo de confianza cubrirá el valor real de $\beta_i$.
+
+También se dice que el intervalo tiene un nivel de confianza de $95\%$. La idea del intervalo de confianza se resume en el Concepto clave 5.3.
+
+```{r, 342, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC5.3">
+<h3 class = "right"> Concepto clave 5.3 </h3>
+<h3 class = "left"> Un intervalo de confianza por $\\beta_i$ </h3>
+
+Imagíne que pudiera extraer todas las muestras aleatorias posibles de un tamaño determinado. El intervalo que contiene el valor verdadero $\\beta_i$ en $95\\%$ de todas las muestras viene dado por la expresión:
+
+$$ \\text{CI}_{0.95}^{\\beta_i} = \\left[ \\hat{\\beta}_i - 1.96 \\times SE(\\hat{\\beta}_i) \\, , \\, \\hat{\\beta}_i + 1.96 \\times SE(\\hat{\\beta}_i) \\right]. $$
+
+De manera equivalente, este intervalo puede verse como el conjunto de hipótesis nulas para las que una prueba de hipótesis de dos lados $5\\%$ no es rechazada.
+</div>
+')
+```
+
+```{r, 343, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Un intervalo de confianza por $\\beta_i$]{5.3}
+
+Imagíne que pudiera extraer todas las muestras aleatorias posibles de un tamaño determinado. El intervalo que contiene el valor verdadero $\\beta_i$ en $95\\%$ de todas las muestras viene dado por la expresión:
+
+$$ \\text{CI}_{0.95}^{\\beta_i} = \\left[ \\hat{\\beta}_i - 1.96 \\times SE(\\hat{\\beta}_i) \\, , \\, \\hat{\\beta}_i + 1.96 \\times SE(\\hat{\\beta}_i) \\right]. $$
+
+De manera equivalente, este intervalo puede verse como el conjunto de hipótesis nulas para las que una prueba de hipótesis de dos lados $5\\%$ no es rechazada.
+\\end{keyconcepts}
+')
+```
+
+### Estudio de simulación: Intervalos de confianza {-}
+
+Para comprender mejor los intervalos de confianza, se realiza otro estudio de simulación. Por ahora, suponga que se tiene la siguiente muestra de $n = 100$ observaciones en una sola variable $Y$, donde
+
+$$ Y_i \overset{i.i.d}{\sim} \mathcal{N}(5,25), \ i = 1, \dots, 100.$$
+
+```{r, 344, fig.align='center'}
+# establecer semillas para la reproducibilidad
+set.seed(4)
+
+# generar y graficar los datos de muestra
+Y <- rnorm(n = 100, 
+           mean = 5, 
+           sd = 5)
+
+plot(Y, 
+     pch = 19, 
+     col = "steelblue")
+```
+
+Se supone que los datos son generados por el modelo
+
+$$ Y_i = \mu + \epsilon_i $$
+
+donde $\mu$ es una constante desconocida y se sabe que $\epsilon_i \overset{i.i.d.}{\sim} \mathcal{N}(0,25)$. En este modelo, el estimador MCO para $\mu$ viene dado por 
+
+$$ \hat\mu = \overline{Y} = \frac{1}{n} \sum_{i=1}^n Y_i, $$
+
+es decir, el promedio de la muestra de $Y_i$. Además sostiene que:
+
+$$ SE(\hat\mu) = \frac{\sigma_{\epsilon}}{\sqrt{n}} = \frac{5}{\sqrt{100}} $$
+
+Un intervalo de confianza de $95\%$ de muestra grande para $\mu$ viene dado por:
+
+\begin{equation} 
+CI^{\mu}_{0.95} = \left[\hat\mu - 1.96 \times \frac{5}{\sqrt{100}} \ , \ \hat\mu + 1.96 \times \frac{5}{\sqrt{100}}  \right]. (\#eq:KI)
+\end{equation}
+
+Es bastante fácil calcular este intervalo en **R** a mano. El siguiente fragmento de código genera un vector con nombre que contiene los límites del intervalo:
+
+```{r, 345}
+cbind(CIlower = mean(Y) - 1.96 * 5 / 10, CIupper = mean(Y) + 1.96 * 5 / 10)
+```
+
+Sabiendo que $\mu = 5$, se puede ver que, para los datos del ejemplo, el intervalo de confianza cubre el valor real.
+
+A diferencia de los ejemplos del mundo real, se puede usar **R** para comprender mejor los intervalos de confianza muestreando datos repetidamente, estimando $\mu$ y calculando el intervalo de confianza para $\mu$ como en \@ref(eq:KI).
+
+El procedimiento es el siguiente:
+
+- Inicializar los vectores **lower** y **upper** en los que se van a guardar los límites del intervalo simulado. Se quiere simular intervalos de $10000$ para que ambos vectores tengan esta longitud.
+- Se usa un bucle **for()** para muestrear observaciones de $100$ de la distribución $\mathcal{N}(5,25)$ y calcular $\hat\mu$ así como los límites del intervalo de confianza en cada iteración del bucle.
+- Por fin se une **lower** y **upper** en una matriz.
+
+```{r, 346}
+# sembrar semilla
+set.seed(1)
+
+# inicializar vectores de límites de intervalo superior e inferior
+lower <- numeric(10000)
+upper <- numeric(10000)
+
+# muestreo / estimación / IC de bucle
+for(i in 1:10000) {
+  
+  Y <- rnorm(100, mean = 5, sd = 5)
+  lower[i] <- mean(Y) - 1.96 * 5 / 10
+  upper[i] <- mean(Y) + 1.96 * 5 / 10
+  
+}
+
+# unir vectores de límites de intervalo en una matriz
+CIs <- cbind(lower, upper)
+```
+
+Según el Concepto clave 5.3, se espera que la fracción de los intervalos simulados de $10000$ guardados en la matriz **IC** que contienen el valor real $\mu = 5$ debe ser aproximadamente $95\%$. Se puede verificar esto fácilmente usando operadores lógicos.
+
+```{r, 347}
+mean(CIs[, 1] <= 5 & 5 <= CIs[, 2])
+```
+
+La simulación muestra que la fracción de intervalos que cubren $\mu = 5$; es decir, aquellos intervalos para los que $H_0: \mu = 5$ no se pueden rechazar, está cerca del valor teórico de $95\%$.
+
+Trazar un gráfico de los primeros intervalos de confianza simulados de $100$ e indicar aquellos que *no* cubren el valor real de $\mu$. Hacer esto a través de líneas horizontales que representan los intervalos de confianza uno encima del otro.
+
+```{r, 348, fig.align='center', fig.height=5, fig.width=4}
+# identificar intervalos que no cubren mu
+# (4 intervalos de 100)
+ID <- which(!(CIs[1:100, 1] <= 5 & 5 <= CIs[1:100, 2]))
+
+# inicializar la gráfica
+plot(0, 
+     xlim = c(3, 7), 
+     ylim = c(1, 100), 
+     ylab = "Sample", 
+     xlab = expression(mu), 
+     main = "Intervalos de confianza")
+
+# configurar vector de color
+colors <- rep(gray(0.6), 100)
+colors[ID] <- "red"
+
+# dibuja la línea de referencia en mu = 5
+abline(v = 5, lty = 2)
+
+# agregar barras horizontales que representen los IC
+for(j in 1:100) {
+  
+  lines(c(CIs[j, 1], CIs[j, 2]), 
+        c(j, j), 
+        col = colors[j], 
+        lwd = 2)
+  
+}
+```
+
+Para las primeras muestras de $100$, la hipótesis nula verdadera se rechaza en cuatro casos, por lo que estos intervalos no cubren $\mu = 5$. Se han indicado los intervalos que conducen a un rechazo del rojo nulo.
+
+Volviendo al ejemplo de los resultados de las pruebas y el tamaño de las clases. El modelo de regresión del Capítulo \@ref(RLR) se almacena en **linear_model**. Una manera fácil de obtener intervalos de confianza de $95\%$ para $\beta_0$ y $\beta_1$, los coeficientes en **(intercepción)** y **STR**, es usar la función **confint()**. Solo se tiene que proporcionar un objeto de modelo ajustado como entrada para esta función. El nivel de confianza está establecido en $95\%$ de forma predeterminada, pero se puede modificar configurando el argumento **level**, consultar **?Confint**.
+
+```{r, 349}
+# calcular el intervalo de confianza del 95% para los coeficientes en 'linear_model'
+confint(linear_model)
+```
+
+Comprobar si el cálculo se realiza como se espera para $\beta_1$, el coeficiente de **STR**.
+
+```{r, 350}
+# calcular el intervalo de confianza del 95% para los coeficientes en 'linear_model' a mano
+lm_summ <- summary(linear_model)
+
+c("lower" = lm_summ$coef[2,1] - qt(0.975, df = lm_summ$df[2]) * lm_summ$coef[2, 2],
+  "upper" = lm_summ$coef[2,1] + qt(0.975, df = lm_summ$df[2]) * lm_summ$coef[2, 2])
+```
+
+Los límites superior e inferior coinciden. Se ha utilizado el $0.975$ -cuantil de la distribución $t_{418}$ para obtener el resultado exacto informado por **confint**. Evidentemente, este intervalo *no contiene el valor cero* que, como ya se ha visto en el apartado anterior, conduce al rechazar la hipótesis nula $\beta_{1,0} = 0$.
+
+## Regresión cuando X es una variable binaria {#RCXVB}
+
+En lugar de usar un regresor continuo $X$, de podría estar interesados en ejecutar la regresión
+
+$Y_i = \beta_0 + \beta_1 D_i + u_i \tag{5.2}$
+
+donde $D_i$ es una variable binaria, una llamada *variable ficticia* (*dummy variable*). Por ejemplo, se puede definir $D_i$ de la siguiente manera:
+
+$D_i = \begin{cases}
+        1 \ \ \text{si $STR$ en $i^{ésimo}$ distrito escolar < 20} \\
+        0 \ \ \text{si $STR$ en $i^{ésimo}$ distrito escolar $\geq$ 20} \\
+      \end{cases} \tag{5.3}$
+
+El modelo de regresión ahora es
+
+$TestScore_i = \beta_0 + \beta_1 D_i + u_i. \tag{5.4}$
+
+Es momento de ver cómo se comportan estos datos en un diagrama de dispersión:
+
+```{r, 351, eval=F}
+# Cree la variable ficticia como se define arriba
+CASchools$D <- CASchools$STR < 20
+
+# Graficar los datos
+plot(CASchools$D, CASchools$score,     # proporciona los datos que se trazarán
+     pch = 20,                         # utilizar círculos rellenos como símbolos de la gráfica
+     cex = 0.5,                        # establecer el tamaño de los símbolos de la gráfica en 0.5
+     col = "Steelblue",                # establece el color de los símbolos en "Steelblue"
+     xlab = expression(D[i]),          # establecer el título y los nombres de los ejes
+     ylab = "Resultado de la prueba",
+     main = "Regresión ficticia")
+```
+
+```{r, 352, fig.align='center', echo=F}
+# crear la variable ficticia como se define arriba
+CASchools$D <- CASchools$STR < 20
+
+# estimar la regresión ficticia
+dummy_model <- lm(score ~ D, data = CASchools)
+
+# graficar los datos
+plot(CASchools$D, CASchools$score, 
+     pch = 20, cex = 0.5 , col = "Steelblue",
+     xlab = expression(D[i]), ylab = "Resultado de la prueba",
+     main = "Regresión ficticia")
+#
+points(CASchools$D, predict(dummy_model), col = "red", pch = 20)
+```
+
+Con $D$ como regresor, no es útil pensar en $\beta_1$ como un parámetro de pendiente, ya que $D_i \in \{0,1\}$; es decir, solo se observan dos valores discretos en lugar de un continuo de valores regresores. No hay una línea continua que represente la función de expectativa condicional $E(TestScore_i | D_i)$, teniendo en cuenta que esta función está definida únicamente para $x$ - en las posiciones $0$ y $1$.
+
+Por tanto, la interpretación de los coeficientes en este modelo de regresión es la siguiente:
+
+- $E(Y_i | D_i = 0) = \beta_0$, por lo que $\beta_0$ es la puntuación de prueba esperada en los distritos donde $D_i = 0$ donde $STR$ está por encima de $20$.
+
+- $E(Y_i | D_i = 1) = \beta_0 + \beta_1$ o, usando el resultado anterior, $\beta_1 = E(Y_i | D_i = 1) - E(Y_i | D_i = 0)$. Por lo tanto, $\beta_1$ es *la diferencia en las expectativas específicas del grupo*; es decir, la diferencia en la puntuación esperada de la prueba entre los distritos con $STR<20$ y aquellos con $STR\geq20$.
+
+Ahora se usará **R** para estimar un modelo de regresión ficticio según lo definido por las ecuaciones (<a href="#mjx-eqn-5.2">5.2</a>) y (<a href="#mjx-eqn-5.3">5.3</a>).
+
+```{r, 353}
+# estimar el modelo de regresión ficticia
+dummy_model <- lm(score ~ D, data = CASchools)
+summary(dummy_model)
+```
+
+```{block2, precision, type='rmdnote'}
+<tt>summary()</tt> informa el valor $p$ de la prueba, que en este caso el coeficiente en <tt>(Intercepción)</tt> es cero para ser <tt><2e-16</tt>. Esta notación científica establece que el valor $p$ es menor que $\frac{2}{10^{16}}$, por lo que es un número muy pequeño. La razón de esto es que las computadoras no pueden manejar números pequeños arbitrarios. De hecho, $\frac{2}{10^{16}}$ es el número más pequeño posible con el que <tt>R</tt> puede trabajar.
+```
+
+El vector **CASchools\$D** tiene el tipo **logical** (para ver esto, usar **typeof (CASchools\$D)**) que es mostrado en la salida de **summary (modelo_dummy)**: la etiqueta **DTRUE** establece que todas las entradas **TRUE** están codificadas como **1** y todas las entradas **FALSE** se codifican como **0**. Por lo tanto, la interpretación del coeficiente **DTRUE** es como se indicó anteriormente para $\beta_1$.
+
+Se puede ver como predecir el puntaje de prueba esperado en distritos con $STR < 20$ ($D_i = 1$) será $650.1 + 7.17 = 657.27$  mientras que los distritos con $STR \geq 20$ ($D_i = 0$) se espera que tenga un puntaje promedio de prueba de solo $650.1$.
+
+Las predicciones específicas de grupo se pueden agregar al gráfico mediante la ejecución del siguiente fragmento de código.
+
+```{r, 354, eval=F}
+# agregar predicciones específicas de grupo a la gráfica
+points(x = CASchools$D, 
+       y = predict(dummy_model), 
+       col = "red", 
+       pch = 20)
+```
+
+Aquí se usa la función **predict()** para obtener estimaciones de las medias específicas del grupo. Los puntos rojos representan los promedios de estos grupos de muestra. En consecuencia, $\hat{\beta}_1 = 7.17$ puede verse como la diferencia en los promedios del grupo.
+
+**summary(dummy_model)** también responde a la pregunta de si existe una diferencia estadísticamente significativa en las medias de los grupos. Esto, a su vez, apoyaría la hipótesis de que los estudiantes se desempeñan de manera diferente cuando se les enseña en clases pequeñas. Se puede evaluar esto mediante una prueba de dos colas de la hipótesis $H_0: \beta_1 = 0$. Convenientemente, el estadístico $t$ y el valor $p$ correspondiente para esta prueba se calculan mediante **summary()**.
+
+Dado que el valor **t** $= 3.88 > 1.96$, se rechaza la hipótesis nula en el nivel de significancia de $5\%$. Se obtiene la misma conclusión cuando se usa el valor $p$, que reporta significancia hasta el nivel $0.00012\%$.
+
+Como se hizo con **linear_model**, alternativamente se puede usar la función **confint()** para calcular un intervalo de confianza de $95\%$ para la verdadera diferencia en las medias y ver si el valor hipotético es un elemento de este conjunto de confianza.
+
+```{r, 355}
+# intervalos de confianza para coeficientes en el modelo de regresión ficticia
+confint(dummy_model)
+```
+
+Se rechaza la hipótesis de que no existe diferencia entre las medias de los grupos en el nivel de significancia de $5\%$, ya que $\beta_{1,0} = 0$ se encuentra fuera de $[3.54, 10.8]$, el intervalo de confianza de $95\%$ para el coeficiente de $D$.
+
+## Heteroscedasticidad y homocedasticidad {#HH}
+
+Todas las inferencias hechas en los capítulos anteriores se basan en el supuesto de que la varianza del error no varía a medida que cambian los valores del regresor. Pero este no suele ser el caso en las aplicaciones empíricas.
+
+```{r, 356, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC5.4">
+<h3 class = "right"> Concepto clave 5.4 </h3>          
+<h3 class = "left"> Heteroscedasticidad y homocedasticidad </h3>
+<br>
+
+
+- El término de error del modelo de regresión es homocedástico si la varianza de la distribución condicional de $u_i$ dado $X_i$, $Var(u_i|X_i=x)$, es constante *para todas las observaciones* en la muestra:
+
+$$ \\text{Var}(u_i|X_i=x) = \\sigma^2 \\ \\forall \\ i=1,\\dots,n. $$
+
+- Si, en cambio, existe dependencia de la varianza condicional de $u_i$ con $X_i$, se dice que el término de error es heterocedástico. Luego se escribe:
+
+$$ \\text{Var}(u_i|X_i=x) = \\sigma_i^2 \\ \\forall \\ i=1,\\dots,n. $$
+
+- La homocedasticidad es un *caso especial* de heterocedasticidad. En conclusión, en los modelos de regresión lineales se dice que hay heterocedasticidad cuando la varianza de los errores no es igual en todas las observaciones realizadas.
+
+</div>
+')
+```
+
+```{r, 357, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Heteroscedasticidad y homocedasticidad]{5.4}
+\\begin{itemize}
+
+\\item El término de error del modelo de regresión es homocedástico si la varianza de la distribución condicional de $u_i$ dado $X_i$, $Var(u_i|X_i=x)$, es constante \\textit{para todas las observaciones} en la muestra:
+
+$$ \\text{Var}(u_i|X_i=x) = \\sigma^2 \\ \\forall \\ i=1,\\dots,n. $$
+
+\\item Si, en cambio, existe dependencia de la varianza condicional de $u_i$ con $X_i$, se dice que el término de error es heterocedástico. Luego se escribe:
+
+$$ \\text{Var}(u_i|X_i=x) = \\sigma_i^2 \\ \\forall \\ i=1,\\dots,n. $$
+
+\\item La homocedasticidad es un \\textit{caso especial} de heterocedasticidad. En conclusión, en los modelos de regresión lineales se dice que hay heterocedasticidad cuando la varianza de los errores no es igual en todas las observaciones realizadas.
+
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+Para una mejor comprensión de la heterocedasticidad, se generan algunos datos heterocedásticos bivariados, se estima un modelo de regresión lineal y luego se usan diagramas de caja para representar las distribuciones condicionales de los residuos.
+
+```{r, 358, fig.align='center', warning=FALSE}
+# cargar el paquete de escalas para ajustar opacidades de color
+library(scales)
+
+# generar algunos datos heterocedásticos:
+
+# establecer semillas para la reproducibilidad
+set.seed(123) 
+
+# configurar vector de x coordenadas
+x <- rep(c(10, 15, 20, 25), each = 25)
+
+# inicializar vector de errores
+e <- c()
+
+# muestrear 100 errores tales que la varianza aumenta con x
+e[1:25] <- rnorm(25, sd = 10)
+e[26:50] <- rnorm(25, sd = 15)
+e[51:75] <- rnorm(25, sd = 20)
+e[76:100] <- rnorm(25, sd = 25)
+
+# configurar y
+y <- 720 - 3.3 * x + e
+
+# estimar el modelo
+mod <- lm(y ~ x)
+
+# graficar los datos
+plot(x = x, 
+     y = y, 
+     main = "Un ejemplo de heterocedasticidad",
+     xlab = "Proporción alumno-maestro",
+     ylab = "Resultado de la prueba",
+     cex = 0.5, 
+     pch = 19, 
+     xlim = c(8, 27), 
+     ylim = c(600, 710))
+
+# Agregar la línea de regresión al gráfico
+abline(mod, col = "darkred")
+
+# Agregar diagramas de caja a la trama
+boxplot(formula = y ~ x, 
+        add = TRUE, 
+        at = c(10, 15, 20, 25), 
+        col = alpha("gray", 0.4), 
+        border = "black")
+```
+
+Se ha utilizado la función **formula** con el argumento **y ~ x** en **boxplot()** para especificar que se quiere dividir el vector **y** en grupos, de acuerdo con **x**. **boxplot(y ~ x)** genera un boxplot para cada uno de los grupos en **y** definido por **X**.
+
+Para estos datos artificiales, está claro que las variaciones de error condicionales difieren. Específicamente, se observa que la varianza en los puntajes de las pruebas (y por lo tanto la varianza de los errores cometidos) *aumenta* con la proporción de alumnos por maestro.
+
+### Un ejemplo del mundo real de heterocedasticidad {-}
+
+Piense en el valor económico de la educación: Si no hubiera un valor agregado económico esperado para recibir educación universitaria, probablemente no estaría atendiendo la lectura del presente curso en este momento. Un punto de partida para verificar empíricamente tal relación es tener datos sobre las personas que trabajan. Más precisamente, se necesitan datos sobre salarios y educación de los trabajadores para estimar un modelo como
+
+$$ wage_i = \beta_0 + \beta_1 \cdot education_i + u_i. $$
+
+¿Qué se puede presumir de esta relación? Es probable que, en promedio, los trabajadores con mayor educación ganen más que los trabajadores con menos educación, por lo que se espera estimar una línea de regresión con pendiente ascendente. Además, parece plausible que los ingresos de los trabajadores mejor educados tengan una mayor dispersión que los de los trabajadores poco calificados: una educación sólida no es garantía para un salario alto, por lo que incluso los trabajadores altamente calificados aceptan trabajos de bajos ingresos. Sin embargo, es más probable que cumplan con los requisitos para los trabajos bien remunerados que los trabajadores con menos educación para quienes las oportunidades en el mercado laboral son mucho más limitadas.
+
+Para verificar esto empíricamente, se pueden usar datos reales sobre ganancias por hora y el número de años de educación de los empleados. Estos datos se pueden encontrar en **CPSSWEducation**. Este conjunto de datos es parte del paquete **AER** y proviene de la Current Population Survey (CPS) que es realizada periódicamente por la [Oficina de Estadísticas Laborales](http://www.bls.gov/) en los Estados Unidos.
+
+Los siguientes fragmentos de código demuestran cómo importar los datos a **R** y cómo producir un gráfico:
+
+```{r, 359, fig.align='center'}
+# cargar paquete y adjuntar datos
+library(AER)
+data("CPSSWEducation")
+attach(CPSSWEducation)
+
+# obtener una descripción general
+summary(CPSSWEducation)
+
+# estimar un modelo de regresión simple
+labor_model <- lm(earnings ~ education)
+
+# graficar observaciones y agregar la línea de regresión
+plot(education, 
+     earnings, 
+     ylim = c(0, 150))
+
+abline(labor_model, 
+       col = "steelblue", 
+       lwd = 2)
+```
+
+La gráfica revela que la media de la distribución de ingresos aumenta con el nivel de educación. Esto también está respaldado por un análisis formal: El modelo de regresión estimado almacenado en **labor_mod** muestra que existe una relación positiva entre los años de educación y los ingresos.
+
+```{r, 360}
+# imprimir el contenido de labor_model en la consola
+labor_model
+```
+
+La ecuación de regresión estimada establece que, en promedio, un año adicional de educación aumenta los ingresos por hora de un trabajador en aproximadamente $\$ 1.47$. Una vez más se usa **confint()** para obtener un intervalo de confianza de $95\%$ para ambos coeficientes de regresión.
+
+```{r, 361}
+# calcular un intervalo de confianza del 95% para los coeficientes en el modelo
+confint(labor_model)
+```
+
+Dado que el intervalo es $[1.33, 1.60]$, se puede rechazar la hipótesis de que el coeficiente de **educación** es cero en el nivel de $5\%$.
+
+Además, el gráfico indica que hay heterocedasticidad: Si se asume que la línea de regresión es una representación razonablemente buena de la función media condicional $E(ganancias_i\vert educación_i)$, la dispersión de las ganancias por hora alrededor de esa función aumenta claramente con el nivel de la educación; es decir, aumenta la varianza de la distribución de los ingresos. En otras palabras: La varianza de los errores (los errores cometidos al explicar los ingresos por educación) aumenta con la educación, por lo que los errores de regresión son heterocedásticos.
+
+Este ejemplo demuestra que el supuesto de homocedasticidad es dudoso en aplicaciones económicas. ¿Los economistas deberían preocuparse por la heterocedasticidad? Sí, deberían. Como se explica en la siguiente sección, la heterocedasticidad puede tener graves consecuencias negativas en la prueba de hipótesis, si se ignora.
+
+### ¿Los economistas deberían preocuparse por la heterocedasticidad? {-}
+
+Para responder a la pregunta de si deberían preocuparse por la presencia de heterocedasticidad, se debe considerar la varianza de $\hat\beta_1$ bajo el supuesto de homocedasticidad. En este caso se tiene:
+
+$$ \sigma^2_{\hat\beta_1} = \frac{\sigma^2_u}{n \cdot \sigma^2_X} \tag{5.5} $$
+
+que es una versión simplificada de la ecuación general (<a href="#mjx-eqn-4.1">4.1</a>) presentada en el Concepto clave 4.4; así como **summary()** estimaciones (<a href="#mjx-eqn-5.5">5.5</a>) por
+
+$$ \overset{\sim}{\sigma}^2_{\hat\beta_1} = \frac{SER^2}{\sum_{i=1}^n (X_i - \overline{X})^2} \ \ \text{where} \ \ SER=\frac{1}{n-2} \sum_{i=1}^n \hat u_i^2. $$
+
+Por lo tanto, **summary()** estima el error estándar *de solo homocedasticidad*:
+
+$$\sqrt{ \overset{\sim}{\sigma}^2_{\hat\beta_1} } = \sqrt{ \frac{SER^2}{\sum_{i=1}^n(X_i - \overline{X})^2} }.$$
+
+De hecho, este es un estimador para la desviación estándar del estimador $\hat{\beta}_1$ que es *inconsistente* para el valor verdadero $\sigma^2_{\hat\beta_1}$ cuando existe heterocedasticidad. La implicación es que el estadístico $t$ calculado a la manera del Concepto clave 5.1 no sigue una distribución normal estándar, incluso en muestras grandes. Este problema puede invalidar la inferencia cuando se utilizan las herramientas tratadas anteriormente para la prueba de hipótesis: Se debe tener cuidado al hacer afirmaciones sobre la importancia de los coeficientes de regresión sobre la base del estadístico $t$ calculado por **summary()** o intervalos de confianza producido por **confint()** si es dudoso que se mantenga el supuesto de homocedasticidad.
+
+Ahora se usará **R** para calcular el error estándar de solo homocedasticidad para $\hat{\beta}_1$ en el modelo de regresión de puntaje de prueba **modelo_laboral** a mano y se verá que coincide con el valor producido por **summary()**.
+
+```{r, 362}
+# resumen del modelo de tienda en 'modelo'
+model <- summary(labor_model)
+
+# extraer el error estándar de la regresión del resumen del modelo
+SER <- model$sigma
+
+# calcular la variación en 'educación'
+V <- (nrow(CPSSWEducation)-1) * var(education)
+
+# calcular el error estándar del estimador del parámetro de pendiente e imprimirlo
+SE.beta_1.hat <- sqrt(SER^2/V)
+SE.beta_1.hat
+
+# utilizar los operadores lógicos para ver si el valor calculado coincide con el proporcionado
+# en mod$coefficients, redondear estimaciones a cuatro lugares decimales
+round(model$coefficients[2, 2], 4) == round(SE.beta_1.hat, 4)
+```
+
+De hecho, los valores estimados son iguales.
+
+### Cálculo de errores estándar robustos de heterocedasticidad {-}
+
+Se otorga una estimación consistente de $\sigma_{\hat{\beta}_1}$ bajo heterocedasticidad cuando se usa el siguiente estimador *robusto*:
+
+$SE(\hat{\beta}_1) = \sqrt{ \frac{1}{n} \cdot \frac{ \frac{1}{n} \sum_{i=1}^n (X_i - \overline{X})^2 \hat{u}_i^2 }{ \left[ \frac{1}{n} \sum_{i=1}^n (X_i - \overline{X})^2  \right]^2} } \tag{5.6}$
+
+Las estimaciones de error estándar calculadas de esta manera también se conocen como [errores estándar de Eicker-Huber-White](https://en.wikipedia.org/wiki/Heteroscedasticity-consistent_standard_errors), el artículo más frecuentemente citado sobre esto es @white1980.
+
+Puede resultar bastante engorroso hacer este cálculo a mano. Afortunadamente, existen ciertas funciones en R que cumplen con ese propósito. Uno conveniente llamado **vcovHC()** es parte del paquete **sandwich**.^[El paquete **sandwich** es una dependencia del paquete **AER**, lo que implica que se adjunta automáticamente si se carga **AER**.] Dicha función puede calcular una variedad de errores estándar. El presentado en (<a href="#mjx-eqn-5.6">5.6</a>) se calcula cuando el argumento **type** se establece en **"HC0"**. La mayoría de los ejemplos presentados en los libros de texto encuentran fundamento en una fórmula ligeramente diferente, que es la predeterminada en el paquete de estadísticas *STATA*:
+
+\begin{align}
+SE(\hat{\beta}_1)_{HC1} = \sqrt{ \frac{1}{n} \cdot \frac{ \frac{1}{n-2} \sum_{i=1}^n (X_i - \overline{X})^2 \hat{u}_i^2 }{ \left[ \frac{1}{n} \sum_{i=1}^n (X_i - \overline{X})^2  \right]^2}} (\#eq:hc1)
+\end{align}
+
+La diferencia es que se multiplica por $\frac{1}{n-2}$ en el numerador de \@ref(eq:hc1). Esta es una corrección de grados de libertad y fue considerada por @mackinnon1985. Para que **vcovHC()** use \@ref(eq:hc1), se tiene que establecer **type = "HC1"**.
+
+Calcular ahora estimaciones robustas del error estándar para los coeficientes en **modelo_lineal**.
+
+```{r, 363}
+# calcular errores estándar robustos a la heterocedasticidad
+vcov <- vcovHC(linear_model, type = "HC1")
+vcov
+```
+
+La salida de **vcovHC()** es la matriz de varianza-covarianza de estimaciones de coeficientes. Se está interesado en la raíz cuadrada de los elementos diagonales de esta matriz; es decir, las estimaciones del error estándar.
+
+```{block2, vcovmatrix, type='rmdknit'}
+Cuando se tiene k > 1 regresores, escribir las ecuaciones para un modelo de regresión se vuelve muy complicado. Una forma más conveniente de denotar y estimar los llamados modelos de regresión múltiple (ver Capítulo \@ref(MRVR)) es usando álgebra matricial. Es por eso que funciones como <tt>vcovHC()</tt> producen matrices. En el modelo de regresión lineal simple, las varianzas y covarianzas de los estimadores se pueden recopilar en la matriz simétrica de varianza-covarianza.
+
+\begin{equation}
+\text{Var}
+  \begin{pmatrix}
+    \hat\beta_0 \\
+    \hat\beta_1
+  \end{pmatrix} = 
+\begin{pmatrix}
+  \text{Var}(\hat\beta_0) & \text{Cov}(\hat\beta_0,\hat\beta_1) \\
+\text{Cov}(\hat\beta_0,\hat\beta_1) & \text{Var}(\hat\beta_1)
+\end{pmatrix},
+\end{equation}
+
+entonces <tt>vcovHC()</tt> da $\widehat{\text{Var}}(\hat\beta_0)$, $\widehat{\text{Var}}(\hat\beta_1)$ y $\widehat{\text{Cov}}(\hat\beta_0,\hat\beta_1)$, pero la mayoría de las veces se está interesado en los elementos diagonales de la matriz estimada.
+
+```
+
+```{r, 364}
+# calcular la raíz cuadrada de los elementos diagonales en vcov
+robust_se <- sqrt(diag(vcov))
+robust_se
+```
+
+Ahora suponga que se quiere generar un resumen de coeficientes como lo proporciona **summary()**, pero con errores estándar *robustos* de los estimadores de coeficientes, estadísticos robustas de $t$ y valores de $p$ correspondientes para el modelo de regresión **linear_model**. Esto se puede hacer usando **coeftest()** del paquete **lmtest**, ver **?coeftest**. Más adelante se especifica en el argumento **vcov.** que debe usarse **vcov**, la estimación de Eicker-Huber-White de la matriz de varianza que se ha calculado antes.
+
+```{r, 365}
+# se invoca la función `coeftest()` en el modelo
+coeftest(linear_model, vcov. = vcov)
+```
+
+Se puede ver que los valores reportados en la columna **Std. Error** son iguales a los de **sqrt(diag(vcov))**.
+
+¿Qué tan severas son las implicaciones de usar errores estándar de solo homocedasticidad en presencia de heterocedasticidad? La respuesta es, depende. Como se mencionó anteriormente, se corre el riesgo de sacar conclusiones erróneas al realizar pruebas de significancia. 
+
+Resulta importante ilustrar este punto generando otro ejemplo de un conjunto de datos heterocedásticos, usándolo para estimar un modelo de regresión simple. En este caso se toma:
+
+$$ Y_i = \beta_1 \cdot X_i + u_i \ \ , \ \ u_i \overset{i.i.d.}{\sim} \mathcal{N}(0,0.36 \cdot X_i^2)  $$ 
+
+con $\beta_1=1$ como proceso de generación de datos. Claramente, aquí se viola el supuesto de homocedasticidad, dado que la varianza de los errores es una función creciente no lineal de $X_i$, pero los errores tienen media cero y son i.i.d. de manera que no se violen las suposiciones hechas en el Concepto clave 4.3. Como antes, se está interesado en estimar $\beta_1$.
+
+```{r, 366}
+set.seed(905)
+
+# generar datos heterocedásticos
+X <- 1:500
+Y <- rnorm(n = 500, mean = X, sd = 0.6 * X)
+
+# estimar un modelo de regresión simple
+reg <- lm(Y ~ X)
+```
+
+Se grafican los datos y se agrega la línea de regresión.
+
+```{r, 367, fig.align='center'}
+# graficar los datos
+plot(x = X, y = Y, 
+     pch = 19, 
+     col = "steelblue", 
+     cex = 0.8)
+
+# agregar la línea de regresión al gráfico
+abline(reg, 
+       col = "darkred", 
+       lwd = 1.5)
+```
+
+La gráfica muestra que los datos son heterocedásticos a medida que la varianza de $Y$ crece con $X$. A continuación, se realiza una prueba de significancia de la hipótesis nula (verdadera) $H_0: \beta_1 = 1$ dos veces, una vez usando la fórmula de error estándar de homocedasticidad solamente y una vez con la versión robusta (<a href="#mjx-eqn-5.6">5.6</a>). Una manera fácil de hacer esto en **R** es la función **linearHypothesis()** del paquete **car**, ver **?LinearHypothesis**. Permite probar hipótesis lineales sobre parámetros en modelos lineales de manera similar a como se hace con un estadístico $t$ y ofrecer varios estimadores de matrices de covarianza robustas. Se prueba comparando los valores $p$ de las pruebas con el nivel de significancia de $5\%$.
+
+```{block2, linearhypothesis, type='rmdknit'}
+<tt>linearHypothesis()</tt> calcula una estadística de prueba que sigue una distribución $F$ bajo la hipótesis nula. No es momento de centrarse en los detalles de la teoría subyacente. En general, la idea de la prueba $F$ es comparar el ajuste de diferentes modelos. Cuando se prueba una hipótesis sobre un coeficiente *único* usando una prueba $F$, se puede mostrar que la estadística de prueba es simplemente el cuadrado del estadístico $t$ correspondiente:
+
+$$ F = t ^ 2 = \ left (\ frac {\ hat \ beta_i - \ beta_ {i, 0}} {SE (\ hat \ beta_i)} \ right) ^ 2 \ sim F_ {1, nk-1 } $$
+
+En <tt>linearHypothesis()</tt>, existen diferentes formas de especificar la hipótesis que se va a probar; por ejemplo, utilizando un vector del tipo <tt>character</tt> (como se hace en el siguiente fragmento de código), ver <tt>?linearHypothesis</tt> para alternativas. La función devuelve un objeto de clase <tt>anova</tt> que contiene más información sobre la prueba a la que se puede acceder utilizando el operador <tt>$</tt>.
+```
+
+```{r, 368}
+# probar la hipótesis utilizando la fórmula de error estándar predeterminada
+linearHypothesis(reg, hypothesis.matrix = "X = 1")$'Pr(>F)'[2] < 0.05
+
+# probar hipótesis usando la fórmula robusta de error estándar
+linearHypothesis(reg, hypothesis.matrix = "X = 1", white.adjust = "hc1")$'Pr(>F)'[2] < 0.05
+```
+
+Este es un buen ejemplo de lo que puede salir mal si se ignora la heterocedasticidad: Para el conjunto de datos en cuestión, el método predeterminado rechaza la hipótesis nula $\beta_1 = 1$ aunque es cierta. Cuando se utiliza la fórmula robusta de error estándar, la prueba no rechaza la hipótesis nula. Por supuesto, se podría pensar que esto es solo una coincidencia y ambas pruebas funcionan igualmente bien para mantener la tasa de error de tipo I de $5\%$. Esto se puede investigar más a fondo calculando estimaciones de *Monte Carlo* de las frecuencias de rechazo de ambas pruebas sobre la base de un gran número de muestras aleatorias. Se procede de la siguiente manera:
+
+- Inicializar los vectores **t** y **t.rob**.
+- Usar un bucle **for()** para generar $10000$ muestras aleatorias heterocedásticas de tamaño $1000$, se estima el modelo de regresión y se verifica si las pruebas rechazan falsamente la hipótesis nula al nivel de $5\%$ usando operadores de comparación. Los resultados se almacenan en los vectores respectivos **t** y **t.rob**.
+- Después de la simulación, se calcula la fracción de falsos rechazos para ambas pruebas.
+
+```{r, 369, cache=T, echo=-1}
+set.seed(905)
+
+# inicializar los vectores t y t.rob
+t <- c()
+t.rob <- c()
+
+# muestreo y estimación de bucles
+for (i in 1:10000) {
+  
+  # datos de muestra
+  X <- 1:1000
+  Y <- rnorm(n = 1000, mean = X, sd = 0.6 * X)
+
+  # estimar modelo de regresión
+  reg <- lm(Y ~ X)
+
+  # prueba de significación solo de homocedasticidad
+  t[i] <- linearHypothesis(reg, "X = 1")$'Pr(>F)'[2] < 0.05
+
+  # prueba de significancia robusta
+  t.rob[i] <- linearHypothesis(reg, "X = 1", white.adjust = "hc1")$'Pr(>F)'[2] < 0.05
+
+}
+
+# calcular la fracción de falsos rechazos
+round(cbind(t = mean(t), t.rob = mean(t.rob)), 3)
+```
+
+Estos resultados revelan un mayor riesgo de rechazar falsamente la hipótesis nula utilizando el error estándar de solo homocedasticidad para el problema de prueba en cuestión: Con el error estándar común, $`r round(sum(t)/length(t)*100,3)`\%$  de todas las pruebas rechazan falsamente la hipótesis nula. Por el contrario, con la estadística de prueba robusta se esta más cerca del nivel nominal de $5\%$.
+ 
+## El teorema de Gauss-Markov
+
+Al estimar modelos de regresión, se sabe que los resultados del procedimiento de estimación son aleatorios. Sin embargo, al utilizar estimadores insesgados, al menos en promedio, se estima el parámetro verdadero. Por lo tanto, al comparar diferentes estimadores insesgados, es interesante saber cuál tiene la mayor precisión: Siendo conscientes de que la probabilidad de estimar el valor *exacto* del parámetro de interés es $0$ en una aplicación empírica, se quiere asegurar que la probabilidad de obtener una estimación muy cercana al valor real es lo más alta posible. Esto implica que se quiere utilizar el estimador con la varianza más baja de todos los estimadores insesgados, siempre que se preocupe por el insesgado. El teorema de Gauss-Markov establece que, en la clase de estimadores lineales condicionalmente insesgados, el estimador MCO tiene esta propiedad bajo ciertas condiciones.
+
+```{r, 370, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC5.5">
+<h3 class = "right"> Concepto clave 5.5 </h3>          
+<h3 class = "left"> El teorema de Gauss-Markov para $\\hat{\\beta}_1$ </h3>
+Suponga que las *suposiciones hechas en el Concepto clave 4.3 son válidas* y *que los errores son homocedásticos*. El estimador MCO es el mejor estimador lineal condicionalmente insesgado (AZUL) (en el sentido de la varianza más pequeña) en este entorno.
+
+Echando un vistazo más de cerca a lo que esto significa:
+
+- Los estimadores de $\\beta_1$ que son funciones lineales de $Y_1, \\dots, Y_n$ y que son insesgados condicionalmente en el regresor $X_1, \\dots, X_n$ se pueden escribir como 
+$$\\overset{\\sim}{\\beta}_1 = \\sum_{i = 1}^n a_i Y_i$$ 
+
+donde $a_i$ son pesos que pueden depender de $X_i$ pero *no* de $Y_i$.
+
+- Ya se sabe que $\\overset{\\sim}{\\beta}_1$  tiene una distribución de muestreo: $\\overset{\\sim}{\\beta}_1$ es una función lineal de $Y_i$ que son variables aleatorias. Si ahora
+
+$$ E(\\overset{\\sim}{\\beta}_1 | X_1, \\dots, X_n) = \\beta_1,$$
+
+$\\overset{\\sim}{\\beta}_1$ es un estimador lineal imparcial de $\\beta_1$, condicionalmente en $X_1, \\dots, X_n$.
+
+- Se puede preguntar si $\\overset{\\sim}{\\beta}_1$ es también el *mejor* estimador de esta clase; es decir, el más eficiente de todos los estimadores lineales condicionalmente insesgados donde "más eficiente" significa varianza más pequeña. Los pesos $a_i$ juegan un papel importante aquí y resulta que MCO usa los pesos correctos para tener la propiedad AZUL.
+</div>
+')
+```
+
+```{r, 371, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El teorema de Gauss-Markov para $\\hat{\\beta}_1$]{5.5}
+Suponga que las \\textit{suposiciones hechas en el Concepto clave 4.3 son válidas} y \\textit{que los errores son homocedásticos}. El estimador MCO es el mejor estimador lineal condicionalmente insesgado (AZUL) (en el sentido de la varianza más pequeña) en este entorno.\\newline
+
+Echando un vistazo más de cerca a lo que esto significa:\\newline
+
+\\begin{itemize}
+\\item Los estimadores de $\\beta_1$ que son funciones lineales de $Y_1, \\dots, Y_n$ y que son insesgados condicionalmente en el regresor $X_1, \\dots, X_n$ se pueden escribir como 
+
+$$\\overset{\\sim}{\\beta}_1 = \\sum_{i = 1}^n a_i Y_i $$ 
+
+donde $a_i$ son pesos que pueden depender de $X_i$ pero \\textit{no} de $Y_i$.
+
+\\item Ya se sabe que $\\overset{\\sim}{\\beta}_1$  tiene una distribución de muestreo: $\\overset{\\sim}{\\beta}_1$ es una función lineal de $Y_i$ que son variables aleatorias. Si ahora 
+
+$$ E(\\overset{\\sim}{\\beta}_1 | X_1, \\dots, X_n) = \\beta_1, $$
+
+$\\overset{\\sim}{\\beta}_1$ es un estimador lineal imparcial de $\\beta_1$, condicionalmente en $X_1, \\dots, X_n$.
+
+\\item Se puede preguntar si $\\overset{\\sim}{\\beta}_1$ es también el \\textit{mejor} estimador de esta clase; es decir, el más eficiente de todos los estimadores lineales condicionalmente insesgados donde "más eficiente" significa varianza más pequeña. Los pesos $a_i$ juegan un papel importante aquí y resulta que MCO usa los pesos correctos para tener la propiedad AZUL.
+
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+### Estudio de simulación: Estimador AZUL {-}
+
+Considere el caso de una regresión de $Y_i,\dots,Y_n$ solo en una constante. Aquí, se supone que $Y_i$ es una muestra aleatoria de una población con media $\mu$ y varianza $\sigma^2$. El estimador de MCO en este modelo es simplemente la media de la muestra, consulte el Capítulo \@ref(PMM).
+
+\begin{equation}
+\hat{\beta}_1 = \sum_{i=1}^n \underbrace{\frac{1}{n}}_{=a_i} Y_i (\#eq:bluemean)
+\end{equation}
+
+Claramente, cada observación está ponderada por 
+
+$$a_i = \frac{1}{n}.$$
+
+y también se sabe que $\text{Var}(\hat{\beta}_1)=\frac{\sigma^2}{n}$.
+
+Ahora se usa **R** para realizar un estudio de simulación que demuestra lo que sucede con la varianza de \@ref(eq:bluemean) si diferentes pesos $w_i = \frac{1 \pm \epsilon}{n}$ se asignan a la mitad de la muestra $Y_1, \dots, Y_n$ en lugar de usar $\frac{1}{n}$, los pesos de MCO.
+
+```{r, 372, fig.align='center', cache=T}
+# establecer el tamaño de la muestra y el número de repeticiones
+n <- 100      
+reps <- 1e5
+
+# elegir épsilon y crear un vector de pesos como se define arriba
+epsilon <- 0.8
+w <- c(rep((1 + epsilon) / n, n / 2), 
+       rep((1 - epsilon) / n, n / 2) )
+
+# extraer una muestra aleatoria y_1, ..., y_n de la distribución normal estándar,
+# usar ambos estimadores 1e5 veces y almacene el resultado en los vectores 'ols' y
+# 'weightedestimator'
+
+ols <- rep(NA, reps)
+weightedestimator <- rep(NA, reps)
+
+for (i in 1:reps) {
+  
+  y <- rnorm(n)
+  ols[i] <- mean(y)
+  weightedestimator[i] <- crossprod(w, y)
+  
+}
+
+# graficar estimaciones de densidad de kernel de las distribuciones de los estimadores:
+# MCO
+plot(density(ols), 
+     col = "purple", 
+     lwd = 3, 
+     main = "Densidad de MCO y estimador ponderado",
+     xlab = "Estimados")
+
+# ponderado
+lines(density(weightedestimator), 
+      col = "steelblue", 
+      lwd = 3) 
+
+# agregar una línea discontinua en 0 y agregar una leyenda al gráfico
+abline(v = 0, lty = 2)
+
+legend('topright', 
+       c("MCO", "ponderado"), 
+       col = c("purple", "steelblue"), 
+       lwd = 3)
+```
+
+¿Qué conclusión se puede obtener del resultado?
+
+- Ambos estimadores parecen no sesgados: Las medias de sus distribuciones estimadas son cero.
+- El estimador que usa ponderaciones que se desvían de las implícitas en los MCO es menos eficiente que el estimador MCO: Existe una mayor dispersión cuando las ponderaciones son $w_i = \frac{1 \pm 0.8}{100}$ en lugar de $w_i=\frac{1}{100}$ según lo requiera la solución MCO.
+
+Por tanto, los resultados de la simulación apoyan el teorema de Gauss-Markov.
+
+## Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño
+
+Los tres supuestos de MCO discutidos en el Capítulo \@ref(RLR) (ver Concepto clave 4.3) son la base de los resultados de la distribución muestral grande de los estimadores de MCO en el modelo de regresión simple. ¿Qué se puede decir acerca de la distribución de los estimadores y sus estadísticos $t$ cuando el tamaño de la muestra es pequeño y se desconoce la distribución poblacional de los datos? Siempre que se cumplan los tres supuestos de mínimos cuadrados y los errores estén distribuidos normalmente y sean homocedásticos (se hace referecnia a estas condiciones como supuestos de regresión normal homocedásticos), se tienen estimadores distribuidos normalmente y estadísticos de prueba distribuidos en $t$ en muestras pequeñas.
+
+Recuerde la [definición](#thetdist) de una variable distribuida $t$
+
+$$\frac{Z}{\sqrt{W/M}}\sim t_M$$
+
+donde $Z$ es una variable aleatoria normal estándar, $W$ es $\chi^2$ distribuida con $M$ grados de libertad y $Z$ y $W$ son independientes. Ejemplo de la distribución muestral pequeña del estadístico $t$ en los métodos de regresión.
+
+Simulando la distribución de los estadísticos de regresión $t$ basados en un gran número de pequeñas muestras aleatorias, suponiendo $n = 20$, y comparando las distribuciones simuladas con las distribuciones teóricas que deberían ser $t_{18}$, la distribución $t$ con $18$ grados de libertad (recuerde que $\text{DF} = nk-1$).
+
+```{r, 373, fig.align="center", cache=T}
+# inicializar dos vectores
+beta_0 <- c()
+beta_1 <- c()
+
+# muestreo de bucle/estimación/estadístico t
+for (i in 1:10000) {
+  
+  X <- runif(20, 0, 20)
+  Y <- rnorm(n = 20, mean = X)
+  reg <- summary(lm(Y ~ X))
+  beta_0[i] <- (reg$coefficients[1, 1] - 0)/(reg$coefficients[1, 2])
+  beta_1[i] <- (reg$coefficients[2, 1] - 1)/(reg$coefficients[2, 2])
+  
+}
+
+# graficar las distribuciones y comparar con la densidad t_18:
+# dividir el área del gráfico
+par(mfrow = c(1, 2))
+
+# graficar la densidad simulada de beta_0
+plot(density(beta_0), 
+     lwd = 2 , 
+     main = expression(widehat(beta)[0]), 
+     xlim = c(-4, 4))
+
+# agregar la densidad t_18 al gráfico
+curve(dt(x, df = 18), 
+      add = T, 
+      col = "red", 
+      lwd = 2, 
+      lty = 2)
+
+# graficar la densidad simulada de beta_1
+plot(density(beta_1), 
+     lwd = 2, 
+     main = expression(widehat(beta)[1]), xlim = c(-4, 4)
+     )
+
+# agregar la densidad t_18 al gráfico
+curve(dt(x, df = 18), 
+      add = T, 
+      col = "red", 
+      lwd = 2, 
+      lty = 2) 
+```
+
+Los resultados son consistentes con las expectativas: Las distribuciones empíricas de ambos estimadores parecen seguir la distribución teórica $t_{18}$ bastante de cerca.
+
+## Ejercicios {#Ejercicios-5}
+
+```{r, 374, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Prueba de dos hipótesis nulas por separado {-}
+
+Considere el modelo de regresión estimado
+
+$$ \\widehat{TestScore} = \\underset{(23.96)}{567.43} - \\underset{(0.85)}{7.15} \\times STR, \\, R^2 = 0.8976, \\, SER=15.19 $$
+
+con errores estándar entre paréntesis.
+
+**Instrucciones:**
+
+  + Calcular el valor $p$ para una prueba $t$ de la hipótesis de que la intersección es cero frente a la alternativa de dos lados que no es cero. Guardar el resultado en <tt>p_int</tt>
+  + Calcular el valor $p$ para una prueba $t$ de la hipótesis de que el coeficiente de <tt>STR</tt> es cero frente a la alternativa bilateral de que no es cero. Guardar el resultado en <tt>p_STR</tt>
+
+<iframe src="DCL/ex5_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:** 
+
+  + Ambas hipótesis pueden probarse individualmente mediante una prueba de dos caras. Utilizar <tt>pnorm()</tt> para obtener probabilidades acumuladas de resultados estándar distribuidos normalmente.
+
+</div>')
+} else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 375, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Dos hipótesis nulas que no puedes rechazar, ¿verdad? {-}
+
+Considere nuevamente el modelo de regresión estimado
+
+$$\\widehat{TestScore} = \\underset{(23.96)}{567.43} - \\underset{(0.85)}{7.15} \\times STR, \\, R^2 = 0.8976, \\,SER=15.19$$
+
+¿Puede rechazar las hipótesis nulas discutidas en el ejercicio de código anterior utilizando pruebas $t$ individuales al nivel de significancia de $5\\%$?
+
+Las variables <tt>t_int</tt> y <tt>t_STR</tt> son los estadísticos $t$. Ambos están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Reunir <tt>t_int</tt> y <tt>t_STR</tt> en una <tt>prueba</tt> vectorial y usar operadores lógicos para verificar si se aplica la regla de rechazo correspondiente.
+
+<iframe src="DCL/ex5_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Ambas pruebas son pruebas $t$ de dos caras. El Concepto clave 5.2 resume cómo se realiza una prueba $t$ bilateral.
+  + Utilizar <tt>qnorm()</tt> para obtener valores críticos normales estándar.
+
+</div>')}
+```
+
+```{r, 376, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('    
+<div  class = "DCexercise">
+
+#### 3. Intervalos de confianza {-}
+
+<tt>mod</tt>, el objeto de la clase <tt>lm</tt> que contiene el modelo de regresión estimado 
+
+$$\\widehat{TestScore} = \\underset{(23.96)}{567.43} - \\underset{(0.85)}{7.15} \\times STR, \\, R^2 = 0.8976, \\,SER=15.19$$ 
+
+está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcuar los intervalos de confianza de $90\\% $ para ambos coeficientes.
+
+<iframe src="DCL/ex5_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + Utilizar la función <tt>confint()</tt>, consultar <tt>?Confint</tt>. El argumento <tt>level</tt> establece el nivel de confianza que se utilizará.
+
+</div>')}
+```
+
+```{r, 377, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. Un intervalo de confianza para la media I {-}
+
+Considere el modelo de regresión $$Y_i = \\beta_1 + u_i$$ donde $Y_i \\sim \\mathcal{N}(\\mu, \\sigma^2)$. Siguiendo la discusión que precede a la ecuación \\@ref(eq:KI), un intervalo de confianza de $95\\%$ para la media de $Y_i$ se puede calcular como
+
+$$CI^{\\mu}_{0.95} = \\left[\\hat\\mu - 1.96 \\times \\frac{\\sigma}{\\sqrt{n}}; \\, \\hat\\mu + 1.96 \\times \\frac{\\sigma}{\\sqrt{n}} \\right].$$
+
+**Instrucciones:**
+
+  + Muestra $n = 100$ observaciones de una distribución normal con varianza $100$ y media $10$.
+  + Utilizar la muestra para estimar $\\beta_1$. Guardar la estimación en <tt>mu_hat</tt>.
+  + Suponga que se conoce $\\sigma^2 = 100$. Reemplazar las <tt>NA</tt> en el código siguiente para obtener un intervalo de confianza de $95\\%$ para la media de $Y_i$.
+
+<iframe src="DCL/ex5_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + Utilizar la función <tt>confint()</tt>, consultar <tt>?Confint</tt>. El argumento <tt>level</tt> establece el nivel de confianza.
+
+</div>')}
+```
+
+```{r, 378, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Un intervalo de confianza para la media II {-}
+
+Por razones históricas, algunas funciones de <tt>R</tt> que se usan para obtener inferencias sobre los parámetros del modelo, entre ellas <tt>confint()</tt> y <tt>summary()</tt>, se basan en la distribución $t$ en lugar de utilizar la aproximación normal de muestra grande. Esta es la razón por la que para tamaños de muestra pequeños (y por lo tanto pequeños grados de libertad), los valores de $p$ y los intervalos de confianza informados por estas funciones se desvían de los calculados utilizando valores críticos o probabilidades acumuladas de la distribución normal estándar.
+
+El intervalo de confianza de $95\\%$ para la media del ejercicio anterior es $[9.13, 13.05]$.
+
+**Instrucciones:**
+
+  + Se han asignado 100 observaciones muestreadas de una distribución normal con $\\mu = 10$ y $\\sigma^2 = 100$ al vector <tt>s</tt> que está disponible en el entorno de trabajo.
+  + Configurar un modelo de regresión adecuado para estimar la media de las observaciones en <tt>s</tt>. Luego usar <tt>confint()</tt> para calcular un intervalo de confianza de $95\\%$ para la media.
+  + (Comprobar que el resultado sea diferente del intervalo informado anteriormente).
+
+<iframe src="DCL/ex5_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 379, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Regresión en una variable ficticia I {-}
+
+El capítulo \\@ref(RCXVB) analiza la regresión cuando $X$ es una variable ficticia. Se ha utilizado un ciclo <tt>for()</tt> para generar una variable binaria que indica si un distrito escolar en el conjunto de datos de <tt>CASchools</tt> tiene una proporción alumno-maestro por debajo de $20$. Aunque es instructivo usar un bucle para esto, existen formas alternativas de lograr lo mismo con menos líneas de código.
+
+Un <tt>data.frame</tt> <tt>DF</tt> con $100$ observaciones de una variable <tt>X</tt> está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Use <tt>ifelse()</tt> para generar un vector binario <tt>ficticio</tt> que indique si las observaciones en <tt>X</tt> son *positivas*.
+
+  + Agregar <tt>dummy</tt> al <tt>data.frame</tt> <tt>DF</tt>.
+
+<iframe src="DCL/ex5_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 380, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Regresión en una variable ficticia II {-}
+
+Un <tt>data.frame</tt> <tt>DF</tt> con $100$ observaciones en <tt>Y</tt> y la variable binaria <tt>D</tt> del ejercicio anterior está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular las medias muestrales específicas del grupo de las observaciones en <tt>Y</tt>: Guardar la media de las observaciones en <tt>Y</tt> donde <tt>dummy == 1</tt> a <tt>mu_Y_D1</tt> y asignar la media de esas observaciones con <tt>D == 0</tt> a <tt>mu_Y_D0</tt>.
+
+  + Usar <tt>lm()</tt> para retroceder <tt>Y</tt> en <tt>D</tt>; es decir, estimar los coeficientes en el modelo $$Y_i = \\beta_0 + \\beta_1 \\times D_i + u_i.$$
+
+  + Verificar que las estimaciones de los coeficientes $\\beta_0$ y $\\beta_1$ reflejen medias de muestra específicas. ¿Puede decir cuál (no es necesario enviar el código)?
+
+<iframe src="DCL/ex5_7.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 381, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 8. Regresión en una variable ficticia III {-}
+
+En este ejercicio, se deben visualizar algunos de los resultados del modelo de regresión ficticia $$\\widehat{Y}_i = -0.66 + 1.43 \\times D_i$$ estimado en el ejercicio anterior.
+
+Un <tt>data.frame</tt> <tt>DF</tt> con 100 observaciones en <tt>X</tt> y la variable binaria <tt>dummy</tt> así como el objeto modelo <tt>dummy_mod</tt> del ejercicio anterior están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Dibujar un diagrama visualmente atractivo de las observaciones en $Y$ y $D$ basado en el fragmento de código proporcionado en <tt>Script.R</tt>. Reemplazar <tt>???</tt> por las expresiones correctas.
+
+  + Agregar la línea de regresión al gráfico.
+
+<iframe src="DCL/ex5_8.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 382, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 9. Brecha salarial de género I {-}
+
+El conjunto de datos de corte transversal <tt>CPS1985</tt> es una submuestra de la *Encuesta de población actual* de mayo de 1985 realizada por la *Oficina del Censo de EE.UU.* Que contiene observaciones sobre, entre otras cosas, el salario y el género de los empleados.
+
+<tt>CPS1985</tt> es parte del paquete <tt>AER</tt>.
+
+**Instrucciones:**
+
+  + Adjuntar el paquete <tt>AER</tt> y cargar el conjunto de datos <tt>CPS1985</tt>.
+
+  + Estimar el modelo de regresión ficticia $$wage_i = \\beta_0 + \\beta_1 \\cdot female_i + u_i$$ donde
+
+    \\begin{align*}
+      female_i = 
+      \\begin{cases}
+        1, & \\text{si empleada} \\, i \\, \\text{es female,} \\\\
+        0, & \\text{si empleado} \\, i \\,  \\text{es male.}
+      \\end{cases}
+    \\end{align*}
+  
+  + Guardar el resultado en <tt>wage_mod</tt>.
+
+<iframe src="DCL/ex5_9.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 383, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 10. Brecha salarial de género II {-}
+
+La regresión salarial del ejercicio anterior arroja $$\\widehat{wage}_i = 9.995 - 2.116 \\cdot female_i.$$
+
+El objeto modelo <tt>dummy_mod</tt> está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Probar la hipótesis de que el coeficiente de $female_i$ es cero frente a la alternativa de que no es cero. La hipótesis nula implica que no existe brecha salarial de género. Utilizar el estimador robusto de heterocedasticidad propuesto por @white1980.
+
+<iframe src="DCL/ex5_10.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + <tt>vcovHC()</tt> calcula estimaciones robustas a la heterocedasticidad de la matriz de covarianza de los estimadores de coeficientes para el modelo proporcionado. El estimador propuesto por @white1980 se calcula si establece <tt>type = "HC0"</tt>.
+
+  + La función <tt>coeftest()</tt> realiza pruebas de significancia para los coeficientes en los objetos del modelo. Se puede proporcionar una matriz de covarianza usando el argumento <tt>vcov.</tt>.
+
+</div>')}
+```
+
+```{r, 384, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 11. Cálculo de errores estándar robustos de heterocedasticidad {-}
+
+En el modelo de regresión simple, la matriz de covarianza de los estimadores de coeficientes se denota
+
+\\begin{equation}
+\\text{Var}
+  \\begin{pmatrix}
+    \\hat\\beta_0 \\
+    \\hat\\beta_1
+  \\end{pmatrix} = 
+\\begin{pmatrix}
+  \\text{Var}(\\hat\\beta_0) & \\text{Cov}(\\hat\\beta_0,\\hat\\beta_1) \\\\
+\\text{Cov}(\\hat\\beta_0,\\hat\\beta_1) & \\text{Var}(\\hat\\beta_1)
+\\end{pmatrix}
+\\end{equation}
+
+La función <tt>vcovHC</tt> se puede utilizar para obtener estimaciones de esta matriz para un objeto modelo de interés.
+
+<tt>dummy_mod</tt>, un objeto modelo que contiene la regresión salarial tratada en los Ejercicios 9 y 10 está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular errores estándar robustos del tipo <tt>HC1</tt> para los estimadores de coeficientes en el objeto modelo <tt>dummy_mod</tt>. Almacenar los errores estándar en un vector llamado <tt>rob_SEs</tt>.
+
+<iframe src="DCL/ex5_11.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias**
+
+  + Los errores estándar que se buscan se pueden obtener tomando la raíz cuadrada de los elementos diagonales de la matriz de covarianza estimada.
+  + <tt>diag(A)</tt> devuelve los elementos diagonales de la matriz <tt>A</tt>.
+
+</div>')}
+```
+
+```{r, 385, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 12. Intervalos de confianza robustos {-}
+
+La función <tt>confint()</tt> calcula los intervalos de confianza para los modelos de regresión que utilizan errores estándar de solo homocedasticidad, por lo que esta función no es una opción cuando hay heterocedasticidad.
+
+La función <tt>Rob_CI()</tt> en <tt>script.R</tt> está destinada a calcular e informar intervalos de confianza robustos a la heterocedasticidad para ambos coeficientes del modelo en un modelo de regresión simple.
+
+<tt>gender_mod</tt>, un objeto modelo que contiene la regresión salarial tratada en los ejercicios anteriores está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Completar el código de <tt>Rob_CI()</tt> dado en <tt>Script.R</tt> de modo que se devuelvan los límites superior e inferior de los intervalos de confianza robustos de $95\\%$. Utilizar errores estándar del tipo <tt>HC1</tt>.
+  + Utilizar la función <tt>Rob_CI()</tt> para obtener intervalos de confianza de $95\\%$ para los coeficientes del modelo en <tt>dummy_mod</tt>.
+
+<iframe src="DCL/ex5_12.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 386, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 13. Un pequeño estudio de simulación --- I {-}
+
+Considere el proceso de generación de datos (DGP)
+
+\\begin{align}
+  X_i \\sim& \\, \\mathcal{U}[2,10], \\notag \\\\
+  e_i \\sim& \\, \\mathcal{N}(0, X_i), \\notag \\\\
+  Y_i =& \\, \\beta_1 X_i + e_i, (\\#eq:asss)  
+\\end{align}
+
+donde $\\mathcal{U}[2,10]$ denota la distribución uniforme en el intervalo $[2,10]$ y $\\beta_1=2$.
+
+Observe que los errores $e_i$ son heterocedásticos, ya que la varianza de $e_i$ es una función de $X_i$.
+
+**Instrucciones:**
+
+  + Escribir una función <tt>DGP_OLS</tt> que genere una muestra $(X_i,Y_i)$, $i=1,…,100$ usando el DGP anterior y devuelva la estimación de MCO de $\\beta_1$ basada en esta muestra.
+
+<iframe src="DCL/ex5_13.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + <tt>runif()</tt> se puede utilizar para obtener muestras aleatorias de una distribución uniforme, consultar <tt>?runif</tt>.
+
+</div>')}
+```
+
+```{r, 387, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 14. Un pequeño estudio de simulación --- II {-}
+
+La función <tt>DGP_OLS()</tt> del ejercicio anterior está disponible en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Utilizar <tt>replicate()</tt> para generar una muestra de $1000$ estimaciones de MCO $\\widehat{\\beta}_1$ usando la función <tt>DGP_OLS</tt>. Almacenar las estimaciones en un vector llamado <tt>estimates</tt>.
+  + Luego, estimar la varianza de $\\widehat{\\beta}_1$ en \\@ref(eq:asss): Calcular la varianza muestral de las estimaciones de $1000$ MCO en <tt>estimates</tt>. Almacenar el resultado en <tt>est_var_OLS</tt>.
+
+<iframe src="DCL/ex5_14.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 388, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 15. Un pequeño estudio de simulación --- III {-}
+
+Según el teorema de Gauss-Markov, el estimador MCO en modelos de regresión lineal ya no es el estimador más eficiente entre los estimadores lineales condicionalmente insesgados cuando hay heterocedasticidad. En otras palabras, el estimador MCO pierde la propiedad AZUL cuando se viola el supuesto de homocedasticidad.
+
+Resulta que MCO aplicado a las observaciones ponderadas $(w_i X_i, w_i Y_i)$ donde $w_i=\\frac{1}{\\sigma_i}$ es el estimador AZUL bajo heterocedasticidad. Este estimador se denomina estimador de *Mínimos Cuadrados Ponderados* (MCP). Por tanto, cuando hay heterocedasticidad, el estimador MCP tiene una varianza menor que MCO.
+
+La función <tt>DGP_OLS()</tt> y la varianza estimada <tt>est_var_OLS</tt> de los ejercicios anteriores están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Escribir una función <tt>DGP_WLS()</tt> que genere muestras de $100$ usando el DGP presentado en el ejercicio 13 y devuelva la estimación de MCP de $\\beta_1$. Tratar $\\sigma_i$ como conocido; es decir, establecer $w_i=\\frac{1}{\\sqrt{X_i}}$.
+  + Repetir el ejercicio 14 usando <tt>DGP_WLS()</tt>. Almacenar la estimación de la varianza en <tt>est_var_GLS</tt>.
+  + Comparar las varianzas estimadas <tt>est_var_OLS</tt> y <tt>est_var_GLS</tt> utilizando operadores lógicos (<tt> < </tt> o <tt> > </tt>).
+
+<iframe src="DCL/ex5_15.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + <tt>DGP_WLS()</tt> se puede obtener usando un código modificado de <tt>DGP_OLS()</tt>.
+  + Recordar que las funciones son objetos y se puede imprimir el código de una función en la consola.
+
+</div>')}
+```

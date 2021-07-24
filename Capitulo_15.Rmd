@@ -1,0 +1,2090 @@
+# Introducción a la regresión de series de tiempo y pronóstico {#IRSTP}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 740, child="_setup.Rmd"}
+```
+
+```{r, 741, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+```{r, 742, warnings = FALSE, message=FALSE, echo=F, purl=F}
+library(dynlm)
+library(stargazer)
+library(scales)
+library(readxl)
+library(urca)
+```
+
+Los datos de series de tiempo son datos que se recopilan para una sola entidad a lo largo del tiempo. Esto es fundamentalmente diferente de los datos de sección transversal, que son datos sobre múltiples entidades en el mismo momento. Los datos de series de tiempo permiten estimar el efecto en $Y$ de un cambio en $X$ *a lo largo del tiempo*. Esto es lo que los econometristas llaman un *efecto causal dinámico*. Volviendo a la aplicación al consumo de cigarrillos del capítulo \@ref(RVI) donde interesaba estimar el efecto sobre la demanda de cigarrillos de un aumento de precio causado por un aumento del impuesto general a las ventas. Se podrían utilizar datos de series de tiempo para evaluar el efecto causal de un aumento de impuestos sobre el tabaquismo tanto inicialmente como en períodos posteriores.
+
+Otra aplicación de los datos de series de tiempo es la previsión. Por ejemplo, los servicios meteorológicos utilizan datos de series de tiempo para predecir la temperatura del mañana, entre otras cosas, utilizando la temperatura actual y las temperaturas del pasado. Para motivar un ejemplo económico, los bancos centrales están interesados en pronosticar las tasas de desempleo del próximo mes.
+
+El resto de los capítulos del curso trata de las técnicas econométricas para el análisis de datos de series de tiempo y las aplicaciones para pronosticar y estimar los efectos causales dinámicos. Esta sección cubre los conceptos básicos de las series de tiempo, en las que se explica cómo visualizar datos de series de tiempo y se demuestra cómo estimar modelos autorregresivos simples, donde los regresores son valores pasados de la variable dependiente u otras variables. En este contexto también se discute el concepto de estacionariedad, una propiedad importante que tiene consecuencias de gran alcance.
+
+La mayoría de las aplicaciones empíricas de este capítulo se refieren a pronosticar y utilizar datos sobre indicadores macroeconómicos o series de tiempo financieras de EE. UU. como el Producto Interno Bruto (PIB), la tasa de desempleo o el exceso de rendimiento de las acciones.
+
+Los siguientes paquetes y sus dependencias son necesarios para la reproducción de los fragmentos de código presentados a lo largo de este capítulo:
+
++ **AER** [@R-AER]
++ **dynlm** [@R-dynlm]
++ **forecast** [@R-forecast]
++ **readxl** [@R-readxl]
++ **stargazer** [@R-stargazer]
++ **scales** [@R-scales]
++ **quantmod** [@R-quantmod]
++ **urca** [@R-urca]
+
+Verifique que el siguiente fragmento de código se ejecute en su máquina sin ningún error:
+
+```{r, 743, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(dynlm)
+library(forecast)
+library(readxl)
+library(stargazer)
+library(scales)
+library(quantmod)
+library(urca)
+```
+
+## Uso de modelos de regresión para la previsión
+
+¿Cuál es la diferencia entre la estimación de modelos para la evaluación de efectos causales y la previsión? Considere nuevamente el ejemplo simple de estimar el efecto casual de la proporción alumno-maestro en los puntajes de las pruebas presentado en el Capítulo \@ref(RLR).
+
+```{r, 744, warning = FALSE, message=FALSE}
+library(AER)
+data(CASchools)   
+CASchools$STR <- CASchools$students/CASchools$teachers       
+CASchools$score <- (CASchools$read + CASchools$math)/2
+
+mod <- lm(score ~ STR, data = CASchools)
+mod
+```
+
+Como se enfatizó en el Capítulo \@ref(MRVR), la estimación del coeficiente de la razón alumno-maestro no tiene una interpretación causal debido al sesgo de la variable omitida. Sin embargo, en términos de decidir a qué escuela enviar a su hijo, podría ser atractivo para un padre usar **mod** para pronosticar los puntajes de las pruebas en los distritos escolares donde no existen datos públicos disponibles sobre los puntajes.
+
+Como ejemplo, suponga que la clase promedio en un distrito tiene $25$ estudiantes. Este no es un pronóstico perfecto, pero la siguiente serie puede ser útil para que los padres decidan.
+
+```{r, 745}
+predict(mod, newdata = data.frame("STR" = 25))
+```
+
+En un contexto de series de tiempo, el padre podría usar datos sobre los puntajes de las pruebas del año presente y pasado para pronosticar los puntajes de las pruebas del próximo año, una aplicación típica para un modelo autorregresivo.
+
+## Datos de series de tiempo y correlación serial {#DSTCS}
+
+El PIB se define comúnmente como el valor de los bienes y servicios producidos durante un período de tiempo determinado. El conjunto de datos **us_macro_quarterly.xlsx** es proporcionado por los autores y se puede descargar [aquí](http://wps.pearsoned.co.uk/wps/media/objects/16103/16489878/data3eu/us_macro_quarterly.xlsx). Proporciona datos trimestrales sobre el PIB real de Estados Unidos (es decir, ajustado por inflación) desde 1947 hasta 2004.
+
+Como antes, un buen punto de partida es graficar los datos. El paquete **quantmod** proporciona algunas funciones convenientes para trazar y calcular con datos de series de tiempo. También se carga el paquete **readxl** para leer los datos en **R**.
+
+```{r, 746, warning=FALSE, message=FALSE}
+# adjuntar el paquete 'quantmod'
+library(quantmod)
+```
+
+Se comienza importando el conjunto de datos.
+
+```{r, 747}
+# cargar datos macroeconómicos de EE. UU.
+USMacroSWQ <- read_xlsx("Data/us_macro_quarterly.xlsx",
+                         sheet = 1,
+                         col_types = c("text", rep("numeric", 9)))
+
+# formatear columna de fecha
+USMacroSWQ$...1 <- as.yearqtr(USMacroSWQ$...1, format = "%Y:0%q")
+
+# ajustar los nombres de las columnas
+colnames(USMacroSWQ) <- c("Date", "GDPC96", "JAPAN_IP", "PCECTPI", 
+                          "GS10", "GS1", "TB3MS", "UNRATE", "EXUSUK", "CPIAUCSL")
+```
+
+La primera columna de **us_macro_quarterly.xlsx** contiene texto y las restantes son numéricas. Usando **col_types = c (" text ", rep (" numeric ", 9))** se indica a **read_xlsx()** tener esto en cuenta al importar los datos.
+
+Es útil trabajar con objetos de series de tiempo que realizan un seguimiento de la frecuencia de los datos y son extensibles. En lo que sigue se usarán objetos de la clase **xts**, ver `?Xts`. Dado que los datos en **USMacroSWQ** están en frecuencia trimestral, se convierte la primera columna al formato **yearqtr** antes de generar el **xts** objeto **GDP**.
+
+```{r, 748}
+# serie de PIB como objeto xts
+GDP <- xts(USMacroSWQ$GDPC96, USMacroSWQ$Date)["1960::2013"]
+
+# serie de crecimiento del PIB como objeto xts
+GDPGrowth <- xts(400 * log(GDP/lag(GDP)))
+```
+
+Los siguientes fragmentos de código reproducen un gráfico con los datos:
+
+```{r, 749, fig.align='center'}
+# gráfico (a)
+plot(log(as.zoo(GDP)),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Logaritmo",
+     xlab = "Fecha",
+     main = "PIB real trimestral de EE. UU.")
+```
+
+```{r, 750, fig.align='center'}
+# gráfico (b)
+plot(as.zoo(GDPGrowth),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Logaritmo",
+     xlab = "Fecha",
+     main = "Tasas de crecimiento del PIB real de EE. UU.")
+```
+
+### Notación, retrasos, diferencias, logaritmos y tasas de crecimiento {-}
+
+Para las observaciones de una variable $Y$ registradas a lo largo del tiempo, $Y_t$ denota el valor observado en el momento $t$. El período entre dos observaciones secuenciales $Y_t$ y $Y_{t-1}$ es una unidad de tiempo: Horas, días, semanas, meses, trimestres, años, entre otros. El Concepto clave 14.1 presenta la terminología y la notación esenciales para los datos de series de tiempo que se usan en las siguientes secciones.
+
+```{r, 751, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.1">
+<h3 class = "right"> Concepto clave 14.1 </h3>
+<h3 class = "left"> Retrasos, primeras diferencias, logaritmos y tasas de crecimiento </h3>
+
+- Los valores anteriores de una serie de tiempo se denominan *rezagos*. El primer desfase de $Y_t$ es $Y_{t-1}$. El retraso $j^{th}$ de $Y_t$ es $Y_{t-j}$. En <tt>R</tt>, los retrasos de los objetos de series de tiempo univariados o multivariados se calculan convenientemente mediante <tt>lag()</tt>, consulte <tt>?Lag</tt>.
+
+- A veces se trabaja con series diferenciadas. La primera diferencia de una serie es $\\Delta Y_{t} = Y_t - Y_{t-1}$, la diferencia entre los períodos $t$ y $t-1$. Si <tt>Y</tt> es una serie de tiempo, la serie de las primeras diferencias se calcula como <tt>diff(Y)</tt>.
+
+- Puede resultar conveniente trabajar con la primera diferencia en logaritmos de una serie. Se denota esto por $\\Delta \\log(Y_t) = \\log(Y_t) - \\log(Y_{t-1})$. Para una serie de tiempo <tt>Y</tt>, esto se obtiene usando <tt>log(Y/lag(Y))</tt>.
+
+- $100 \\Delta \\log (Y_t)$ es una aproximación del cambio porcentual entre $Y_t$ y $Y_{t-1}$.
+
+</div>
+')
+```
+
+```{r, 752, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Retrasos, primeras diferencias, logaritmos y tasas de crecimiento]{14.1}
+\\begin{itemize}
+\\item Los valores anteriores de una serie de tiempo se denominan \\textit{rezagos}. El primer desfase de $Y_t$ es $Y_{t-1}$. El retraso $j^{th}$ de $Y_t$ es $Y_{t-j}$. En \\texttt{R}, los retrasos de los objetos de series de tiempo univariados o multivariados se calculan convenientemente mediante \\texttt{lag()}, consulte \\texttt{?lag}.
+\\item A veces se trabaja con series diferenciadas. La primera diferencia de una serie es $\\Delta Y_{t} = Y_t - Y_{t-1}$, la diferencia entre los períodos $t$ y $t-1$. Si \\texttt{Y} es una serie de tiempo, la serie de las primeras diferencias se calcula como \\texttt{diff(Y)}.
+\\item Puede resultar conveniente trabajar con la primera diferencia en logaritmos de una serie. Se denota esto por $\\Delta \\log(Y_t) = \\log(Y_t) - \\log(Y_{t-1})$. Para una serie de tiempo \\texttt{Y}, esto se obtiene usando \\texttt{log(Y/lag(Y))}.
+\\item $100 \\Delta \\log (Y_t)$ es una aproximación del cambio porcentual entre $Y_t$ y $Y_{t-1}$.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+Las definiciones hechas en el Concepto clave 14.1 son útiles debido a dos propiedades que son comunes a muchas series de tiempo económicas:
+
+- Crecimiento exponencial: Algunas series económicas crecen aproximadamente exponencialmente de tal manera que su logaritmo es aproximadamente lineal.
+
+- La desviación estándar de muchas series de tiempo económicas es aproximadamente proporcional a su nivel. Por lo tanto, la desviación estándar del logaritmo de tal serie es aproximadamente constante.
+
+Además, es común informar las tasas de crecimiento en series macroeconómicas, por lo que a menudo se utilizan diferencias $\log$.
+
+A continuación se presenta la serie temporal del PIB trimestral de EE. UU; su logaritmo, la tasa de crecimiento anualizada y el primer rezago de la serie de la tasa de crecimiento anualizada para el período 2012:Q1 - 2013:Q1. La función simple **serie** se puede utilizar para calcular estas cantidades para una serie de tiempo trimestral.
+
+```{r, 753}
+# calcular logaritmos, tasas de crecimiento anual y el primer rezago de las tasas de crecimiento
+quants <- function(series) {
+  s <- series
+  return(
+    data.frame("Nivel" = s,
+               "Logaritmo" = log(s),
+               "Tasa anual de crecimiento" = 400 * log(s / lag(s)),
+               "Primer rezago de la tasa de crecimiento anual" = lag(400 * log(s / lag(s))))
+    )
+}
+```
+
+La tasa de crecimiento anual se calcula usando la aproximación $$Annual Growth Y_t = 400 \cdot\Delta\log(Y_t)$$, ya que $100\cdot\Delta\log(Y_t)$ es una aproximación de los cambios porcentuales trimestrales, ver Concepto clave 14.1.
+
+Se llama **quants()** a las observaciones para el período 2011:Q3 - 2013:Q1.
+
+```{r, 754}
+# obtain a data.frame with level, logarithm, annual growth rate and its 1st lag of GDP
+quants(GDP["2011-07::2013-01"])
+```
+
+#### Autocorrelación {-}
+
+Las observaciones de una serie temporal suelen estar correlacionadas. Este tipo de correlación se llama *autocorrelación* o *correlación en serie*. El Concepto clave 14.2 resume los conceptos de autocovarianza poblacional y autocorrelación poblacional. De igual forma, muestra cómo calcular sus equivalentes muestrales.
+
+```{r, 755, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.2">
+<h3 class = "right"> Concepto clave 14.2 </h3>
+<h3 class = "left"> Autocorrelación y autocovarianza </h3>
+
+La covarianza entre $Y_t$ y su rezago $j^{th}$, $Y_{t-j}$, se denomina $j^{th}$ *autocovarianza* de la serie $Y_t$. El $j^{th}$ *coeficiente de autocorrelación*, también llamado *coeficiente de correlación serial*, mide la correlación entre $Y_t$ y $Y_{t-j}$. Así se tiene:
+
+\\begin{align*}
+  j^{th} \\text{autocovarianza} =& \\, Cov(Y_t,Y_{t-j}), \\\\
+  j^{th} \\text{autocorrelación} = \\rho_j =& \\, \\rho_{Y_t,Y_{t-j}} = \\frac{Cov(Y_t,Y_{t-j)}}{\\sqrt{Var(Y_t)Var(Y_{t-j})}}.
+\\end{align*}
+
+La autocovarianza de la población y la autocorrelación de la población se pueden estimar mediante $\\widehat{Cov(Y_t,Y_{t-j})}$, la autocovarianza de la muestra y $\\widehat{\\rho}_j$, la autocorrelación de la muestra:
+
+\\begin{align*}
+  \\widehat{Cov(Y_t,Y_{t-j})} =& \\, \\frac{1}{T} \\sum_{t=j+1}^T (Y_t - \\overline{Y}_{j+1:T})(Y_{t-j} - \\overline{Y}_{1:T-j}), \\\\
+  \\widehat{\\rho}_j =& \\, \\frac{\\widehat{Cov(Y_t,Y_{t-j})}}{\\widehat{Var(Y_t)}}
+\\end{align*}
+
+$\\overline{Y}_{j+1:T}$ denota el promedio de $Y_{j+1}, Y{j+2}, \\dots, Y_T$.
+
+En <tt>R</tt> la función <tt>acf()</tt> del paquete <tt>stats</tt> calcula la autocovarianza de muestra o la función de autocorrelación de muestra.
+
+</div>
+')
+```
+
+```{r, 756, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Autocorrelation and Autocovariance]{14.2}
+
+La covarianza entre $Y_t$ y su rezago $j^{th}$, $Y_{t-j}$, se denomina $j^{th}$ \\textit{autocovarianza} de la serie $Y_t$. El $j^{th}$ \\textit{coeficiente de autocorrelación}, también llamado \\textit{coeficiente de correlación serial}, mide la correlación entre $Y_t$ y $Y_{t-j}$. Así se tiene:
+
+\\begin{align*}
+  j^{th} \\text{autocovarianza} =& \\, Cov(Y_t,Y_{t-j}), \\\\
+  j^{th} \\text{autocorrelación} = \\rho_j =& \\, \\rho_{Y_t,Y_{t-j}} = \\frac{Cov(Y_t,Y_{t-j)}}{\\sqrt{Var(Y_t)Var(Y_{t-j})}}.
+\\end{align*}
+
+La autocovarianza de la población y la autocorrelación de la población se pueden estimar mediante $\\widehat{Cov(Y_t,Y_{t-j})}$, la autocovarianza de la muestra y $\\widehat{\\rho}_j$, la autocorrelación de la muestra:
+
+\\begin{align*}
+  \\widehat{Cov(Y_t,Y_{t-j})} =& \\, \\frac{1}{T} \\sum_{t=j+1}^T (Y_t - \\overline{Y}_{j+1:T})(Y_{t-j} - \\overline{Y}_{1:T-j}), \\\\
+  \\widehat{\\rho}_j =& \\, \\frac{\\widehat{Cov(Y_t,Y_{t-j})}}{\\widehat{Var(Y_t)}}.
+\\end{align*}\\vspace{0.5cm}
+
+$\\overline{Y}_{j+1:T}$ denota el promedio de $Y_{j+1}, Y{j+2}, \\dots, Y_T$.\\newline
+
+En \\texttt{R} la función \\texttt{acf()} del paquete \\texttt{stats} calcula la autocovarianza de muestra o la función de autocorrelación de muestra.
+
+\\end{keyconcepts}
+')
+```
+
+Usando **acf()** es sencillo calcular las primeras cuatro autocorrelaciones de muestra de la serie **GDPGrowth**.
+
+```{r, 757}
+acf(na.omit(GDPGrowth), lag.max = 4, plot = F)
+```
+
+Esto es evidencia de que existe una leve autocorrelación positiva en el crecimiento del PIB: Si el PIB crece más rápido que el promedio en un período, existe una tendencia que crece más rápido que el promedio en los siguientes períodos.
+
+#### Otros ejemplos de series de tiempo económicas {-}
+
+Se presentan cuatro gráficos: La tasa de desempleo de EE. UU; el tipo de cambio dólar estadounidense/libra esterlina, el logaritmo del índice de producción industrial japonés, así como los cambios diarios en el índice de precios de las acciones de Wilshire 5000, una serie de tiempo financiera. El siguiente fragmento de código reproduce los gráficos de las tres series macroeconómicas y agrega cambios porcentuales en los valores diarios del índice compuesto de la Bolsa de Nueva York como cuarto (el conjunto de datos **NYSESW** viene con el paquete **AER**).
+
+```{r, 758}
+# definir series como objetos xts
+USUnemp <- xts(USMacroSWQ$UNRATE, USMacroSWQ$Date)["1960::2013"]
+
+DollarPoundFX <- xts(USMacroSWQ$EXUSUK, USMacroSWQ$Date)["1960::2013"]
+  
+JPIndProd <- xts(log(USMacroSWQ$JAPAN_IP), USMacroSWQ$Date)["1960::2013"]
+
+# adjuntar datos de NYSESW
+data("NYSESW")  
+NYSESW <- xts(Delt(NYSESW))
+```
+
+```{r, 759, fig.align='center'}
+# dividir el área de graficado en una matriz de 2x2
+par(mfrow = c(2, 2))
+
+# graficar la serie
+plot(as.zoo(USUnemp),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Porcentaje",
+     xlab = "Fecha",
+     main = "Tasa de desempleo de EE. UU.",
+     cex.main = 1)
+
+plot(as.zoo(DollarPoundFX),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Dólar por libra",
+     xlab = "Fecha",
+     main = "Tipo de cambio del dólar estadounidense / libra esterlina",
+     cex.main = 1)
+
+plot(as.zoo(JPIndProd),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Logaritmo",
+     xlab = "Fecha",
+     main = "Producción industrial japonesa",
+     cex.main = 1)
+
+plot(as.zoo(NYSESW),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Porcentaje por día",
+     xlab = "Fecha",
+     main = "Índice compuesto de la bolsa de valores de Nueva York",
+     cex.main = 1)
+```
+
+La serie presenta características bastante diferentes. La tasa de desempleo aumenta durante las recesiones y disminuye durante la recuperación económica y el crecimiento. El tipo de cambio dólar/libra muestra un patrón determinista hasta el final del sistema de Bretton Woods. La producción industrial de Japón muestra una tendencia ascendente y un crecimiento decreciente. Los cambios diarios en el índice compuesto de la Bolsa de Nueva York parecen fluctuar aleatoriamente alrededor de la línea cero. Las autocorrelaciones de muestra apoyan esta conjetura.
+
+```{r, 760}
+# calcular la autocorrelación de la muestra para la serie NYSESW
+acf(na.omit(NYSESW), plot = F, lag.max = 10)
+```
+
+Los primeros 10 coeficientes de autocorrelación de muestra están muy cerca de cero. El gráfico predeterminado generado por `acf()` proporciona más evidencia.
+
+```{r, 761, fig.align='center'}
+# graficar la autocorrelación de la muestra para la serie NYSESW
+acf(na.omit(NYSESW), main = "Sample Autocorrelation for NYSESW Data")
+```
+
+Las bandas de trazos azules representan valores más allá de los cuales las autocorrelaciones son significativamente diferentes de cero al nivel de $5\%$. Incluso cuando las verdaderas autocorrelaciones son cero, se debe esperar algunas superaciones; recuerde la definición de error de tipo I del Concepto clave 3.5.
+
+Para la mayoría de los rezagos, se puede ver que la autocorrelación de la muestra no excede las bandas y solo existen unos pocos casos que se encuentran marginalmente más allá de los límites.
+
+Además, la serie **NYSESW** muestra lo que los econometristas llaman *agrupamiento de volatilidad*: Existen períodos de alta y baja variación. Esto es común para muchas series de tiempo financieras.
+
+## Autoregresiones
+
+Los modelos autorregresivos se utilizan mucho en la previsión económica. Un modelo autorregresivo relaciona una variable de serie temporal con sus valores pasados. En esta sección se analizan las ideas básicas de los modelos de autorregresiones, se muestra cómo se estiman y se analiza una aplicación para pronosticar el crecimiento del PIB utilizando **R**.
+
+#### El modelo autorregresivo de primer orden {-}
+
+Es intuitivo que el pasado inmediato de una variable debería tener el poder de predecir su futuro cercano. El modelo autorregresivo más simple utiliza solo el resultado más reciente de la serie temporal observada para predecir valores futuros. Para una serie de tiempo $Y_t$, dicho modelo se denomina modelo autorregresivo de primer orden, a menudo abreviado AR(1), donde el 1 indica que el orden de autorregresión es uno:
+
+\begin{align*}
+  Y_t = \beta_0 + \beta_1 Y_{t-1} + u_t
+\end{align*}
+
+es el modelo de población AR(1) de una serie de tiempo $Y_t$.
+
+Para la serie de crecimiento del PIB, un modelo autorregresivo de primer orden utiliza solo la información sobre el crecimiento del PIB observado en el último trimestre para predecir una tasa de crecimiento futura. El modelo de autorregresión de primer orden del crecimiento del PIB se puede estimar calculando estimaciones de MCO en la regresión de $GDPGR_t$ sobre $GDPGR_{t-1}$,
+
+\begin{align}
+  \widehat{GDPGR}_t = \hat\beta_0 + \hat\beta_1  GDPGR_{t-1}. (\#eq:GDPGRAR1)
+\end{align}
+
+Se usan datos de 1962 a 2012 para estimar \@ref(eq:GDPGRAR1). Esto se hace fácilmente con la función **ar.ols()** del paquete **stats**.
+
+```{r, 762}
+# datos de subconjunto
+GDPGRSub <- GDPGrowth["1962::2012"]
+
+# estimar el modelo
+ar.ols(GDPGRSub, 
+       order.max = 1, 
+       demean = F, 
+       intercept = T)
+```
+
+Se puede comprobar que los cálculos realizados por **ar.ols()** son los mismos que los realizados por **lm()**.
+
+```{r, 763}
+# longitud del conjunto de datos
+N <-length(GDPGRSub)
+
+GDPGR_level <- as.numeric(GDPGRSub[-1])
+GDPGR_lags <- as.numeric(GDPGRSub[-N])
+
+# estimar el modelo
+armod <- lm(GDPGR_level ~ GDPGR_lags)
+armod
+```
+
+Como de costumbre, se puede usar **coeftest()** para obtener un resumen robusto de los coeficientes de regresión estimados.
+
+```{r, 764}
+# resumen robusto
+coeftest(armod, vcov. = vcovHC, type = "HC1")
+```
+
+Por tanto, el modelo estimado es
+
+\begin{align}
+  \widehat{GDPGR}_t = \underset{(0.351)}{1.995} + \underset{(0.076)}{0.338} GDPGR_{t-1} (\#eq:gdpgrar1).
+\end{align}
+
+Se ha omitido la primera observación para $GDPGR_{1962 \ Q1}$ del vector de la variable dependiente, ya que $GDPGR_{1962 \ Q1 - 1} = GDPGR_{1961 \ Q4}$, no está incluido en la muestra. De manera similar, la última observación, $GDPGR_{2012 \ Q4}$, se excluye del vector predictor ya que los datos no incluyen $GDPGR_{2012 \ Q4 + 1} = GDPGR_{2013 \ Q1}$. Dicho de otra manera, al estimar el modelo, se pierde una observación debido a la estructura de series de tiempo de los datos.
+
+#### Pronósticos y errores de pronóstico {-}
+
+Suponga que $Y_t$ sigue un modelo AR(1) con una intersección y que tiene una estimación de MCO del modelo sobre la base de observaciones para períodos de $T$. Luego puede usar el modelo AR(1) para obtener $\widehat{Y}_{T+1\vert T}$, un pronóstico para $Y_{T+1}$ usando datos hasta el período $T$ donde
+
+\begin{align*}
+  \widehat{Y}_{T+1\vert T} = \hat{\beta}_0 + \hat{\beta}_1 Y_T.
+\end{align*}
+
+El error de previsión es
+
+\begin{align*}
+  \text{Error de previsión} = Y_{T+1} - \widehat{Y}_{T+1\vert T}.
+\end{align*}
+
+#### Pronósticos y valores previstos {-}
+
+Los valores pronosticados de $Y_t$ *no* son lo que se llama *valores predichos de MCO* de $Y_t$. Además, el error de pronóstico *no* es un residuo de MCO. Los pronósticos y los errores de pronóstico se obtienen utilizando valores *fuera de la muestra*, mientras que los valores predichos y los residuos se calculan para los valores *dentro de la muestra* que se observaron y utilizaron realmente para estimar el modelo.
+
+El error de pronóstico de la raíz cuadrada media (EPRCM) mide el tamaño típico del error de pronóstico y se define como
+
+\begin{align*}
+  EPRCM = \sqrt{E\left[\left(Y_{T+1} - \widehat{Y}_{T+1\vert T}\right)^2\right]}.
+\end{align*}
+
+El $EPRCM$ está compuesto por los errores futuros $u_t$ y el error cometido al estimar los coeficientes. Cuando el tamaño de la muestra es grande, el primero puede ser mucho mayor que el segundo, de modo que $EPRCM \approx \sqrt{Var()u_t}$ que puede estimarse mediante el error estándar de la regresión.
+
+#### Aplicación al crecimiento del PIB {-}
+
+Utilizando \@ref(eq:gdpgrar1), el modelo estimado AR(1) de crecimiento del PIB, se realiza el pronóstico de crecimiento del PIB para 2013:Q1 (recuerde que el modelo se estimó utilizando datos para los períodos 1962:Q1 - 2012:Q4, por lo que 2013, el primer trimestre, es un período fuera de la muestra). Conectando $GDPGR_{2012:Q4} \approx 0.15$ en \@ref(eq:gdpgrar1),
+
+\begin{align*}
+  \widehat{GDPGR}_{2013:Q1} = 1.995 + 0.348 \cdot 0.15 = 2.047.
+\end{align*}
+
+La función **forecast()** del paquete **forecast** tiene algunas características útiles para pronosticar datos de series de tiempo.
+
+```{r, 765, message=FALSE}
+library(forecast)
+
+# asignar tasa de crecimiento del PIB en 2012:Q4
+new <- data.frame("GDPGR_lags" = GDPGR_level[N-1])
+
+# pronosticar la tasa de crecimiento del PIB para 2013:Q1
+forecast(armod, newdata = new)
+```
+
+El uso de **forecast()** produce el mismo pronóstico puntual de aproximadamente 2.0, junto con intervalos de pronóstico de $80\%$ y $95\%$, consulte la sección \@ref(PAMADL). Se concluye con que el modelo AR(1) prevé un crecimiento del PIB de $2\%$ en 2013:Q1.
+
+¿Qué tan preciso es este pronóstico? El error de pronóstico es bastante grande: $GDPGR_{2013:Q1} \approx 1.1\%$ mientras que el pronóstico es $2\%$.
+
+En segundo lugar, al llamar `summary(armod)` se muestra que el modelo explica solo una pequeña parte de la variación en la tasa de crecimiento del PIB y el $SER$ es de aproximadamente $3.16$. Dejando de lado la incertidumbre del pronóstico debido a la estimación de los coeficientes del modelo $\beta_0$ y $\beta_1$, el $EPRCM$ debe ser al menos $3.16\%$, la estimación de la desviación estándar de los errores. Se concluye que este pronóstico es bastante inexacto.
+
+```{r, 766}
+# calcular el error de pronóstico
+forecast(armod, newdata = new)$mean - GDPGrowth["2013"][1]
+
+# R^2
+summary(armod)$r.squared
+
+# SER
+summary(armod)$sigma
+```
+
+### Modelos autorregresivos de orden $p$ {-}
+
+Para pronosticar el crecimiento del PIB, el modelo AR($1$) \@ref(eq:gdpgrar1) descarta cualquier información del pasado de la serie que esté más distante que un período. Un modelo AR($p$) incorpora la información de $p$ rezagos de la serie. La idea se explica en el Concepto clave 14.3.
+
+```{r, 767, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.3">
+<h3 class = "right"> Concepto clave 14.3 </h3>
+<h3 class = "left"> Autorregresiones </h3>
+<p>
+
+Un modelo AR($p$) supone que una serie de tiempo $Y_t$ puede modelarse mediante una función lineal de los primeros $p$ de sus valores rezagados.
+
+\\begin{align*}
+  Y_t = \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_p Y_{t-p} + u_t
+\\end{align*}
+
+es un modelo autorregresivo de orden $p$ donde $E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots,Y_{t-p})=0$.
+
+</p>
+</div>
+')
+```
+
+```{r, 768, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Autorregresiones]{14.3}
+
+Un modelo AR($p$) supone que una serie de tiempo $Y_t$ puede modelarse mediante una función lineal de los primeros $p$ de sus valores rezagados.
+
+\\begin{align*}
+  Y_t = \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_p Y_{t-p} + u_t
+\\end{align*}
+
+es un modelo autorregresivo de orden $p$ donde $E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots,Y_{t-p})=0$.
+
+\\end{keyconcepts}
+')
+```
+
+Se estima un modelo AR($2$) de la serie de crecimiento del PIB desde 1962:Q1 hasta 2012:Q4.
+
+```{r, 769}
+# estimar el modelo AR(2)
+GDPGR_AR2 <- dynlm(ts(GDPGR_level) ~ L(ts(GDPGR_level)) + L(ts(GDPGR_level), 2))
+
+coeftest(GDPGR_AR2, vcov. = sandwich)
+```
+
+La estimación rinde
+
+\begin{align}
+  \widehat{GDPGR}_t = \underset{(0.40)}{1.63} + \underset{(0.08)}{0.28} GDPGR_{t-1} + \underset{(0.08)}{0.18} GDPGR_{t-1}. (\#eq:GDPGRAR2)
+\end{align}
+
+Se puede ver que el coeficiente en el segundo rezago es significativamente diferente de cero. El ajuste mejora ligeramente: $\bar{R}^2$ crece de $0.11$ para el modelo AR($1$) a, aproximadamente, $0.14$ y el $SER$ se reduce a $3.13$.
+
+```{r, 770}
+# R^2
+summary(GDPGR_AR2)$r.squared
+
+# SER
+summary(GDPGR_AR2)$sigma
+```
+
+Se puede utilizar el modelo AR($2$) para obtener un pronóstico del crecimiento del PIB en 2013:Q1 de la misma manera que para el modelo AR(1).
+
+```{r, 771}
+# pronóstico AR(2) de crecimiento del PIB en 2013:Q1 
+forecast <- c("2013:Q1" = coef(GDPGR_AR2) %*% c(1, GDPGR_level[N-1], GDPGR_level[N-2]))
+```
+
+Esto conduce a un error de pronóstico de aproximadamente $-1\%$.
+
+```{r, 772}
+# calcular el error de pronóstico AR(2)
+GDPGrowth["2013"][1] - forecast
+```
+
+## ¿Puede ganarle al mercado? (Parte I) {#PGMPI}
+
+La teoría de los mercados de capital eficientes establece que los precios de las acciones incorporan toda la información disponible actualmente. Si esta hipótesis se cumple, no debería ser posible estimar un modelo útil para pronosticar los rendimientos futuros de las acciones utilizando información disponible públicamente sobre los rendimientos pasados (esto también se conoce como la hipótesis de eficiencia de forma débil): Si fuera posible pronosticar el mercado, los comerciantes podrían arbitrar; por ejemplo, al confiar en un modelo AR($2$), usarían información que aún no está incluida en el precio, lo que empujaría los precios hasta que el rendimiento esperado sea cero.
+
+Esta sección reproduce los resultados de las estimaciones. Comenzando por importar los datos mensuales desde 1931:1 hasta 2002:12 sobre el exceso de rendimiento de un índice de precios de acciones de base amplia, el índice ponderado por valor CRSP. Los datos son proporcionados como una hoja de Excel que se puede descargar [aquí](http://wps.aw.com/wps/media/objects/11422/11696965/data3eu/Stock_Returns_1931_2002.xlsx).
+
+```{r, 773}
+# leer datos sobre el rendimiento de las acciones
+SReturns <- read_xlsx("Data/Stock_Returns_1931_2002.xlsx",
+                      sheet = 1,
+                      col_types = "numeric")
+```
+
+Se continua convirtiendo los datos en un objeto de clase **ts**.
+
+```{r, 774}
+# convertir los datos en un objeto ts
+StockReturns <- ts(SReturns[, 3:4], 
+                   start = c(1931, 1), 
+                   end = c(2002, 12), 
+                   frequency = 12)
+```
+
+A continuación, se estiman los modelos AR($1$), AR($2$) y AR($4$) del exceso de rendimientos para el período de tiempo 1960:1 a 2002:12.
+
+```{r, 775}
+# estimar modelos AR:
+
+# AR(1)
+SR_AR1 <- dynlm(ExReturn ~ L(ExReturn), 
+      data = StockReturns, start = c(1960, 1), end = c(2002, 12))
+
+# AR(2)
+SR_AR2 <- dynlm(ExReturn ~ L(ExReturn) + L(ExReturn, 2), 
+      data = StockReturns, start = c(1960, 1), end = c(2002, 12))
+
+# AR(4)
+SR_AR4 <- dynlm(ExReturn ~ L(ExReturn) + L(ExReturn, 1:4), 
+      data = StockReturns, start = c(1960, 1), end = c(2002, 12))
+```
+
+Después de calcular errores estándar robustos, se recopilan los resultados en una tabla generada por **stargazer()**.
+
+```{r, 776}
+# calcular errores estándar robustos
+rob_se <- list(sqrt(diag(sandwich(SR_AR1))),
+               sqrt(diag(sandwich(SR_AR2))),
+               sqrt(diag(sandwich(SR_AR4))))
+```
+
+```{r, 777, message=F, warning=F, results='asis', eval=F}
+# generar una tabla usando 'stargazer()'
+stargazer(SR_AR1, SR_AR2, SR_AR4,
+  title = "Modelos autorregresivos de exceso de rentabilidad de existencias mensuales",
+  header = FALSE, 
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("AR(1)", "AR(2)", "AR(4)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor de CSRP",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", "$excess return_{t-2}$", 
+                       "$excess return_{t-3}$", "$excess return_{t-4}$", 
+                       "Intercept"),
+  se = rob_se,
+  omit.stat = "rsq") 
+```
+
+<!--html_preserve-->
+
+```{r, 778, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="html"}
+stargazer(SR_AR1, SR_AR2, SR_AR4,
+  header = FALSE, 
+  type = "html",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("AR(1)", "AR(2)", "AR(4)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor de CSRP ",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", "$excess return_{t-2}$", "$excess return_{t-3}$", "$excess return_{t-4}$", "Intercept"),
+  se = rob_se,
+  omit.stat = c("rsq")
+  )
+
+stargazer_html_title("Modelos autorregresivos de exceso de rentabilidad de existencias mensuales", "amomesr")
+```
+
+<!--/html_preserve-->
+
+```{r, 779, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="latex"}
+stargazer(SR_AR1, SR_AR2, SR_AR4,
+  title = "\\label{tab:amomesr} Modelos autorregresivos de exceso de rentabilidad de existencias mensuales",
+  header = FALSE, 
+  type = "latex",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("AR(1)", "AR(2)", "AR(4)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor de CSRP",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", "$excess return_{t-2}$", "$excess return_{t-3}$", "$excess return_{t-4}$", "Intercept"),
+  se = rob_se,
+  omit.stat = c("rsq")
+  ) 
+```
+
+Los resultados son consistentes con la hipótesis de mercados financieros eficientes: No existen coeficientes estadísticamente significativos en ninguno de los modelos estimados y la hipótesis de que todos los coeficientes son cero no puede rechazarse. $\bar{R}^2$ es casi cero en todos los modelos e incluso negativo para el modelo AR($4$). Esto sugiere que ninguno de los modelos es útil para pronosticar la rentabilidad de las acciones.
+
+## Predictores adicionales y el modelo ADL {#PAMADL}
+
+En lugar de utilizar únicamente los rezagos de la variable dependiente como predictores, un modelo de retraso distribuido autorregresivo (ADL) también utiliza rezagos de otras variables para el pronóstico. El modelo general de ADL se resume en el Concepto clave 14.4:
+
+```{r, 780, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.4">
+<h3 class = "right"> Concepto clave 14.4 </h3>
+<h3 class = "left"> El modelo de retardo distribuido autorregresivo </h3>
+<p>
+
+Un modelo ADL($p$, $q$) asume que una serie de tiempo $Y_t$ puede ser representada por una función lineal de $p$ de sus valores rezagados y $q$ rezagos de otra serie de tiempo $X_t$:
+
+\\begin{align*}
+  Y_t =& \\, \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_p Y_{t-p} \\\\ 
+      &+ \\, \\delta_1 X_{t-1} + \\delta_2 X_{t-2} + \\dots + \\delta_q X_{t-q} X_{t-q} + u_t.
+\\end{align*}
+
+es un *modelo de retraso distribuido autorregresivo* con $p$ retrasos de $Y_t$ y $q$ retrasos de $X_t$ donde $$E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots, X_{t-1}, X_{t-2}, \\dots)=0.$$
+
+</p>
+</div>
+')
+```
+
+```{r, 781, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El modelo de retardo distribuido autorregresivo]{14.4}
+
+Un modelo ADL($p$, $q$) asume que una serie de tiempo $Y_t$ puede ser representada por una función lineal de $p$ de sus valores rezagados y $q$ rezagos de otra serie de tiempo $X_t$:
+
+\\begin{align*}
+  Y_t =& \\, \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_p Y_{t-p} \\\\ 
+      &+ \\, \\delta_1 X_{t-1} + \\delta_2 X_{t-2} + \\dots + \\delta_q X_{t-q} X_{t-q} + u_t.
+\\end{align*}
+
+es un \\textit{modelo de retraso distribuido autorregresivo} con $p$ retrasos de $Y_t$ y $q$ retrasos de $X_t$ donde $$E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots, X_{t-1}, X_{t-2}, \\dots)=0.$$
+
+\\end{keyconcepts}
+')
+```
+
+#### Pronóstico del crecimiento del PIB mediante el diferencial de plazos {-}
+
+Los tipos de interés de los bonos del tesoro a corto y largo plazo están estrechamente vinculados a las condiciones macroeconómicas. Si bien las tasas de interés de ambos tipos de bonos tienen las mismas tendencias a largo plazo, se comportan de manera bastante diferente a corto plazo.
+
+La diferencia en las tasas de interés de dos bonos con vencimiento distinto se denomina *margen de plazo*.
+
+Los siguientes fragmentos de código muestran las tasas de interés de los bonos del Tesoro de EE. UU. a 10 años y las letras del Tesoro de EE. UU. a 3 meses de 1960 a 2012.
+
+```{r, 782}
+# tasa de interés de las letras del Tesoro a 3 meses
+TB3MS <- xts(USMacroSWQ$TB3MS, USMacroSWQ$Date)["1960::2012"]
+
+# tasa de interés de los bonos del Tesoro a 10 años
+TB10YS <- xts(USMacroSWQ$GS10, USMacroSWQ$Date)["1960::2012"]
+
+# diferencial de plazo
+TSpread <- TB10YS - TB3MS
+```
+
+```{r, 783, fig.align='center'}
+# gráfico (a)
+plot(merge(as.zoo(TB3MS), as.zoo(TB10YS)), 
+     plot.type = "single", 
+     col = c("darkred", "steelblue"),
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "Porcentaje por año",
+     main = "Tasas de interés")
+
+# definir la función que transforma años en la clase 'yearqtr'
+YToYQTR <- function(years) {
+  return(
+      sort(as.yearqtr(sapply(years, paste, c("Q1", "Q2", "Q3", "Q4"))))
+  )
+}
+
+# recesiones
+recessions <- YToYQTR(c(1961:1962, 1970, 1974:1975, 1980:1982, 1990:1991, 2001, 2007:2008))
+          
+# agregar sombreado de color para recesiones
+xblocks(time(as.zoo(TB3MS)), 
+        c(time(TB3MS) %in% recessions), 
+        col = alpha("steelblue", alpha = 0.3))
+
+# agrega una leyenda
+legend("topright", 
+       legend = c("TB3MS", "TB10YS"),
+       col = c("darkred", "steelblue"),
+       lwd = c(2, 2))
+
+# gráfico (b)
+plot(as.zoo(TSpread), 
+     col = "steelblue",
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "Porcentaje por año",
+     main = "Diferencial de plazo")
+
+# agregar sombreado de color para recesiones
+xblocks(time(as.zoo(TB3MS)), 
+        c(time(TB3MS) %in% recessions), 
+        col = alpha("steelblue", alpha = 0.3))
+```
+
+Antes de las recesiones, la brecha entre las tasas de interés de los bonos a largo plazo y las letras a corto plazo se reduce y, en consecuencia, el diferencial de plazo se reduce drásticamente hacia cero o incluso se vuelve negativo en tiempos de tensión económica. Esta información podría utilizarse para mejorar las previsiones de crecimiento del PIB en el futuro.
+
+Se verifica esto estimando un modelo ADL($2$, $1$) y un modelo ADL($2$, $2$) de la tasa de crecimiento del PIB utilizando rezagos del crecimiento del PIB y rezagos del diferencial de plazo como regresores. Luego se usan ambos modelos para pronosticar el crecimiento del PIB en 2013:Q1.
+
+```{r, 784}
+# convertir series de crecimiento y plazo en objetos ts
+GDPGrowth_ts <- ts(GDPGrowth, 
+                  start = c(1960, 1), 
+                  end = c(2013, 4), 
+                  frequency = 4)
+
+TSpread_ts <- ts(TSpread, 
+                start = c(1960, 1), 
+                end = c(2012, 4), 
+                frequency = 4)
+
+# unir ambos objetos ts
+ADLdata <- ts.union(GDPGrowth_ts, TSpread_ts)
+```
+
+```{r, 785}
+# estimar el modelo ADL(2,1) de crecimiento del PIB
+GDPGR_ADL21 <- dynlm(GDPGrowth_ts ~ L(GDPGrowth_ts) + L(GDPGrowth_ts, 2) + L(TSpread_ts), 
+      start = c(1962, 1), end = c(2012, 4))
+
+coeftest(GDPGR_ADL21, vcov. = sandwich)
+```
+
+La ecuación estimada del modelo ADL($2$, $1$) es:
+
+\begin{align}
+  \widehat{GDPGR}_t = \underset{(0.49)}{0.96} + \underset{(0.08)}{0.26} GDPGR_{t-1} + \underset{(0.08)}{0.19} GDPGR_{t-2} + \underset{(0.18)}{0.44} TSpread_{t-1} (\#eq:gdpgradl21)
+\end{align}
+
+Todos los coeficientes son significativos al nivel de $5\%$.
+
+```{r, 786}
+# 2012:Q3 / 2012:Q4 datos sobre el crecimiento del PIB y el diferencial de plazo
+subset <- window(ADLdata, c(2012, 3), c(2012, 4))
+
+# ADL(2,1) previsión de crecimiento del PIB para 2013:Q1
+ADL21_forecast <- coef(GDPGR_ADL21) %*% c(1, subset[2, 1], subset[1, 1], subset[2, 2])
+ADL21_forecast
+
+# calcular el error de pronóstico
+window(GDPGrowth_ts, c(2013, 1), c(2013, 1)) - ADL21_forecast
+```
+
+El modelo \@ref(eq:gdpgradl21) predice el crecimiento del PIB en 2013:Q1 será de $2.24\%$, lo que genera un error de pronóstico de $-1.10\%$.
+
+Se estima la especificación de ADL($2$, $2$) para ver si agregar información adicional sobre el diferencial de plazos anteriores mejora el pronóstico.
+
+```{r, 787}
+# estimar el modelo ADL(2,2) de crecimiento del PIB
+GDPGR_ADL22 <- dynlm(GDPGrowth_ts ~ L(GDPGrowth_ts) + L(GDPGrowth_ts, 2) 
+                     + L(TSpread_ts) + L(TSpread_ts, 2), 
+                     start = c(1962, 1), end = c(2012, 4))
+
+coeftest(GDPGR_ADL22, vcov. = sandwich)
+```
+
+Se obtiene 
+
+\begin{align}
+  \begin{split}
+    \widehat{GDPGR}_t =& \underset{(0.47)}{0.98} + \underset{(0.08)}{0.24} GDPGR_{t-1} \\
+    & + \underset{(0.08)}{0.18} GDPGR_{t-2} -\underset{(0.42)}{0.14} TSpread_{t-1} + \underset{(0.43)}{0.66} TSpread_{t-2}.
+  \end{split} (\#eq:gdpgradl22)
+\end{align}
+
+Los coeficientes en ambos rezagos del diferencial de plazo no son significativos al nivel de $10\%$.
+
+```{r, 788}
+# pronóstico de crecimiento del PIB ADL(2,2) para 2013:Q1
+ADL22_forecast <- coef(GDPGR_ADL22) %*% c(1, subset[2, 1], subset[1, 1], subset[2, 2], subset[1, 2])
+ADL22_forecast
+
+# calcular el error de pronóstico
+window(GDPGrowth_ts, c(2013, 1), c(2013, 1)) - ADL22_forecast
+```
+
+El pronóstico de ADL($2$, $2$) de crecimiento del PIB en 2013:Q1 es $2.27\%$, lo que implica un error de pronóstico de $1.14\%$.
+
+¿Los modelos ADL \@ref(eq:gdpgradl21) y \@ref(eq:gdpgradl22) mejoran el modelo AR($2$) simple \@ref(eq:GDPGRAR2)? La respuesta es sí. No obstante, $SER$ y $\bar{R}^2$ solo mejoran ligeramente, una prueba $F$ sobre los coeficientes de diferenciación de términos en \@ref(eq:gdpgradl22) proporciona evidencia de que el modelo funciona mejor al explicar el crecimiento del PIB que el modelo AR($2$), ya que la hipótesis de que ambos coeficientes son cero no puede rechazarse al nivel de $5\%$.
+
+```{r, 789}
+# comparar R2 ajustada
+c("Adj.R2 AR(2)" = summary(GDPGR_AR2)$r.squared,
+  "Adj.R2 ADL(2,1)" = summary(GDPGR_ADL21)$r.squared,
+  "Adj.R2 ADL(2,2)" = summary(GDPGR_ADL22)$r.squared)
+
+# comparar SER
+c("SER AR(2)" = summary(GDPGR_AR2)$sigma,
+  "SER ADL(2,1)" = summary(GDPGR_ADL21)$sigma,
+  "SER ADL(2,2)" = summary(GDPGR_ADL22)$sigma)
+
+# prueba F sobre coeficientes de diferencias de plazos
+linearHypothesis(GDPGR_ADL22, 
+                 c("L(TSpread_ts)=0", "L(TSpread_ts, 2)=0"),
+                 vcov. = sandwich)
+```
+
+#### Estacionariedad {-}
+
+En general, los pronósticos se pueden mejorar mediante el uso de múltiples predictores, al igual que en la regresión transversal. Al construir modelos de series de tiempo, se debe tener en cuenta si las variables son *estacionarias* o *no estacionarias*. El Concepto clave 14.5 explica qué es la estacionariedad.
+
+```{r, 790, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.5">
+<h3 class = "right"> Concepto clave 14.5 </h3>
+<h3 class = "left"> Estacionariedad </h3>
+
+Una serie de tiempo $Y_t$ es estacionaria si su distribución de probabilidad es independiente del tiempo; es decir, la distribución conjunta de $Y_{s+1}, Y_{s+2},\\dots,Y_{s+T}$ no cambia a medida que varía $s$, independientemente de $T$.
+
+De manera similar, dos series de tiempo $X_t$ y $Y_t$ son *conjuntamente estacionarias* si la distribución conjunta de $(X_{s+1},Y_{s+1}, X_{s+2},Y_{s+2} \\dots, X_{s+T},Y_{s+T})$ no depende de $s$, independientemente de $T$.
+
+En un sentido probabilístico, estacionariedad significa que la información sobre cómo evoluciona una serie de tiempo en el futuro es inherente a su pasado. Si este no es el caso, no se puede usar el pasado de una serie como una guía confiable para su futuro.
+
+La estacionariedad facilita el aprendizaje de las características de los datos pasados.
+
+</div>
+')
+```
+
+```{r, 791, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Estacionariedad]{14.5}
+
+Una serie de tiempo $Y_t$ es estacionaria si su distribución de probabilidad es independiente del tiempo; es decir, la distribución conjunta de $Y_{s+1}, Y_{s+2},\\dots,Y_{s+T}$ no cambia a medida que varía $s$, independientemente de $T$.\\newline
+
+De manera similar, dos series de tiempo $X_t$ y $Y_t$ son \\textit{conjuntamente estacionarias} si la distribución conjunta de $(X_{s+1},Y_{s+1}, X_{s+2},Y_{s+2} \\dots, X_{s+T},Y_{s+T})$ no depende de $s$, independientemente de $T$.\\newline
+
+En un sentido probabilístico, estacionariedad significa que la información sobre cómo evoluciona una serie de tiempo en el futuro es inherente a su pasado. Si este no es el caso, no se puede usar el pasado de una serie como una guía confiable para predecir su futuro.\\vspace{0.5cm}
+
+La estacionariedad facilita el aprendizaje de las características de los datos pasados.
+
+\\end{keyconcepts}
+')
+```
+
+#### Regresión de series temporales con varios predictores {-}
+
+El concepto de estacionariedad es un supuesto clave en el modelo de regresión de series de tiempo general con múltiples predictores. El Concepto clave 14.6 establece este modelo y sus supuestos.
+
+```{r, 792, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.6">
+<h3 class = "right"> Concepto clave 14.6 </h3>
+<h3 class = "left"> Regresión de series de tiempo con múltiples predictores </h3>
+
+El modelo general de regresión de series de tiempo amplía el modelo ADL de manera que se incluyen múltiples regresores y sus rezagos. Utiliza $p$ retrasos de la variable dependiente y $q_l$ retrasos de $l$ predictores adicionales donde $l=1,\\dots,k$:
+
+\\begin{equation}
+  \\begin{aligned}
+  Y_t =&  \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_{p} Y_{t-p} \\\\
+      &+  \\delta_{11} X_{1,t-1} + \\delta_{12} X_{1,t-2} + \\dots + \\delta_{1q} X_{1,t-q} \\\\
+      &+  \\dots \\\\
+      &+  \\delta_{k1} X_{k,t-1} + \\delta_{k2} X_{k,t-2} + \\dots + \\delta_{kq} X_{k,t-q} \\\\
+      &+  u_t 
+  \\end{aligned}
+\\end{equation}
+
+Para la estimación se hacen las siguientes suposiciones:
+
+1. El término de error $u_t$ tiene una media condicional cero dados todos los regresores y sus retrasos:  $$E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots, X_{1,t-1}, X_{1,t-2} \\dots, X_{k,t-1}, X_{k,t-2}, \\dots)$$ Esta suposición es una extensión de la suposición de cero media condicional utilizada para los modelos AR y ADL. En este sentido, garantiza que el modelo de regresión de series de tiempo general indicado anteriormente da el mejor pronóstico de $Y_t$ dados sus rezagos, los regresores adicionales $X_{1,t},\\dots,X_{k,t}$ y sus rezagos.
+
+2. La suposición de i.i.d. para los datos transversales no es (completamente) significativa para los datos de series de tiempo. Se reemplaza por el siguiente supuesto que consta de dos partes:
+
+    (a) Los $(Y_{t}, X_{1,t}, \\dots, X_{k,t})$ tienen una distribución estacionaria (la parte "idénticamente distribuida" del supuesto i.i.d. para datos transversales). Si esto no se cumple, los pronósticos *pueden* estar sesgados y la inferencia *puede* ser muy engañosa.
+
+    (b) $(Y_{t}, X_{1,t}, \\dots, X_{k,t})$ y $(Y_{t-j}, X_{1,t-j}, \\dots, X_{k,t-j})$ se vuelven independientes a medida que $j$ crece (la parte distribuida de forma "independiente" del supuesto i.i.d para datos transversales). Esta suposición también se llama *dependencia débil*. Garantiza que WLLN y CLT se mantengan en muestras grandes.
+
+3. Es poco probable que existan valores atípicos grandes: $E(X_{1,t}^4), E(X_{2,t}^4), \\dots, E(X_{k,t}^4)$ y $E(Y_t^4)$ tienen cuartos momentos finitos distintos de cero.
+
+4. Sin multicolinealidad perfecta.
+
+</div>
+')
+```
+
+```{r, 793, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Regresión de series de tiempo con múltiples predictores]{14.6}
+
+El modelo general de regresión de series de tiempo amplía el modelo ADL de manera que se incluyen múltiples regresores y sus rezagos. Utiliza $p$ retrasos de la variable dependiente y $q_l$ retrasos de $l$ predictores adicionales donde $l=1,\\dots,k$:
+
+\\begin{equation}
+  \\begin{aligned}
+  Y_t =& \\, \\beta_0 + \\beta_1 Y_{t-1} + \\beta_2 Y_{t-2} + \\dots + \\beta_{p} Y_{t-p} \\\\
+      +& \\, \\delta_{11} X_{1,t-1} + \\delta_{12} X_{1,t-2} + \\dots + \\delta_{1q} X_{1,t-q} \\\\
+      +& \\, \\dots \\\\
+      +& \\, \\delta_{k1} X_{k,t-1} + \\delta_{k2} X_{k,t-2} + \\dots + \\delta_{kq} X_{k,t-q} \\\\
+      +& \\, u_t 
+  \\end{aligned}
+\\end{equation}
+
+Para la estimación se hacen las siguientes suposiciones:\\newline
+
+\\begin{enumerate}
+\\item El término de error $u_t$ tiene una media condicional cero dados todos los regresores y sus retrasos:  $$E(u_t\\vert Y_{t-1}, Y_{t-2}, \\dots, X_{1,t-1}, X_{1,t-2} \\dots, X_{k,t-1}, X_{k,t-2}, \\dots)$$ Esta suposición es una extensión de la suposición de cero media condicional utilizada para los modelos AR y ADL. En este sentido, garantiza que el modelo de regresión de series de tiempo general indicado anteriormente da el mejor pronóstico de $Y_t$ dados sus rezagos, los regresores adicionales $X_{1,t},\\dots,X_{k,t}$ y sus rezagos.
+\\item La suposición de i.i.d. para los datos transversales no es (completamente) significativa para los datos de series de tiempo. Se reemplaza por el siguiente supuesto que consta de dos partes:\\newline
+
+\\begin{itemize}
+    \\item[(a)] Los $(Y_{t}, X_{1,t}, \\dots, X_{k,t})$ tienen una distribución estacionaria (la parte "idénticamente distribuida" del supuesto i.i.d. para datos transversales). Si esto no se cumple, los pronósticos \\textit{pueden} estar sesgados y la inferencia \\textit{puede} ser muy engañosa.   
+  
+    \\item[(b)] $(Y_{t}, X_{1,t}, \\dots, X_{k,t})$ y $(Y_{t-j}, X_{1,t-j}, \\dots, X_{k,t-j})$ se vuelven independientes a medida que $j$ crece (la parte distribuida de forma "independiente" del supuesto i.i.d para datos transversales). Esta suposición también se llama \\textit{dependencia débil}. Garantiza que WLLN y CLT se mantengan en muestras grandes.
+\\end{itemize}
+    
+\\item Es poco probable que existan valores atípicos grandes: $E(X_{1,t}^4), E(X_{2,t}^4), \\dots, E(X_{k,t}^4)$ y $E(Y_t^4)$ tienen cuartos momentos finitos distintos de cero. 
+\\item Sin multicolinealidad perfecta.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+Dado que muchas series de tiempo económicas parecen no ser estacionarias, el supuesto dos del Concepto clave 14.6 es crucial en macroeconomía y finanzas aplicadas, razón por la cual se han desarrollado pruebas estadísticas de estacionariedad o no estacionariedad. Los capítulos \@ref(SLRUCI) y \@ref(NEIT) están dedicados a este tema.
+
+#### Inferencia estadística y prueba de causalidad de Granger {-}
+
+Si un $X$ es un predictor útil para $Y$, en una regresión de $Y_t$ con rezagos propios y rezagos de $X_t$, no todos los coeficientes de los rezagos en $X_t$ son cero. Este concepto se llama *causalidad de Granger* y es una hipótesis interesante para probar. El Concepto clave 14.7 resume la idea.
+
+```{r, 794, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.7">
+<h3 class = "right"> Concepto clave 14.7 </h3>
+<h3 class = "left"> Pruebas de causalidad de Granger </h3>
+La prueba de causalidad de Granger @granger1969 es una prueba $F$ de la hipótesis nula de que *todos* los rezagos de una variable $X$ incluida en un modelo de regresión de series de tiempo no tienen poder predictivo para $Y_t$. La prueba de causalidad de Granger no prueba si $X$ realmente *causa* $Y$, sino si los retrasos incluidos son informativos en términos de predicción de $Y$.
+</div>
+')
+```
+
+```{r, 795, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Pruebas de causalidad de Granger]{14.7}
+La prueba de causalidad de Granger\\citep{granger1969} es una prueba $F$ de la hipótesis nula de que \\textit{todos} los rezagos de una variable $X$ incluida en un modelo de regresión de series de tiempo no tienen poder predictivo para $Y_t$. La prueba de causalidad de Granger no prueba si $X$ realmente \\textit{causa} $Y$, sino si los retrasos incluidos son informativos en términos de predicción de $Y$.
+\\end{keyconcepts}
+')
+```
+
+Ya se ha realizado una prueba de causalidad de Granger sobre los coeficientes de diferencial de plazo en \@ref(eq:gdpgradl22), el modelo ADL($2$, $2$) de crecimiento del PIB y se concluye que al menos uno de los dos primeros rezagos del diferencial de plazo tiene poder predictivo para el crecimiento del PIB.
+
+### Incertidumbre de pronóstico e intervalos de pronóstico {-}
+
+En general, es una buena práctica informar una medida de la incertidumbre al presentar los resultados que se ven afectados por este último. La incertidumbre es particularmente interesante cuando se pronostica una serie de tiempo. Por ejemplo, considere un modelo ADL$(1,1)$ simple
+
+\begin{align*}
+  Y_t = \beta_0 + \beta_1 Y_{t-1} + \delta_1 X_{t-1} + u_t
+\end{align*}
+
+donde $u_t$ es un término de error homocedástico. El error de previsión es
+
+\begin{align*}
+  Y_{T+1} - \widehat{Y}_{T+1\vert T} = u_{T+1} - \left[(\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right].
+\end{align*}
+
+El error de pronóstico cuadrático medio (EPCM) y el RMFSE son
+
+\begin{align*}
+  MFSE =& \, E\left[(Y_{T+1} - \widehat{Y}_{T+1\vert T})^2 \right] \\
+       =& \, \sigma_u^2 + Var\left[ (\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right], \\
+  RMFSE =& \, \sqrt{\sigma_u^2 + Var\left[ (\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right]}.
+\end{align*}
+
+Un intervalo de pronóstico de $95\%$ es un intervalo que cubre el valor real de $Y_{T+1}$ en $95\%$ de aplicaciones repetidas. Existe una gran diferencia en el cálculo de un intervalo de confianza y un intervalo de pronóstico: Al calcular un intervalo de confianza de una estimación puntual, se utilizan grandes aproximaciones de muestra que están justificadas por el TLC y, por lo tanto, son válidas para una amplia gama de distribuciones de términos de error. Sin embargo, para calcular un intervalo de pronóstico de $Y_{T+1}$, se debe hacer una suposición adicional sobre la distribución de $u_{T+1}$, el término de error en el período $T+1$. Suponiendo que $u_{T+1}$ se distribuye normalmente, se puede construir un *intervalo de pronóstico* de $95\%$ para $Y_{T+1}$ usando $SE(Y_{T+1} - \widehat{Y}_{T+1\vert T})$, una estimación del EPRCM:
+
+\begin{align*}
+  \widehat{Y}_{T+1\vert T} \pm 1.96 \cdot SE(Y_{T+1} - \widehat{Y}_{T+1\vert T})
+\end{align*}
+
+Por supuesto, el cálculo se vuelve más complicado cuando el término de error es heterocedástico o si se está interesado en calcular un intervalo de pronóstico para $T+s, s>1$.
+
+En algunas aplicaciones, es útil informar múltiples intervalos de pronóstico para períodos posteriores. Estos se pueden visualizar en un llamado diagrama de abanico. No se replicará el diagrama de abanico porque el modelo subyacente es mucho más complejo que los modelos AR y ADL simples que se tratan aquí. En su lugar, en el siguiente ejemplo se usan datos de series de tiempo simuladas y se estima un modelo AR ($2$) que luego se utiliza para pronosticar los subsiguientes $25$ resultados futuros de la serie.
+
+```{r, 796, fig.align='center'}
+# sembrar semilla
+set.seed(1234)
+
+# simular la serie temporal
+Y <- arima.sim(list(order = c(2, 0, 0), ar = c(0.2, 0.2)),  n = 200)
+
+# estimar un modelo AR(2) usando 'arima()', ver `?arima`
+model <- arima(Y, order = c(2, 0, 0))
+
+# calcular pronósticos de puntos e intervalos de predicción para los próximos 25 períodos
+fc <- forecast(model, h = 25, level = seq(5, 99, 10))
+
+# graficar un diagrama de abanico
+plot(fc, 
+     main = "Fan Chart de pronóstico para el modelo AR(2) de datos simulados", 
+     showgap = F, 
+     fcol = "red",
+     flty = 2)
+```
+
+**arima.sim()** simula modelos de media móvil integrada autorregresiva (ARIMA). Los modelos AR pertenecen a esta clase de modelos. Se usa **list(order = c(2, 0, 0), ar = c(0.2, 0.2))**, por lo que el DGP (Data Generating Process) es $$Y_t = 0.2 Y_{t-1} + 0.2 Y_{t-2} + u_t.$$
+
+Se elige **level = seq(5, 99, 10)** en la llamada de **forecast()**, de modo que se calculen los intervalos de pronóstico con niveles  $5\%, 15\%, \dots, 95\%$ para cada pronóstico puntual de la serie.
+
+La línea roja discontinua muestra los pronósticos puntuales de la serie para los próximos 25 períodos basados en un modelo $ADL(1,1)$ y las áreas sombreadas representan los intervalos de predicción. El grado de sombreado indica el nivel del intervalo de predicción. La más oscura de las bandas azules muestra los intervalos de pronóstico de $5\%$ y el color se desvanece hacia el gris a medida que aumenta el nivel de los intervalos.
+
+## Selección de la longitud de retraso utilizando criterios de información {#SLRUCI}
+
+La selección de las longitudes de los rezagos en los modelos AR y ADL a veces puede estar guiada por la teoría económica. Sin embargo, existen métodos estadísticos que son útiles para determinar cuántos rezagos deben incluirse como regresores. En general, demasiados rezagos inflan los errores estándar de las estimaciones de coeficientes y, por lo tanto, implican un aumento en el error de pronóstico, mientras que omitir los rezagos que deberían incluirse en el modelo pueden dar lugar a un sesgo de estimación.
+
+El orden de un modelo AR se puede determinar mediante dos enfoques:
+
+1. **El enfoque de la prueba F**
+
+    Estimar un modelo AR($p$) y pruebar la significancia del rezago o los rezagos más grandes. Si la prueba es rechazada, elimine el o los respectivos rezagos del modelo. Este enfoque tiene la tendencia a producir modelos donde el orden es demasiado grande: En una prueba de significancia siempre se enfrenta al riesgo de rechazar una verdadera hipótesis nula.
+
+2. **Basándose en un criterio de información**
+
+    Para evitar el problema de producir modelos demasiado grandes, se puede elegir el orden de retraso que minimiza uno de los siguientes dos criterios de información:
+    
+      + El *criterio de información de Bayes* (CIB):
+      
+        $$CIB(p) = \log\left(\frac{SSR(p)}{T}\right) + (p + 1) \frac{\log(T)}{T}$$
+        
+      + El *criterio de información de Akaike* (CIA):
+
+        $$CIA(p) = \log\left(\frac{SSR(p)}{T}\right) + (p + 1) \frac{2}{T}$$
+
+    Ambos criterios son estimadores de la longitud de rezago óptimo $p$. El orden de rezago $\widehat{p}$ que minimiza el criterio respectivo se llama *estimación CIB* o *estimación CIA* del orden de modelo óptimo. La idea básica de ambos criterios es que el $SSR$ disminuye a medida que se agregan retrasos adicionales al modelo, de modo que el primer término disminuye mientras que el segundo aumenta a medida que crece el orden de retraso. Se puede demostrar que el $CIB$ es un estimador consistente del verdadero orden de retraso, mientras que el $CIA$ no lo es, lo que se debe a los diferentes factores en el segundo sumando. Sin embargo, ambos estimadores se utilizan en la práctica donde el $CIA$ a veces se usa como una alternativa cuando el $CIB$ produce un modelo con "muy pocos" rezagos.
+
+La función **dynlm()** no calcula criterios de información por defecto. Por lo tanto, se escribe una función corta que informa el $CIB$ (junto con el orden de retraso elegido $p$ y la $R^2$) para objetos de clase **dynlm**.
+
+```{r, 797}
+# calcular BIC (Bayesian information criterion) para objetos de modelo AR de clase 'dynlm'
+BIC <- function(model) {
+  
+  ssr <- sum(model$residuals^2)
+  t <- length(model$residuals)
+  npar <- length(model$coef)
+  
+  return(
+    round(c("p" = npar - 1,
+          "BIC" = log(ssr/t) + npar * log(t)/t,
+          "R2" = summary(model)$r.squared), 4)
+  )
+}
+```
+
+Se calcula el $CIB$ para los modelos AR ($p$) de crecimiento del PIB con orden $p=1,\dots,6$. El resultado final se puede reproducir fácilmente usando **sapply()** y la función **BIC()** definida anteriormente.
+
+```{r, 798}
+# aplicar el BIC() a un modelo de crecimiento del PIB de un solo intercepto
+BIC(dynlm(ts(GDPGR_level) ~ 1))
+
+# bucle BIC sobre modelos de diferentes órdenes
+order <- 1:6
+
+BICs <- sapply(order, function(x) 
+        "AR" = BIC(dynlm(ts(GDPGR_level) ~ L(ts(GDPGR_level), 1:x))))
+
+BICs
+```
+
+Se debe tomar en cuenta que aumentar el orden de retraso aumenta $R^2$ porque el $SSR$ disminuye a medida que se agregan retrasos adicionales al modelo, pero de acuerdo con el $CIB$, se debería conformar con el modelo AR($2$) en lugar del modelo AR($6$). Ayuda a decidir si la disminución en $SSR$ es suficiente para justificar la adición de un regresor adicional.
+
+Si se tuvieran que comparar un conjunto más grande de modelos, una forma conveniente de seleccionar el modelo con el $CIB$ más bajo es usar la función **which.min()**.
+
+```{r, 799}
+# seleccione el modelo AR con el BIC más pequeño
+BICs[, which.min(BICs[2, ])]
+```
+
+El $CIB$ también se puede usar para seleccionar longitudes de retardo en modelos de regresión de series de tiempo con múltiples predictores. En un modelo con coeficientes de $K$, incluida la intersección, se tiene:
+
+\begin{align*}
+    CIB(K) = \log\left(\frac{SSR(K)}{T}\right) + K \frac{\log(T)}{T}.
+\end{align*}
+
+Se debe tener en cuenta que elegir el modelo óptimo de acuerdo con el $CIB$ puede ser computacionalmente exigente porque puede haber muchas combinaciones diferentes de longitudes de retardo cuando existen múltiples predictores.
+
+Para dar un ejemplo, se estima el modelos ADL($p$, $q$) de crecimiento del PIB donde, como se indicó anteriormente, la variable adicional es el diferencial de plazo entre bonos a corto y largo plazo. Se impone la restricción de que $p=q_1=\dots=q_k$ de modo que solo se deben estimar $p_{max}$ modelos ($p=1,\dots,p_{max}$). En el siguiente ejemplo, se elige $p_{max} = 12$.
+
+```{r, 800}
+# bucle 'BIC()' sobre múltiples modelos ADL 
+order <- 1:12
+
+BICs <- sapply(order, function(x) 
+         BIC(dynlm(GDPGrowth_ts ~ L(GDPGrowth_ts, 1:x) + L(TSpread_ts, 1:x), 
+                   start = c(1962, 1), end = c(2012, 4))))
+
+BICs
+```
+
+De la definición de **BIC()**, para los modelos ADL con $p = q$ se deduce que **p** informa el número de coeficientes estimados *excluyendo* la intersección. Por lo tanto, el orden de retraso se obtiene dividiendo **p** entre 2.
+
+```{r, 801}
+# seleccionar el modelo ADL con el BIC más pequeño
+BICs[, which.min(BICs[2, ])]
+```
+
+El $CIB$ está a favor del modelo ADL($2$, $2$) \@ref(eq:gdpgradl22) que se ha estimado antes.
+
+## No estacionariedad I: Tendencias {#NEIT}
+
+Si una serie no es estacionaria, las pruebas de hipótesis convencionales, los intervalos de confianza y los pronósticos pueden ser muy engañosos. El supuesto de estacionariedad se viola si una serie presenta tendencias o rupturas y las complicaciones resultantes en un análisis econométrico dependen del tipo específico de no estacionariedad. Esta sección se centra en las series de tiempo que muestran tendencias.
+
+Se dice que una serie muestra una tendencia si tiene un movimiento persistente a largo plazo. Se distingue entre tendencias *deterministas* y *estocásticas*.
+
++ Una tendencia es *determinista* si es una función del tiempo no aleatoria.
+
++ Se dice que una tendencia es *estocástica* si es una función aleatoria del tiempo.
+
+Las cifras que se han elaborado en el capítulo \@ref(DSTCS) revelan que muchas series de tiempo económicas muestran un comportamiento de tendencia que probablemente se modele mejor mediante tendencias estocásticas. Por eso el curso se centra en el tratamiento de las tendencias estocásticas.
+
+#### El modelo de caminata aleatoria de una tendencia {-}
+
+La forma más sencilla de modelar una serie de tiempo $Y_t$ que tiene una tendencia estocástica es el *paseo aleatorio* (*random walk*):
+
+\begin{align}
+  Y_t = Y_{t-1} + u_t, (\#eq:randomwalk)
+\end{align}
+
+donde los $u_t$ son errores i.i.d. con $E(u_t\vert Y_{t-1}, Y_{t-2}, \dots) = 0$. Se debe tener en cuenta que:
+
+\begin{align*}
+  E(Y_t\vert Y_{t-1}, Y_{t-2}\dots) =& \, E(Y_{t-1}\vert Y_{t-1}, Y_{t-2}\dots) + E(u_t\vert Y_{t-1}, Y_{t-2}\dots) \\
+  =& \, Y_{t-1}
+\end{align*}
+
+por lo que el mejor pronóstico para $Y_t$ es la observación de ayer  $Y_{t-1}$. Por tanto, la diferencia entre $Y_t$ y $Y_{t-1}$ es impredecible. La ruta seguida por $Y_t$ consta de pasos aleatorios $u_t$, por lo que se denomina caminata aleatoria.
+
+Suponga que $Y_0$, el valor inicial de la caminata aleatoria, es $0$. Otra forma de escribir \@ref(eq:randomwalk) es:
+
+\begin{align*}
+  Y_0 =& \, 0 \\
+  Y_1 =& \, 0 + u_1 \\
+  Y_2 =& \, 0 + u_1 + u_2 \\
+  \vdots & \, \\
+  Y_t =& \, \sum_{i=1}^t u_i.
+\end{align*}
+
+Por lo tanto se tiene que:
+
+\begin{align*}
+  Var(Y_t) =& \, Var(u_1 + u_2 + \dots + u_t) \\
+           =& \, t \sigma_u^2.
+\end{align*}
+
+Por lo tanto, la varianza de una caminata aleatoria depende de $t$, lo que viola el supuesto presentado en el Concepto clave 14.5: Una caminata aleatoria no es estacionaria.
+
+Obviamente, \@ref(eq:randomwalk) es un caso especial de un modelo AR($1$) donde $\beta_1 = 1$. Se puede demostrar que una serie de tiempo que sigue un modelo AR($1$) es estacionaria si $\lvert\beta_1\rvert < 1$. En un modelo AR($p$) general, la estacionariedad está vinculada a las raíces del polinomio $$1-\beta_1 z - \beta_2 z^2 - \beta_3 z^3 - \dots - \beta_p z^p.$$ Si todas las raíces son mayores que $1$ en valor absoluto, la serie AR($p$) es estacionaria. Si al menos una raíz es igual a $1$, se dice que el AR($p$) tiene una *raíz unitaria* y, por lo tanto, tiene una tendencia estocástica.
+
+Es sencillo simular paseos aleatorios en **R** usando **arima.sim()**. La función **matplot()** es conveniente para gráficos simples de las columnas de una matriz.
+
+```{r, 802, fig.align='center'}
+# simular y graficar paseos aleatorios a partir de 0
+set.seed(1)
+
+RWs <- ts(replicate(n = 4, 
+            arima.sim(model = list(order = c(0, 1 ,0)), n = 100)))
+
+matplot(RWs, 
+        type = "l", 
+        col = c("steelblue", "darkgreen", "darkred", "orange"), 
+        lty = 1, 
+        lwd = 2,
+        main = "Cuatro paseos al azar",
+        xlab = "Tiempo",
+        ylab = "Valor")
+```
+
+Agregar una constante a \@ref(eq:randomwalk) produce
+
+\begin{align}
+  Y_t = \beta_0 + Y_{t-1} + u_t (\#eq:randomwalkdrift),
+\end{align}
+
+un *modelo de paseo aleatorio con deriva* (*random walk model with drift*) permite modelar si la tendencia de una serie se mueve hacia arriba o hacia abajo. Si $\beta_0$ es positivo, la serie se desplaza hacia arriba y sigue una tendencia a la baja si $\beta_0$ es negativo.
+
+```{r, 803, fig.align='center'}
+# simular y graficar paseos aleatorios con deriva
+set.seed(1)
+
+RWsd <- ts(replicate(n = 4, 
+           arima.sim(model = list(order = c(0, 1, 0)), 
+                     n = 100,
+                     mean = -0.2)))
+
+matplot(RWsd, 
+        type = "l", 
+        col = c("steelblue", "darkgreen", "darkred", "orange"), 
+        lty = 1, 
+        lwd = 2,
+        main = "Cuatro paseos aleatorios con deriva",
+        xlab = "Tiempo",
+        ylab = "Valor")
+```
+
+#### Problemas causados por tendencias estocásticas {-}
+
+La estimación por MCO de los coeficientes en regresores que tienen una tendencia estocástica es problemática porque la distribución del estimador y su estadístico $t$ no es normal, incluso asintóticamente. Esto tiene varias consecuencias:
+
++ **Sesgo a la baja de los coeficientes autorregresivos**:
+  
+    Si $Y_t$ es una caminata aleatoria, $\beta_1$ puede estimarse consistentemente por MCO, pero el estimador está sesgado hacia cero. Este sesgo es aproximadamente $E(\widehat{\beta}_1) \approx 1 - 5.3/T$ que es sustancial para los tamaños de muestra que se encuentran típicamente en macroeconomía. Este sesgo de estimación hace que los pronósticos de $Y_t$ funcionen peor que un modelo de caminata aleatoria pura.
+  
++ **Estadísticos $t$ no distribuidos normalmente**:
+
+    La distribución no normal del coeficiente estimado de un regresor estocástico se traduce en una distribución no normal de su estadístico $t$, de modo que los valores críticos normales no son válidos y, por lo tanto, los intervalos de confianza habituales y las pruebas de hipótesis también son inválidos, y la verdadera distribución del estadístico $t$ no se puede determinar fácilmente.
+    
++ **Regresión espuria**:
+
+    Cuando dos series de tiempo con tendencia estocástica retroceden entre sí, la relación estimada puede parecer muy significativa utilizando valores críticos normales convencionales, aunque las series no están relacionadas. Esto es lo que los econometristas llaman una relación *espuria*.
+    
+Como ejemplo de regresión espuria, considere nuevamente los paseos aleatorios verde y rojo que se han simulado anteriormente. Se sabe que no existe relación entre ambas series: Se generaron independientemente una de la otra.
+
+```{r, 804, fig.align='center'}
+# graficar relación espuria
+matplot(RWs[, c(2, 3)], 
+        lty = 1,
+        lwd = 2,
+        type = "l",
+        col = c("darkgreen", "darkred"),
+        xlab = "Time",
+        ylab = "",
+        main = "Una relación espuria")    
+```
+
+Imagina que no tiene esta información y en su lugar conjetura que la serie verde es útil para predecir la serie roja y así termina estimando el modelo ADL($0$, $1$)
+
+\begin{align*}
+  Red_t = \beta_0 + \beta_1 Green_{t-1} + u_t.
+\end{align*}
+    
+```{r, 805}
+# estimar modelo AR espurio
+summary(dynlm(RWs[, 2] ~ L(RWs[, 3])))$coefficients
+```
+
+El resultado es obviamente falso: El coeficiente en $Green_{t-1}$ se estima en aproximadamente $1$ y el valor $p$ de $1.14 \cdot 10^{-10}$ de la prueba $t$ correspondiente indica que el coeficiente es muy significativo mientras que su valor real es de hecho cero.
+
+Como ejemplo empírico, considere la tasa de desempleo de Estados Unidos y la producción industrial japonesa. Ambas series muestran un comportamiento de tendencia ascendente desde mediados de la década de 1960 hasta principios de la de 1980.
+
+```{r, 806}
+# graficar la tasa de desempleo de EE. UU. y la producción industrial japonesa
+plot(merge(as.zoo(USUnemp), as.zoo(JPIndProd)), 
+     plot.type = "single", 
+     col = c("darkred", "steelblue"),
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "",
+     main = "Regresión espuria: Series de tiempo macroeconómicas")
+
+# agrega una leyenda
+legend("topleft", 
+       legend = c("USA-Desempleo", "JPN-ProducciónIndustrial"),
+       col = c("darkred", "steelblue"),
+       lwd = c(2, 2))
+```
+
+```{r, 807}
+# estimar la regresión utilizando datos de 1962 a 1985
+SR_Unemp1 <- dynlm(ts(USUnemp["1962::1985"]) ~ ts(JPIndProd["1962::1985"]))
+coeftest(SR_Unemp1, vcov = sandwich)
+```
+
+Una regresión simple de la tasa de desempleo de EE. UU. sobre la producción industrial japonesa utilizando datos de los rendimientos entre 1962 a 1985
+
+\begin{align}
+  \widehat{U.S. UR}_t = -\underset{(1.12)}{2.37} + \underset{(0.29)}{2.22} \log(JapaneseIP_t). (\#eq:urjpip1)
+\end{align}
+
+Esta parece ser una relación significativa: La estadística $t$ del coeficiente en $\log(JapaneseIP_t)$ es mayor que 7.
+
+```{r, 808}
+# estimar la regresión usando datos de 1986 a 2012
+SR_Unemp2 <- dynlm(ts(USUnemp["1986::2012"]) ~ ts(JPIndProd["1986::2012"]))
+coeftest(SR_Unemp2, vcov = sandwich)
+```
+
+Al estimar el mismo modelo, esta vez con datos de 1986 a 2012, se obtiene 
+
+\begin{align}
+  \widehat{U.S. UR}_t = \underset{(5.41)}{41.78} -\underset{(1.17)}{7.78} \log(JapaneseIP)_t (\#eq:urjpip2)
+\end{align}
+
+que sorprendentemente es bastante diferente. \@ref(eq:urjpip1) indica una relación positiva moderada, en contraste con el gran coeficiente negativo en \@ref(eq:urjpip2). Este fenómeno se puede atribuir a las tendencias estocásticas de la serie: Dado que no existe un razonamiento económico que relacione ambas tendencias, ambas regresiones pueden ser espurias.
+
+#### Prueba para una raíz unitaria AR {-}
+
+@dickey1979 han propuesto una prueba formal para una tendencia estocástica que, por lo tanto, se denomina *prueba de Dickey-Fuller*. Como se mencionó anteriormente, una serie de tiempo que sigue un modelo AR($1$) con $\beta_1 = 1$ tiene una tendencia estocástica. Por tanto, el problema de las pruebas es:
+
+\begin{align*}
+  H_0: \beta_1 = 1 \ \ \ \text{vs.} \ \ \ H_1: \lvert\beta_1\rvert < 1.
+\end{align*}
+
+La hipótesis nula es que el modelo AR($1$) tiene una raíz unitaria y la hipótesis alternativa es que es estacionario. A menudo, uno reescribe el modelo AR($1$) restando $Y_{t-1}$ en ambos lados:
+
+\begin{align}
+  Y_t = \beta_0 + \beta_1 Y_{t-1} + u_t \ \ \Leftrightarrow \ \ \Delta Y_t = \beta_0 + \delta Y_{t-1} + u_t (\#eq:dfmod)
+\end{align}
+
+donde $\delta = \beta_1 - 1$. El problema de la prueba se convierte en
+
+\begin{align*}
+  H_0: \delta = 0 \ \ \ \text{vs.} \ \ \ H_1: \delta < 0
+\end{align*}
+
+lo cual es conveniente, ya que el estadístico de prueba correspondiente es reportado por muchas funciones relevantes en **R**.^[El estadístico $t$ de la prueba de Dickey-Fuller se calcula usando solamente errores estándar de homocedasticidad, ya que bajo la hipótesis nula, el estadístico $t$ es robusto a la heterocedasticidad condicional.]
+
+La prueba de Dickey-Fuller también se puede aplicar en un modelo AR($p$). La *prueba de Dickey-Fuller aumentada (ADF)* se resume en el Concepto clave 14.8.
+
+```{r, 809, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.8">
+<h3 class = "right"> Concepto clave 14.8 </h3>
+<h3 class = "left"> La prueba ADF para una raíz unitaria </h3>
+<p>
+
+Considere la regresión
+
+\\begin{align}
+  \\Delta Y_t = \\beta_0 + \\delta Y_{t-1} + \\gamma_1 \\Delta_1 Y_{t-1} + \\gamma_2 \\Delta Y_{t-2} + \\dots + \\gamma_p \\Delta Y_{t-p} + u_t. (\\#eq:ADFreg1)
+\\end{align}
+
+La prueba ADF para una raíz unitaria autorregresiva prueba la hipótesis $H_0: \\delta = 0$ (tendencia estocástica) contra la alternativa unilateral $H_1: \\delta < 0$ (estacionariedad) utilizando el valor habitual de MCO, el estadístico $t$.
+
+Si se supone que $Y_t$ es estacionario alrededor de una tendencia de tiempo lineal determinista, el regresor $t$ aumenta el modelo:
+
+\\begin{align}
+  \\Delta Y_t = \\beta_0 + at + \\delta Y_{t-1} + \\gamma_1 \\Delta_1 Y_{t-1} + \\gamma_2 \\Delta Y_{t-2} + \\dots + \\gamma_p \\Delta Y_{t-p} + u_t,  (\\#eq:ADFreg2)
+\\end{align}
+
+donde nuevamente $H_0: \\delta = 0$ se prueba contra $H_1: \\delta < 0$.
+
+La longitud óptima del retraso $p$ se puede estimar utilizando criterios de información. En (\\@ref(eq:ADFreg1)), $p=0$ (no se usan rezagos de $\\Delta Y_t$ como regresores) corresponde a un AR($1$) simple.
+
+Bajo el valor de la hipótesis nula, el estadístico $t$ correspondiente a $H_0: \\delta = 0$ no tiene una distribución normal. Los valores críticos solo se pueden obtener de la simulación y difieren para las regresiones \\@ref(eq:ADFreg1) y \\@ref(eq:ADFreg2), ya que la distribución del estadístico de prueba ADF es sensible a los componentes deterministas incluidos en la regresión.
+
+</p>
+</div>
+')
+```
+
+```{r, 810, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[La prueba ADF para una raíz unitaria]{14.8}
+
+Considere la regresión
+
+\\begin{align}
+  \\Delta Y_t = \\beta_0 + \\delta Y_{t-1} + \\gamma_1 \\Delta_1 Y_{t-1} + \\gamma_2 \\Delta Y_{t-2} + \\dots + \\gamma_p \\Delta Y_{t-p} + u_t. \\label{eq:ADFreg1}
+\\end{align}
+
+La prueba ADF para una raíz unitaria autorregresiva prueba la hipótesis $H_0: \\delta = 0$ (tendencia estocástica) contra la alternativa unilateral $H_1: \\delta < 0$ (estacionariedad) utilizando el valor habitual de MCO, el estadístico $t$.\\newline
+
+Si se supone que $Y_t$ es estacionario alrededor de una tendencia de tiempo lineal determinista, el regresor $t$ aumenta el modelo:
+
+\\begin{align}
+  \\Delta Y_t = \\beta_0 + at + \\delta Y_{t-1} + \\gamma_1 \\Delta_1 Y_{t-1} + \\gamma_2 \\Delta Y_{t-2} + \\dots + \\gamma_p \\Delta Y_{t-p} + u_t,  \\label{eq:ADFreg2}
+\\end{align}
+
+donde nuevamente $H_0: \\delta = 0$ se prueba contra $H_1: \\delta < 0$.\\newline
+
+
+La longitud óptima del retraso $p$ se puede estimar utilizando criterios de información. En (\\@ref(eq:ADFreg1)), $p=0$ (no se usan rezagos de $\\Delta Y_t$ como regresores) corresponde a un AR($1$) simple.\\newline
+
+
+Bajo el valor de la hipótesis nula, el estadístico $t$ correspondiente a $H_0: \\delta = 0$ no tiene una distribución normal. Los valores críticos solo se pueden obtener de la simulación y difieren para las regresiones \\@ref(eq:ADFreg1) y \\@ref(eq:ADFreg2), ya que la distribución del estadístico de prueba ADF es sensible a los componentes deterministas incluidos en la regresión.
+
+\\end{keyconcepts}
+')
+```
+
+#### Valores críticos para el estadístico ADF {-}
+
+El Concepto clave 14.8 establece que los valores críticos para la prueba ADF en las regresiones \@ref(eq:ADFreg1) y \@ref(eq:ADFreg2) solo se pueden determinar mediante simulación. La idea del estudio de simulación es simular una gran cantidad de estadísticos de prueba ADF y usarlos para estimar cuantiles de su distribución *asintótica*. Esta sección muestra cómo se puede hacer esto usando **R**.
+
+Primero, se debe considerar el siguiente modelo AR($1$) con intercepción:
+
+\begin{align*}
+  Y_t =& \, \alpha + z_t, \ \ z_t = \rho z_{t-1} + u_t.
+\end{align*}
+
+Esto se puede escribir como:
+
+\begin{align*}
+  Y_t =& \, (1-\rho) \alpha + \rho y_{t-1} + u_t,
+\end{align*}
+
+es decir, $Y_t$ es un paseo aleatorio sin deriva bajo la hipótesis nula $\rho = 1$. Se puede demostrar que $Y_t$ es un proceso estacionario con una media de $\alpha$ para $\lvert\rho\rvert<1$.
+
+El procedimiento para simular valores críticos de una prueba de raíz unitaria usando la relación $t$ de $\delta$ en \@ref(eq:dfmod) es el siguiente:
+
++ Simular $N$ paseos aleatorios con $n$ observaciones utilizando el proceso de generación de datos:
+
+\begin{align*}
+  Y_t =& \, a + z_t, \ \ z_t = \rho z_{t-1} + u_t,
+\end{align*}
+
+$t=1,\dots,n$ donde $N$ y $n$ son números grandes, $a$ es una constante y $u$ es un término de error medio cero.
+
++ Para cada caminata aleatoria, se estima la regresión:
+
+\begin{align*}
+  \Delta Y_t =& \, \beta_0 + \delta Y_{t-1} + u_t
+\end{align*}
+
+y calcular el estadístico de prueba ADF. Guardar todas los estadísticos de prueba de $N$.
+
++ Estimar cuantiles de la distribución del estadístico de prueba ADF utilizando los estadísticos de prueba $N$ obtenidos de la simulación.
+
+Para el caso de *deriva* y *tendencia* de tiempo lineal, se reemplaza el proceso de generación de datos por:
+
+\begin{align}
+  Y_t =& \, a + b \cdot t + z_t, \ \ z_t = \rho z_{t-1} + u_t (\#eq:rwdt)
+\end{align}
+
+donde $b \cdot t$ es una tendencia de tiempo lineal. $Y_t$ en \@ref(eq:rwdt) es una caminata aleatoria con (sin) deriva si $b\neq0$ ($b=0$) bajo el valor nulo de $\rho=1$ (¿puede demostrar esto?). Se estima la regresión:
+
+\begin{align*}
+  \Delta Y_t =& \, \beta_0 + \alpha \cdot t + \delta Y_{t-1} + u_t.
+\end{align*}
+
+En términos generales, la precisión de los cuantiles estimados depende de dos factores: $n$, la longitud de la serie subyacente y $N$, el número de estadísticos de prueba utilizados. Dado que se está interesado en estimar cuantiles de la distribución *asintótica* (la distribución de Dickey-Fuller) del estadístico de prueba ADF, tanto el uso de muchas observaciones como un gran número de estadísticos de prueba simulados aumentará la precisión de los cuantiles estimados. Se elige $n = N = 1000$, ya que la carga computacional crece rápidamente con $n$ y $N$.
+
+```{r, 811}
+# repeticiones
+N <- 1000
+
+# observaciones
+n <- 1000
+
+# definir constante, tendencia y rho
+drift <- 0.5
+trend <- 1:n
+rho <- 1
+
+# función que simula un proceso AR(1)
+AR1 <- function(rho) {
+  out <- numeric(n)
+  for(i in 2:n) {
+    out[i] <- rho * out[i-1] + rnorm(1)
+  }
+  return(out)
+}
+
+# simular desde PIB con constante
+RWD <- ts(replicate(n = N, drift + AR1(rho)))
+
+# calcular estadísticos de prueba de ADF y almacenarlos en 'ADFD'
+ADFD <- numeric(N)
+
+for(i in 1:ncol(RWD)) {
+  ADFD[i] <- summary(
+    dynlm(diff(RWD[, i], 1) ~ L(RWD[, i], 1)))$coef[2, 3]
+}
+
+# simular desde PIB con constante y tendencia
+RWDT <- ts(replicate(n = N, drift + trend + AR1(rho)))
+
+# calcular estadísticos de prueba de ADF y almacenarlos en 'ADFDT'
+ADFDT <- numeric(N)
+
+for(i in 1:ncol(RWDT)) {
+  ADFDT[i] <- summary(
+    dynlm(diff(RWDT[, i], 1) ~ L(RWDT[, i], 1) + trend(RWDT[, i]))
+  )$coef[2, 3]
+}
+```
+
+```{r, 812}
+# estimar cuantiles para la regresión ADF con una deriva
+round(quantile(ADFD, c(0.1, 0.05, 0.01)), 2)
+
+# estimar cuantiles para regresión ADF con deriva y tendencia
+round(quantile(ADFDT, c(0.1, 0.05, 0.01)), 2)
+```
+
+Los cuantiles estimados están cerca de los valores críticos de muestras grandes del estadístico de prueba ADF.
+
+| Regresores deterministas         | 10%    | 5%     | 1%    |
+|:---------------------------------|:-------|:-------|:------|
+| Intercepto solo                  | -2.57  | -2.86  | -3.43 |
+| Intercepto y tendencia temporal  | -3.12  | -3.41  | -3.96 |
+
+Table: (\#tab:DFcrits) Muestras grandes de valores críticos de la prueba ADF
+
+Los resultados muestran que el uso de valores críticos normales estándar es erróneo: El valor crítico del $5\%$ de la distribución normal estándar es $-1.64$. Para las distribuciones de Dickey-Fuller, los valores críticos estimados son $-2.87$ (deriva) y $-3.43$ (deriva y tendencia lineal en el tiempo). Esto implica que una verdadera hipótesis nula (la serie tiene una tendencia estocástica) se rechazaría con demasiada frecuencia si se usaran valores críticos normales inapropiados.
+
+Se pueden utilizar las estadísticas de prueba simuladas para una comparación gráfica de la densidad normal estándar y (estimaciones de) ambas densidades Dickey-Fuller.
+
+```{r, 813, fig.align='center'}
+# graficar densidad normal estándar
+curve(dnorm(x), 
+      from = -6, to = 3, 
+      ylim = c(0, 0.6), 
+      lty = 2,
+      ylab = "Densidad",
+      xlab = "Estadístico t",
+      main = "Distribuciones de estadísticos de prueba de ADF",
+      col = "darkred", 
+      lwd = 2)
+
+# gráficos de estimaciones de densidad de ambas distribuciones de Dickey-Fuller
+lines(density(ADFD), lwd = 2, col = "darkgreen")
+lines(density(ADFDT), lwd = 2, col = "blue")
+
+# add a legend
+legend("topleft", 
+       c("N(0,1)", "Deriva", "Deriva + Tendencia"),
+       col = c("darkred", "darkgreen", "blue"),
+       lty = c(2, 1, 1),
+       lwd = 2)
+```
+
+Las desviaciones de la distribución normal estándar son significativas: Ambas distribuciones Dickey-Fuller están sesgadas hacia la izquierda y tienen una cola izquierda más pesada que la distribución normal estándar.
+
+#### ¿Tiene el PIB de EE. UU. una raíz unitaria? {-}
+
+Como ejemplo empírico, se utiliza la prueba ADF para evaluar si existe una tendencia estocástica en el PIB de EE. UU. utilizando la regresión:
+
+\begin{align*}
+  \Delta\log(GDP_t) = \beta_0 + \alpha t + \beta_1 \log(GDP_{t-1}) + \beta_2 \Delta \log(GDP_{t-1}) + \beta_3 \Delta \log(GDP_{t-2}) + u_t.
+\end{align*}
+
+```{r, 814}
+# generar series de logaritmos del PIB
+LogGDP <- ts(log(GDP["1962::2012"]))
+
+# estimar el modelo
+coeftest(
+  dynlm(diff(LogGDP) ~ trend(LogGDP, scale = F) + L(LogGDP) 
+                     + diff(L(LogGDP)) + diff(L(LogGDP), 2)))
+```
+
+La estimación produce
+
+\begin{align*}
+  \Delta\log(GDP_t) =& \underset{(0.118)}{0.28} + \underset{(0.0001)}{0.0002} t -\underset{(0.014)}{0.033} \log(GDP_{t-1}) \\
+   & + \underset{(0.113)}{0.083} \Delta \log(GDP_{t-1}) + \underset{(0.071)}{0.188} \Delta \log(GDP_{t-2}) + u_t,
+\end{align*}
+
+por lo que el estadístico de prueba ADF es $t=-0.033/0.014 = - 2.35$. El valor crítico correspondiente de $5\%$ de la Tabla \@ref(tab:DFcrits) es $-3.41$, por lo que no se puede rechazar la hipótesis nula de que $\log(GDP)$ tiene una tendencia estocástica a favor de la alternativa que es estacionario alrededor de una tendencia de tiempo lineal determinista.
+
+La prueba ADF se puede realizar cómodamente usando **ur.df()** del paquete **urca**.
+
+```{r, 815}
+# prueba de raíz unitaria en el PIB usando 'ur.df()' del paquete 'urca'
+summary(ur.df(LogGDP, 
+              type = "trend", 
+              lags = 2, 
+              selectlags = "Fixed"))
+```
+
+La primera estadística de prueba en la parte inferior de la salida es la que interesa. La cantidad de estadísticas de prueba informadas depende de la regresión de la prueba. Para **type = "trend"**, la segunda estadística corresponde a la prueba de que no existe raíz unitaria ni tendencia temporal, mientras que la tercera corresponde a una prueba de la hipótesis de que existe una raíz unitaria, sin tendencia temporal ni término de deriva.
+
+## No estacionariedad II: Pausas {#NEIIP}
+
+Cuando existen cambios discretos (en una fecha distinta) o graduales (en el tiempo) en los coeficientes de regresión de la población, la serie es no estacionaria. Estos cambios se denominan *rupturas*. Existe una variedad de razones por las cuales pueden ocurrir rupturas en las series de tiempo macroeconómicas, pero la mayoría de las veces están relacionadas con cambios en la política económica o cambios importantes en la estructura de la economía.
+
+Si las rupturas no se tienen en cuenta en el modelo de regresión, las estimaciones de MCO reflejarán la relación promedio. Dado que estas estimaciones pueden ser muy engañosas y dar como resultado una previsión de baja calidad, se está interesado en probar las pausas. Se debe distinguir entre probar una pausa cuando se conoce la fecha y probar una pausa con una fecha es desconocida.
+
+Dejar que $\tau$ denote una fecha de ruptura conocida y sea $D_t(\tau)$ una variable binaria que indique períodos de tiempo antes y después de la ruptura. La incorporación de la ruptura en un modelo de regresión ADL($1$, $1$) produce:
+
+\begin{align*}
+  Y_t =& \beta_0 + \beta_1 Y_{t-1} + \delta_1 X_{t-1} + \gamma_0 D_t(\tau) + \gamma_1\left[D_t(\tau) \cdot Y_{t-1}\right] \\ 
+  &+ \, \gamma_2\left[ D_t(\tau) \cdot X_{t-1} \right] + u_t,
+\end{align*}
+
+donde se permiten cambios discretos en $\beta_0$, $\beta_1$ y $\beta_2$ en la fecha de ruptura $\tau$. La hipótesis nula de no ruptura, $$H_0: \gamma_0=\gamma_1=\gamma_2=0,$$ se puede contrastar con la alternativa de que al menos uno de los $\gamma$ no es cero usando una prueba $F$. Esta idea se llama prueba de Chow por Gregory @chow1960.
+
+Cuando se desconoce la fecha de ruptura, se puede utilizar la *prueba* [@quandt1960] mejor conocida como *razón de verosimilitud de Quandt* (QLR). Es una versión modificada de la prueba de Chow que utiliza el mayor de todos los estadísticos $F$ obtenidos al aplicar la prueba de Chow para todas las posibles fechas de ruptura en un rango predeterminado $\left[\tau_0,\tau_1\right]$. La prueba QLR se resume en el Concepto clave 14.9.
+
+```{r, 816, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.9">
+<h3 class = "right"> Concepto clave 14.9 </h3>
+<h3 class = "left"> La prueba QLR para la estabilidad del coeficiente </h3>
+<p>
+
+La prueba QLR se puede utilizar para probar una ruptura en la función de regresión de la población si se desconoce la fecha de la ruptura. El estadístico de prueba QLR es el estadístico más grande (Chow) $F(\\tau)$ calculado sobre un rango de fechas de ruptura elegibles $\\tau_0 \\leq \\tau \\leq \\tau_1$:
+
+\\begin{align}
+  QLR = \\max\\left[F(\\tau_0),F(\\tau_0 +1),\\dots,F(\\tau_1)\\right]. (\\#eq:QLRstatistic)
+\\end{align}
+</p>
+
+Las propiedades más importantes son:
+
++ La prueba QLR se puede aplicar para probar si un subconjunto de los coeficientes en la función de regresión de población se rompe, pero la prueba también rechaza si existe una evolución lenta de la función de regresión.
+
++ Cuando existe una sola ruptura discreta en la función de regresión poblacional que se encuentra en una fecha dentro del rango probado, el estadístico de prueba $QLR$ es $F(\\widehat{\\tau})$ y $\\widehat{\\tau}/T$ es un estimador consistente de la fracción de la muestra en la que se encuentra la ruptura.
+
++ La distribución de muestra grande de $QLR$ depende de $q$, el número de restricciones que se están probando y ambas razones de los puntos finales del tamaño de la muestra, $\\tau_0/T, \\tau_1/T$.
+
++ Similar a la prueba ADF, la distribución de muestra grande de $QLR$ no es estándar.
+
+</div>
+')
+```
+
+```{r, 817, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[La prueba QLR para la estabilidad del coeficiente]{14.9}
+
+La prueba QLR se puede utilizar para probar una ruptura en la función de regresión de la población si se desconoce la fecha de la ruptura. El estadístico de prueba QLR es el estadístico más grande (Chow) $F(\\tau)$ calculado sobre un rango de fechas de ruptura elegibles $\\tau_0 \\leq \\tau \\leq \\tau_1$:
+
+\\begin{align}
+  QLR = \\max\\left[F(\\tau_0),F(\\tau_0 +1),\\dots,F(\\tau_1)\\right]. \\label{eq:QLRstatistic}
+\\end{align}\\vspace{0.5cm}
+
+Las propiedades más importantes son:
+
+\\begin{itemize}
+\\item La prueba QLR se puede aplicar para probar si un subconjunto de los coeficientes en la función de regresión de población se rompe, pero la prueba también rechaza si existe una evolución lenta de la función de regresión.
+\\item Cuando existe una sola ruptura discreta en la función de regresión poblacional que se encuentra en una fecha dentro del rango probado, el estadístico de prueba $QLR$ es $F(\\widehat{\\tau})$ y $\\widehat{\\tau}/T$ es un estimador consistente de la fracción de la muestra en la que se encuentra la ruptura.
+\\item La distribución de muestra grande de $QLR$ depende de $q$, el número de restricciones que se están probando y ambas razones de los puntos finales del tamaño de la muestra, $\\tau_0/T, \\tau_1/T$. 
+\\item Similar a la prueba ADF, la distribución de muestra grande de $QLR$ no es estándar.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+#### ¿Se ha mantenido estable el poder predictivo del diferencial de plazo? {-}
+
+Usando el estadístico QLR se puede probar si existe una ruptura en los coeficientes de los rezagos del diferencial de plazo en \@ref(eq:gdpgradl22), el modelo de regresión ADL($2$, $2$) del crecimiento del PIB. Siguiendo el Concepto clave 14.9, se modifica la especificación de \@ref(eq:gdpgradl22) agregando una variable ficticia de ruptura $D(\tau)$ y sus interacciones con ambos rezagos del margen de plazo y se elige el rango de puntos de ruptura que se probarán como 1970:Q1 - 2005:Q2 (estos períodos son el centro del $70\%$ de los datos de la muestra que va de 1962:Q2 - 2012:Q4). Por tanto, el modelo se convierte en
+
+\begin{align*}
+    GDPGR_t =&\, \beta_0 + \beta_1 GDPGR_{t-1} + \beta_2 GDPGR_{t-2} \\
+            &+\,  \beta_3  TSpread_{t-1} + \beta_4 TSpread_{t-2} \\
+            &+\, \gamma_1 D(\tau) + \gamma_2 (D(\tau) \cdot TSpread_{t-1}) \\
+            &+\, \gamma_3 (D(\tau) \cdot TSpread_{t-2}) \\
+            &+\, u_t.
+\end{align*}
+
+A continuación, se estima el modelo para cada punto de ruptura y se calcula el estadístico $F$ correspondiente a la hipótesis nula $H_0: \gamma_1=\gamma_2=\gamma_3=0$. El estadístico $QLR$ es el más grande de los estadísticos $F$ obtenidos de esta manera.
+
+```{r, 818}
+# configurar un rango de posibles fechas de ruptura
+tau <- seq(1970, 2005, 0.25)
+
+# inicializar vector de estadísticos F
+Fstats <- numeric(length(tau))
+
+# ciclo de estimación sobre fechas de ruptura
+for(i in 1:length(tau)) {
+
+  # configurar variable ficticia
+  D <- time(GDPGrowth_ts) > tau[i]
+
+  # estimar el modelo ADL(2,2) con interacciones
+  test <- dynlm(GDPGrowth_ts ~ L(GDPGrowth_ts) + L(GDPGrowth_ts, 2) + 
+                D*L(TSpread_ts) + D*L(TSpread_ts, 2),
+                start = c(1962, 1), 
+                end = c(2012, 4))
+  
+  # calcular y guardar el estadístico F
+  Fstats[i] <- linearHypothesis(test, 
+                                c("DTRUE=0", "DTRUE:L(TSpread_ts)", 
+                                  "DTRUE:L(TSpread_ts, 2)"),
+                                vcov. = sandwich)$F[2]
+
+}
+```
+
+Se determina el estadístico $QLR$ usando **max()**.
+
+```{r, 819}
+# identificar el estadístico QLR
+QLR <- max(Fstats)
+QLR
+```
+
+Se comprueba que el estadístico $QLR$ es el estadístico $F$ obtenido para la regresión donde se elige 1980:Q4 como fecha de ruptura.
+
+```{r, 820}
+# identificar el período de tiempo en el que se observa el estadístico QLR
+as.yearqtr(tau[which.max(Fstats)])
+```
+
+Dado que se prueba las hipótesis $q = 3$ y se considera que el $70\%$ de los datos centrales de la muestra contienen rupturas, el valor crítico correspondiente de $1\%$ de la prueba $QLR$ es $6.02$. Se rechaza la hipótesis nula de que todos los coeficientes (los coeficientes en ambos rezagos del margen de plazo y la intersección) son estables, ya que el estadístico de $QLR$ calculado excede este umbral. Por lo tanto, la evidencia de la prueba $QLR$ sugiere que existe una ruptura en el modelo ADL($2$, $2$) de crecimiento del PIB a principios de los años ochenta.
+
+Se convierte el vector de estadísticos secuenciales de punto de ruptura $F$ en un objeto de serie de tiempo y luego se genera una gráfica simple con algunas anotaciones.
+
+```{r, 821, fig.align='center'}
+# serie de estadísticos F
+Fstatsseries <- ts(Fstats, 
+                   start = tau[1], 
+                   end = tau[length(tau)], 
+                   frequency = 4)
+
+# graficar los estadísticos F
+plot(Fstatsseries, 
+     xlim = c(1960, 2015),
+     ylim = c(1, 7.5),
+     lwd = 2,
+     col = "steelblue",
+     ylab = "Estadístico F",
+     xlab = "Fecha de ruptura",
+     main = "Prueba de una ruptura en la regresión del PIB ADL(2,2) en diferentes fechas")
+
+# líneas horizontales discontinuas para valores críticos y estadístico QLR
+abline(h = 4.71, lty = 2)
+abline(h = 6.02, lty = 2)
+segments(0, QLR, 1980.75, QLR, col = "darkred")
+text(2010, 6.2, "1% Valor crítico")
+text(2010, 4.9, "5% Valor crítico")
+text(1980.75, QLR+0.2, "Estadístico QLR")
+```
+
+#### Pronóstico pseudo fuera de la muestra {-}
+
+Los pronósticos pseudo fuera de la muestra se utilizan para simular el rendimiento fuera de la muestra (el rendimiento del pronóstico en tiempo real) de un modelo de regresión de series de tiempo. En particular, los pronósticos pseudo fuera de muestra permiten la estimación de los $EPRCM$ del modelo y permiten a los investigadores comparar diferentes especificaciones del modelo respecto de su poder predictivo. El Concepto clave 14.10 resume esta idea.
+
+```{r, 822, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC14.10">
+<h3 class = "right"> Concepto clave 14.10 </h3>
+<h3 class = "left"> Pronóstico pseudo fuera de la muestra </h3>
+1. Dividir los datos de la muestra en $s = T-P$ y $P$ observaciones subsiguientes. Las observaciones $P$ se utilizan como observaciones pseudo fuera de la muestra.
+
+2. Estimar el modelo usando las primeras $s$ observaciones.
+
+3. Calcular el pseudo-pronóstico $\\overset{\\sim}{Y}_{s+1\\vert s}$.
+
+4. Calcular el error de pseudo-pronóstico $\\overset{\\sim}{u}_{s+1} = Y_{s+1} - \\overset{\\sim}{Y}_{s+1\\vert s}$.
+
+5. Repetir los pasos del 2 al 4 para todas las fechas restantes pseudo-fuera de muestra; es decir, volver a estimar el modelo en cada fecha.
+</div>
+')
+```
+
+```{r, 823, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Pronóstico pseudo fuera de la muestra]{14.10}
+\\begin{enumerate}
+\\item Dividir los datos de la muestra en $s = T-P$ y $P$ observaciones subsiguientes. Las observaciones $P$ se utilizan como observaciones pseudo fuera de la muestra.
+\\item Estimar el modelo usando las primeras $s$ observaciones.
+\\item Calcular el pseudo-pronóstico $\\overset{\\sim}{Y}_{s+1\\vert s}$.
+\\item Calcular el error de pseudo-pronóstico $\\overset{\\sim}{u}_{s+1} = Y_{s+1} - \\overset{\\sim}{Y}_{s+1\\vert s}$.
+\\item Repetir los pasos del 2 al 4 para todas las fechas restantes pseudo-fuera de la muestra; es decir, volver a estimar el modelo en cada fecha.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+#### ¿Cambió el poder predictivo de la extensión del término durante la década de 2000? {-}
+
+El conocimiento adquirido en la sección anterior da razones para suponer que el desempeño pseudo-fuera de la muestra de los modelos de ADL($2$, $2$) estimados usando datos *después* de la ruptura a principios de la década de 1980 no deberían deteriorarse en relación con el uso de la muestra completa: Siempre que los coeficientes de la función de regresión poblacional sean estables después de la ruptura potencial en 1980:Q4, estos modelos deben tener un buen poder predictivo. Se verifica esto calculando pronósticos pseudo-fuera de la muestra para el período 2003:Q1 - 2012:Q4, un rango que cubre 40 períodos, donde el pronóstico para 2003:Q1 se realiza utilizando datos de 1981:Q1 - 2002:Q4, el pronóstico para 2003:Q2 se basa en datos de 1981:Q1 - 2003:Q1 y así sucesivamente.
+
+De manera similar, para la prueba $QLR$ se usa un bucle **for()** para la estimación de los 40 modelos y se recopila sus $SER$s y los pronósticos obtenidos en un vector que luego se usa para calcular pseudo errores de salida de pronóstico de la muestra.
+
+```{r, 824}
+# fechas de finalización de la muestra
+EndOfSample <- seq(2002.75, 2012.5, 0.25)
+
+# inicializar los pronósticos matriciales
+forecasts <- matrix(nrow = 1, 
+                    ncol = length(EndOfSample))
+
+# inicializar el vector SER
+SER  <- numeric(length(EndOfSample))
+
+# bucle de estimación al final de las fechas de muestra
+for(i in 1:length(EndOfSample)) {
+
+  # estimar modelo ADL(2,2)
+  m <- dynlm(GDPGrowth_ts ~ L(GDPGrowth_ts) + L(GDPGrowth_ts, 2) 
+                          + L(TSpread_ts) + L(TSpread_ts, 2), 
+                start = c(1981, 1), 
+                end = EndOfSample[i])
+  
+  SER[i] <- summary(m)$sigma
+  
+  # datos de muestra para el pronóstico de un período por delante
+  s <- window(ADLdata, EndOfSample[i] - 0.25, EndOfSample[i])
+  
+  # calcular pronóstico
+  forecasts[i] <- coef(m) %*% c(1, s[1, 1], s[2, 1], s[1, 2], s[2, 2]) 
+}
+```
+
+```{r, 825}
+# calcular errores de pronóstico psuedo fuera de muestra
+POOSFCE <- c(window(GDPGrowth_ts, c(2003, 1), c(2012, 4))) - forecasts
+```
+
+A continuación, se traducen los pronósticos pseudo fuera de la muestra en un objeto de clase **ts** y se grafica la tasa de crecimiento del PIB real contra la serie pronosticada.
+
+```{r, 826, fig.align='center'}
+# series de pronósticos pseudo fuera de la muestra
+PSOSSFc <- ts(c(forecasts), 
+              start = 2003, 
+              end = 2012.75, 
+              frequency = 4)
+
+# graficar la serie de tiempo de crecimiento del PIB
+plot(window(GDPGrowth_ts, c(2003, 1), c(2012, 4)),
+     col = "steelblue",
+     lwd = 2,
+     ylab = "Porcentaje",
+     main = "Pronósticos pseudo fuera de la muestra de crecimiento del PIB")
+
+# agregar la serie de pronósticos pseudo fuera de la muestra
+lines(PSOSSFc, 
+      lwd = 2, 
+      lty = 2)
+
+# área sombreada entre curvas (el error de pseudo pronóstico)
+polygon(c(time(PSOSSFc), rev(time(PSOSSFc))), 
+        c(window(GDPGrowth_ts, c(2003, 1), c(2012, 4)), rev(PSOSSFc)),
+        col = alpha("blue", alpha = 0.3),
+        border = NA)
+
+# agregar una leyenda
+legend("bottomleft", 
+       lty = c(1, 2, 1),
+       lwd = c(2, 2, 10),
+       col = c("steelblue", "black", alpha("blue", alpha = 0.3)), 
+       legend = c("Tasa de crecimiento real del PIB",
+         "Tasa de crecimiento del PIB pronosticada",
+         "Error de pseudo pronóstico"))
+```
+
+Aparentemente, los pseudo pronósticos siguen bastante bien la tasa de crecimiento real del PIB, excepto por el problema en 2009 que se puede atribuir a la reciente crisis financiera.
+
+El $SER$ del primer modelo (estimado con datos de 1981:Q1 a 2002:Q4) es $2.39$, por lo que, según el ajuste dentro de la muestra, se esperaría que los errores de pronóstico fuera de la muestra tengan una media cero y una raíz del error de pronóstico cuadrático medio de alrededor de $2.39$.
+
+```{r, 827}
+# SER del modo ADL(2,2) usando datos de 1981:Q1 - 2002:Q4
+SER[1]
+```
+
+La raíz del error de pronóstico cuadrático medio de los pronósticos pseudo fuera de muestra es algo mayor.
+
+```{r, 828}
+# calcular la raíz del error de pronóstico cuadrático medio
+sd(POOSFCE)
+```
+
+Una hipótesis interesante es si el error medio de pronóstico es cero; es decir, los pronósticos de ADL($2$, $2$) son correctos, en promedio. Esta hipótesis se prueba fácilmente usando la función **t.test()**.
+
+```{r, 829}
+# probar si el error medio de pronóstico es cero
+t.test(POOSFCE)
+```
+
+La hipótesis no puede rechazarse al nivel de significancia de $10\%$. En conjunto, el análisis sugiere que los coeficientes del modelo ADL($2$, $2$) se han mantenido estables desde la supuesta ruptura a principios de los años ochenta.
+
+## ¿Puedes ganarle al mercado? (Parte II)
+
+El rendimiento por dividendo (la relación entre los dividendos actuales y el precio de la acción) se puede considerar como un indicador de dividendos futuros: Si una acción tiene un rendimiento por dividendo actual alto, se puede considerar infravalorada y se puede presumir que el precio de la acción aumenta en el futuro, lo que significa que los rendimientos excedentes futuros aumentan.
+
+Esta presunción se puede examinar utilizando modelos ADL de exceso de rendimiento, donde los rezagos del logaritmo del rendimiento por dividendo de la acción sirven como regresores adicionales.
+
+Desafortunadamente, una inspección gráfica de la serie temporal del logaritmo del rendimiento por dividendo arroja dudas sobre el supuesto de que la serie es estacionaria, lo cual, como se discutió en el Capítulo \@ref(NEIT), es necesario para realizar inferencias estándar en un análisis de regresión.
+
+```{r, 830, fig.align='center'}
+# graficar el logaritmo de la serie de rendimiento de dividendos
+plot(StockReturns[, 2], 
+     col = "steelblue", 
+     lwd = 2, 
+     ylab = "Logaritmo", 
+     main = "Rendimiento de dividendos para el índice CRSP")
+```
+
+El estadístico de prueba de Dickey-Fuller para una raíz unitaria autorregresiva en un modelo AR($1$) con deriva proporciona más evidencia de que la serie podría ser no estacionaria.
+
+```{r, 831}
+# prueba de raíz unitaria en el PIB usando 'ur.df()' del paquete 'urca'
+summary(ur.df(window(StockReturns[, 2], 
+                     c(1960,1), 
+                     c(2002, 12)), 
+              type = "drift", 
+              lags = 0))
+```
+
+Se usa **window()** para obtener observaciones desde enero de 1960 hasta diciembre de 2012 únicamente.
+
+Dado que el valor $t$ para el coeficiente en el logaritmo rezagado del rendimiento por dividendo es $-1.27$, la hipótesis de que el coeficiente verdadero es cero no puede rechazarse, incluso en el nivel de significancia de $10\%$.
+
+Sin embargo, es posible examinar si el rendimiento por dividendo tiene poder predictivo para rendimientos en exceso utilizando sus diferencias en un modelo de ADL($1$, $1$) y ADL($2$, $2$) (recuerde que diferenciar una serie con un raíz unitaria produce una serie estacionaria), aunque estas especificaciones del modelo no corresponden al razonamiento económico mencionado anteriormente. Por lo tanto, también se estima una regresión ADL($1$, $1$) utilizando el nivel del logaritmo del rendimiento por dividendo.
+
+Es decir, se estiman tres especificaciones diferentes:
+
+\begin{align*}
+  excess \, returns_t =& \, \beta_0 + \beta_1 excess \, returns_{t-1} + \beta_3 \Delta \log(dividend yield_{t-1}) + u_t \\
+  \\
+  excess \, returns_t =& \, \beta_0 + \beta_1 excess \, returns_{t-1} + \beta_2 excess \, returns_{t-2} \\ &+ \, \beta_3 \Delta \log(dividend yield_{t-1}) + \beta_4 \Delta \log(dividend yield_{t-2}) + u_t \\
+  \\
+  excess \, returns_t =& \, \beta_0 + \beta_1 excess \, returns_{t-1} + \beta_5 \log(dividend yield_{t-1}) + u_t \\
+\end{align*}
+
+```{r, 832}
+# ADL(1,1) (1ª diferencia de rentabilidad por dividendo logarítmico)
+CRSP_ADL_1 <- dynlm(ExReturn ~ L(ExReturn) + d(L(ln_DivYield)), 
+                    data = StockReturns,
+                    start = c(1960, 1), end = c(2002, 12))
+
+# ADL(2,2) (1ª y 2ª diferencia de rentabilidad por dividendo logarítmico)
+CRSP_ADL_2 <- dynlm(ExReturn ~ L(ExReturn) + L(ExReturn, 2) 
+                    + d(L(ln_DivYield)) + d(L(ln_DivYield, 2)), 
+                    data = StockReturns,
+                    start = c(1960, 1), end = c(2002, 12))
+
+# ADL(1,1) (nivel de rendimiento de dividendos logarítmicos)
+CRSP_ADL_3 <- dynlm(ExReturn ~ L(ExReturn) + L(ln_DivYield),
+                    data = StockReturns,
+                    start = c(1960, 1), end = c(1992, 12))
+```
+
+```{r, 833}
+# recopilar errores estándar robustos
+rob_se_CRSP_ADL <- list(sqrt(diag(sandwich(CRSP_ADL_1))),
+                        sqrt(diag(sandwich(CRSP_ADL_2))),
+                        sqrt(diag(sandwich(CRSP_ADL_3))))
+```
+
+Luego se puede generar una representación tabular de los resultados usando **stargazer()**.
+
+```{r, 834, message=F, warning=F, results='asis', eval=F}
+stargazer(CRSP_ADL_1, CRSP_ADL_2, CRSP_ADL_3,
+  title = "Modelos ADL de la existencia de rendimientos excesivos mensuales",
+  header = FALSE, 
+  type = "latex",
+  column.sep.width = "-5pt",
+  no.space = T,
+  digits = 3, 
+  column.labels = c("ADL(1,1)", "ADL(2,2)", "ADL(1,1)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor CSRP",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", 
+                       "$excess return_{t-2}$", 
+                       "$1^{st} diff log(dividend yield_{t-1})$", 
+                       "$1^{st} diff log(dividend yield_{t-2})$", 
+                       "$log(dividend yield_{t-1})$", 
+                       "Constant"),
+  se = rob_se_CRSP_ADL) 
+```
+
+<!--html_preserve-->
+
+```{r, 835, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="html"}
+stargazer(CRSP_ADL_1, CRSP_ADL_2, CRSP_ADL_3,
+  header = FALSE, 
+  type = "html",
+  digits = 3, 
+  column.labels = c("ADL(1,1)", "ADL(2,2)", "ADL(1,1)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor de CSRP",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", "$excess return_{t-2}$", "$1^{st} diff log(dividend yield_{t-1})$", "$1^{st} diff log(dividend yield_{t-2})$", "$log(dividend yield_{t-1})$", "Constant"),
+  se = rob_se_CRSP_ADL,
+  no.space = T
+  )
+
+stargazer_html_title("Modelos ADL de la existencia de rendimientos excesivos mensuales", "adlmomesr")
+```
+
+<!--/html_preserve-->
+
+```{r, 836, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="latex"}
+stargazer(CRSP_ADL_1, CRSP_ADL_2, CRSP_ADL_3,
+  title = "\\label{tab:adlmomesr} ADL Models of Monthly Excess Stock Returns",
+  header = FALSE, 
+  type = "latex",
+  column.sep.width = "-5pt",
+  no.space = T,
+  digits = 3, 
+  column.labels = c("ADL(1,1)", "ADL(2,2)", "ADL(1,1)"),
+  dep.var.caption  = "Variable dependiente: Rendimientos excesivos en el índice ponderado por valor de CSRP",
+  dep.var.labels.include = FALSE,
+  covariate.labels = c("$excess return_{t-1}$", "$excess return_{t-2}$", "$1^{st} diff log(dividend yield_{t-1})$", "$1^{st} diff log(dividend yield_{t-2})$", "$log(dividend yield_{t-1})$", "Constant"),
+  se = rob_se_CRSP_ADL
+  ) 
+```
+
+Para los modelos (1) y (2), ninguna de las estadísticas individuales $t$ sugieren que los coeficientes sean diferentes de cero. Además, no se puede rechazar la hipótesis de que ninguno de los rezagos tiene poder predictivo de rendimientos excesivos en ningún nivel común de significancia (una prueba $F$ que los rezagos tienen poder predictivo no rechaza para ambos modelos).
+
+Las cosas son diferentes para el modelo (3). El coeficiente en el nivel del logaritmo del rendimiento por dividendo es diferente de cero en el nivel de $5\%$ y también se rechaza la prueba de $F$. Pero se debe sospechar: El alto grado de persistencia en la serie de rendimiento de dividendos probablemente hace que esta inferencia sea dudosa porque los estadísticos de $t$ y $F$ pueden seguir distribuciones que se desvían considerablemente de sus distribuciones teóricas de muestra grande, de modo que en el valor crítico habitual los valores no se pueden aplicar.
+
+Si el modelo (3) fuera útil para predecir rendimientos en exceso, los pronósticos pseudo fuera de la muestra basados en (3) deberían al menos superar los pronósticos de un modelo de solo intercepción en términos del EPRCM de muestra. Se puede realizar este tipo de comparación utilizando el código **R** a manera de las aplicaciones del Capítulo \@ref(NEIIP).
+
+```{r, 837, cache=T}
+# fechas de finalización de la muestra
+EndOfSample <- as.numeric(window(time(StockReturns), c(1992, 12), c(2002, 11)))
+
+# inicializar pronósticos matriciales
+forecasts <- matrix(nrow = 2, 
+                    ncol = length(EndOfSample))
+
+# bucle de estimación al final de las fechas de muestra
+for(i in 1:length(EndOfSample)) {
+
+  # modelo de estimación (3)
+  mod3 <- dynlm(ExReturn ~ L(ExReturn) + L(ln_DivYield), data = StockReturns, 
+                start = c(1960, 1), 
+                end = EndOfSample[i])
+  
+  # estimar modelo de solo intercepción
+  modconst <- dynlm(ExReturn ~ 1, data = StockReturns, 
+                start = c(1960, 1), 
+                end = EndOfSample[i])
+  
+  # datos de muestra para el pronóstico de un período por delante
+  t <- window(StockReturns, EndOfSample[i], EndOfSample[i])
+  
+  # calcular pronóstico
+  forecasts[, i] <- c(coef(mod3) %*% c(1, t[1], t[2]), coef(modconst))
+                     
+}
+```
+
+```{r, 838}
+# reunir datos
+d <- cbind("Excess Returns" = c(window(StockReturns[,1], c(1993, 1), c(2002, 12))),
+           "Model (3)" = forecasts[1,], 
+           "Intercept Only" = forecasts[2,], 
+           "Always Zero" =  0)
+
+# calcular EPRCM
+c("ADL model (3)" = sd(d[, 1] - d[, 2]),
+  "Intercept-only model" = sd(d[, 1] - d[, 3]),
+  "Always zero" = sd(d[,1] - d[, 4]))
+```
+
+La comparación indica que el modelo (3) no es útil, ya que el modelo de solo intercepto lo supera en términos de EPRCM de muestra. Un modelo que pronostica el exceso de rendimiento siempre en cero tiene un EPRCM de muestra aún más bajo. Este hallazgo es consistente con la hipótesis de eficiencia de forma débil que establece que toda la información disponible públicamente se contabiliza en los precios de las acciones de manera que no hay forma de predecir los precios futuros de las acciones o los rendimientos en exceso utilizando observaciones pasadas, lo que implica que la relación significativa percibida e indicada por el modelo (3) es incorrecta.
+
+#### Resumen {-}
+
+Este capítulo trató temas introductorios en el análisis de regresión de series de tiempo, donde las variables generalmente se correlacionan de una observación a la siguiente, un concepto denominado correlación serial. Se presentaron varias formas de almacenar y graficar datos de series de tiempo usando **R** y se usaron para el análisis informal de datos económicos.
+
+Se han introducido los modelos AR y ADL. Asimismo, se han aplicado en el contexto de la previsión de series de tiempo macroeconómicas y financieras utilizando **R**. La discusión también incluyó el tema de la selección de la duración de los rezagos. Se mostró cómo configurar una función simple que calcula el CIB para un objeto suministrado, como un modelo.
+
+También se ha visto cómo escribir un código **R** simple para realizar y evaluar pronósticos. De igual forma, se demostraron algunos enfoques más sofisticados para realizar pronósticos pseudo fuera de la muestra para evaluar el poder predictivo de un modelo para los resultados futuros no observados de una serie, para comprobar la estabilidad del modelo y comparar diferentes modelos.
+
+Además, se abordaron algunos aspectos más técnicos como el concepto de estacionariedad. Esto incluyó aplicaciones para probar una raíz unitaria autorregresiva con la prueba de Dickey-Fuller y la detección de una ruptura en la función de regresión poblacional usando el estadístico $QLR$. Para ambos métodos, la distribución del estadístico de prueba relevante no es normal, incluso en muestras grandes. Respecto a la prueba de Dickey-Fuller, se han utilizado las instalaciones de generación de números aleatorios de **R** para producir evidencia de esto por medio de una simulación de Monte-Carlo y el uso motivado de los cuantiles tabulados.
+
+De manera adicional, estudios empíricos sobre la validez de las hipótesis de eficiencia de forma débil y fuerte que se presentan en las aplicaciones *¿Puedes ganarle al mercado? Parte I y II* se han reproducido utilizando **R**.
+
+En todas las aplicaciones del presente capítulo, la atención se centró en pronosticar resultados futuros en lugar de estimar las relaciones causales entre las variables de series de tiempo. Sin embargo, los métodos necesarios para este último son bastante similares. El capítulo \@ref(EECD) está dedicado a la estimación de los llamados *efectos causales dinámicos*.

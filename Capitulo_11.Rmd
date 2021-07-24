@@ -1,0 +1,860 @@
+# Regresión con datos de panel {#RDP}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 566, child="_setup.Rmd"}
+```
+
+```{r, 567, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+La regresión utilizando datos de tipo panel puede mitigar el sesgo de la variable omitida cuando no existe información sobre las variables que se correlacionan tanto con los regresores de interés como con la variable independiente y si estas variables son constantes en la dimensión de tiempo o entre entidades. Siempre que se disponga de datos de panel, los métodos de regresión de panel pueden mejorar los modelos de regresión múltiple que, como se explica en el Capítulo \@ref(EEBRM), producen resultados que no son válidos internamente en dicho entorno.
+
+Este capitulo cubre los siguientes topicos:
+
+- Notación para datos de panel.
+- Regresión de efectos fijos usando efectos fijos de tiempo y/o entidad.
+- Cálculo de errores estándar en modelos de regresión de efectos fijos.
+
+Siguiendo con el curso, para las aplicaciones se utiliza el conjunto de datos **Fatalities** del paquete **AER** [@R-AER], que es un conjunto de datos de panel que informa sobre observaciones anuales a nivel estatal sobre muertes de tránsito en los EE. UU. para el período de 1982 a 1988. Las aplicaciones analizan si hay efectos de los impuestos sobre el alcohol y las leyes de conducción sobre el estado de ebriedad en las muertes en carretera y, si están presentes, *qué tan fuertes* son estos efectos.
+
+Se intruduce **plm()**, una conveniente función **R** que permite estimar modelos de regresión de panel lineal que viene con el paquete **plm** [@R-plm]. El uso de **plm()** es muy similar al de la función **lm()** que se ha utilizado a lo largo de los capítulos anteriores para la estimación de modelos de regresión simple y múltiple.
+
+Los siguientes paquetes y sus dependencias son necesarios para la reproducción de los fragmentos de código presentados a lo largo de este capítulo en su computadora:
+
++ **AER**
++ **plm** 
++ **stargazer**
+
+```{r, 568, warning=FALSE, message=FALSE, eval=FALSE}
+install.packages("AER")
+install.packages("plm")
+install.packages("stargazer")
+```
+
+Compruebe si el siguiente fragmento de código se ejecuta sin errores.
+
+```{r, 569, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(plm)
+library(stargazer)
+```
+
+## Datos de panel
+
+```{r, 570, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC10.1">
+<h3 class = "right"> Concepto clave 10.1 </h3>
+<h3 class = "left"> Notación para datos de panel </h3>
+
+En contraste con los datos de sección transversal donde se tienen observaciones sobre $n$ sujetos (entidades), los datos de panel tienen observaciones sobre $n$ entidades en períodos de tiempo $T\\geq2$. Esto se denota:
+
+$$(X_{it},Y_{it}), \\ i=1,\\dots,n \\ \\ \\ \\text{and} \\ \\ \\ t=1,\\dots,T $$
+
+donde el índice $i$ se refiere a la entidad mientras que $t$ se refiere al período de tiempo.
+
+</div>
+')
+```
+
+```{r, 571, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Notación para datos de panel]{10.1}
+
+En contraste con los datos de sección transversal donde se tienen observaciones sobre $n$ sujetos (entidades), los datos de panel tienen observaciones sobre $n$ entidades en períodos de tiempo $T\\geq2$. Esto se denota:
+
+$$(X_{it},Y_{it}), \\ i=1,\\dots,n \\ \\ \\ \\text{and} \\ \\ \\ t=1,\\dots,T $$
+
+donde el índice $i$ se refiere a la entidad mientras que $t$ se refiere al período de tiempo.
+
+\\end{keyconcepts}
+')
+```
+
+A veces, los datos de panel también se denominan datos longitudinales, ya que agregan una dimensión temporal a los datos transversales. Echando un vistazo al conjunto de datos **Fatalities** comprobando su estructura y enumerando las primeras observaciones.
+
+```{r, 572, warning=FALSE, message=FALSE}
+# cargar el paquete y el conjunto de datos
+library(AER)
+data(Fatalities)
+```
+
+```{r, 573, warning=FALSE, message=FALSE}
+# obtener la dimensión e inspeccionar la estructura
+is.data.frame(Fatalities)
+dim(Fatalities)
+```
+
+```{r, 574}
+str(Fatalities)
+```
+
+```{r, 575, warning=FALSE, message=FALSE}
+# enumerar las primeras observaciones
+head(Fatalities)
+```
+
+```{r, 576, warning=FALSE, message=FALSE}
+# resumir las variables 'state' y 'year'
+summary(Fatalities[, c(1, 2)])
+```
+
+Se encuentra que el conjunto de datos consta de 336 observaciones sobre 34 variables. Se puede observar que la variable **state** es una variable de factor con 48 niveles (uno para cada uno de los 48 estados federales contiguos de los EE. UU.).
+
+La variable **year** también es una variable factorial que tiene 7 niveles que identifican el período de tiempo en que se realizó la observación. Esto nos da $7\times48 = 336$ observaciones en total. Dado que todas las variables se observan para todas las entidades y durante todos los períodos de tiempo, el panel está *equilibrado*. Si faltaran datos para al menos una entidad en al menos un período de tiempo, se llamarían datos de panel *desequilibrado*.
+
+#### Ejemplo: Muertes por accidentes de tránsito e impuestos sobre el alcohol {-}
+
+Se debe comenzar con la creación de un gráfico. Para ello, se estiman regresiones simples utilizando datos de los años 1982 y 1988 que modelan la relación entre el impuesto a la cerveza (ajustado por dólares de 1988) y la tasa de fatalidades de tránsito, medida como el número de fatalidades por 10000 habitantes. Luego, se grafican los datos y se agregan las funciones de regresión estimadas correspondientes.
+
+```{r, 577}
+# definir la tasa de letalidad
+Fatalities$fatal_rate <- Fatalities$fatal / Fatalities$pop * 10000
+
+# subconjunto de los datos
+Fatalities1982 <- subset(Fatalities, year == "1982")
+Fatalities1988 <- subset(Fatalities, year == "1988")
+```
+
+```{r, 578, warning=FALSE, message=FALSE}
+# estimar modelos de regresión simple usando datos de 1982 y 1988
+fatal1982_mod <- lm(fatal_rate ~ beertax, data = Fatalities1982)
+fatal1988_mod <- lm(fatal_rate ~ beertax, data = Fatalities1988)
+
+coeftest(fatal1982_mod, vcov. = vcovHC, type = "HC1")
+coeftest(fatal1988_mod, vcov. = vcovHC, type = "HC1")
+```
+
+Las funciones de regresión estimadas son:
+
+\begin{align*}
+  \widehat{\text{Tasa de fatalidad}} =& \, \underset{(0.15)}{2.01} + \underset{(0.13)}{0.15} \times \text{Impuesto a la cerveza} \quad (\text{Datos de } 1982), \\
+  \widehat{\text{Tasa de fatalidad}} =& \, \underset{(0.11)}{1.86} + \underset{(0.13)}{0.44} \times \text{Impuesto a la cerveza} \quad (\text{Datos de } 1988).
+\end{align*}
+
+```{r, 579}
+# graficar las observaciones y agregar la línea de regresión estimada para los datos de 1982
+plot(x = Fatalities1982$beertax, 
+     y = Fatalities1982$fatal_rate, 
+     xlab = "Impuesto a la cerveza (en dólares de 1988)",
+     ylab = "Tasa de mortalidad (muertes por 10000)",
+     main = "Tasas de accidentes de tráfico e impuestos a la cerveza en 1982",
+     ylim = c(0, 4.5),
+     pch = 20, 
+     col = "steelblue")
+
+abline(fatal1982_mod, lwd = 1.5)
+
+# graficar las observaciones y agregar la línea de regresión estimada para los datos de 1988
+plot(x = Fatalities1988$beertax, 
+     y = Fatalities1988$fatal_rate, 
+     xlab = "Impuesto a la cerveza (en dólares de 1988)",
+     ylab = "Tasa de mortalidad (muertes por 10000)",
+     main = "Tasas de accidentes de tráfico e impuestos a la cerveza en 1988",
+     ylim = c(0, 4.5),
+     pch = 20, 
+     col = "steelblue")
+
+abline(fatal1988_mod, lwd = 1.5)
+```
+
+En ambas gráficas, cada punto representa las observaciones del impuesto a la cerveza y la tasa de mortalidad para un estado dado en el año respectivo. Los resultados de la regresión indican una relación positiva entre el impuesto a la cerveza y la tasa de letalidad para ambos años. El coeficiente estimado del impuesto a la cerveza para los datos de 1988 es casi tres veces mayor que el del conjunto de datos de 1988. Esto es contrario a las expectativas: Se supone que los impuestos sobre el alcohol *reducen* la tasa de accidentes de tránsito. Como se sabe por el Capítulo \@ref(MRVR), esto posiblemente se deba al sesgo de la variable omitida, ya que ambos modelos no incluyen ninguna covariable; por ejemplo, condiciones económicas. Esto podría corregirse mediante el uso de un enfoque de regresión múltiple. Sin embargo, esto no puede tener en cuenta los factores omitidos *no observables* que difieren de un estado a otro, pero se puede suponer que son constantes durante el período de observación; por ejemplo, la actitud de la población hacia la conducción bajo los efectos del alcohol. Como se muestra en la siguiente sección, los datos de panel nos permiten mantener dichos factores constantes.
+
+## Datos de panel con dos períodos de tiempo: Comparaciones "antes y después" {#DPDPTCAD}
+
+Suponga que solo existen $T = 2$ períodos de tiempo $t = 1982, 1988$. Esto permite analizar las diferencias en los cambios de la tasa de letalidad del año 1982 a 1988. Para empezar se debe considerar el modelo de regresión poblacional $$\text{Tasa de mortalidad}_{it} = \beta_0 + \beta_1 \text{Impuesto a la cerveza}_{it} + \beta_2 Z_{i} + u_{it}$$ donde $Z_i$ son características específicas del estado que difieren entre los estados pero que son *constantes en el tiempo*. Para $t = 1982$ y $t = 1988$ se tiene:
+
+\begin{align*}
+  \text{Tasa de mortalidad}_{i1982} =&\, \beta_0 + \beta_1 \text{Impuesto a la cerveza}_{i1982} + \beta_2 Z_i + u_{i1982}, \\
+  \text{Tasa de mortalidad}_{i1988} =&\, \beta_0 + \beta_1 \text{Impuesto a la cerveza}_{i1988} + \beta_2 Z_i + u_{i1988}.
+\end{align*}
+
+Se puede eliminar el $Z_i$ haciendo una regresión de la diferencia en la tasa de mortalidad entre 1988 y 1982 sobre la diferencia en el impuesto a la cerveza entre esos años:
+
+$$\text{Tasa de mortalidad}_{i1988} - \text{Tasa de mortalidad}_{i1982} = \\\\ \beta_1 (\text{Impuesto a la cerveza}_{i1988} - \text{Impuesto a la cerveza}_{i1982}) + u_{i1988} - u_{i1982}$$
+
+Este modelo de regresión arroja una estimación robusta de $\beta_1$, un posible sesgo debido a la omisión de $Z_i$, ya que estas influencias se eliminan del modelo. A continuación, se usa **R** para estimar una regresión basada en los datos diferenciados y se grafica la función de regresión estimada.
+
+```{r, 580}
+# calcular las diferencias
+diff_fatal_rate <- Fatalities1988$fatal_rate - Fatalities1982$fatal_rate
+diff_beertax <- Fatalities1988$beertax - Fatalities1982$beertax
+
+# estimar una regresión usando datos diferenciados
+fatal_diff_mod <- lm(diff_fatal_rate ~ diff_beertax)
+
+coeftest(fatal_diff_mod, vcov = vcovHC, type = "HC1")
+```
+
+La inclusión de la intersección permite un cambio en la tasa de mortalidad media en el período comprendido entre 1982 y 1988 en ausencia de un cambio en el impuesto a la cerveza.
+
+Se obtiene la función de regresión estimada de MCO $$\widehat{\text{Tasa de mortalidad}_{i1988} - \text{Tasa de mortalidad}_{i1982}} = \\\\ - \underset{(0.065)}{0.072} - \underset{(0.36)}{1.04} \times (\text{Impuesto a la cerveza}_{i1988} - \text{Impuesto a la cerveza}_{i1982}).$$
+
+```{r, 581, fig.align='center'}
+# graficar los datos diferenciados
+plot(x = diff_beertax, 
+     y = diff_fatal_rate, 
+     xlab = "Cambio en el impuesto a la cerveza (en dólares de 1988)",
+     ylab = "Cambio en la tasa de mortalidad (muertes por 10000)",
+     main = "Cambios en las tasas de mortalidad por accidentes de tráfico y los impuestos a la cerveza en 1982-1988",
+     xlim = c(-0.6, 0.6),
+     ylim = c(-1.5, 1),
+     pch = 20, 
+     col = "steelblue")
+
+# agregar la línea de regresión para graficar
+abline(fatal_diff_mod, lwd = 1.5)
+```
+
+El coeficiente estimado del impuesto a la cerveza es ahora negativo y significativamente diferente de cero a $5\%$. Su interpretación es que aumentar el impuesto a la cerveza en $\$1$ hace que las muertes por accidentes de tránsito disminuyan en $1.04$ por $10000$ personas. Esto es bastante grande ya que la tasa de mortalidad promedio es de aproximadamente $2$ personas por $10000$ personas.
+
+```{r, 582}
+# calcular la tasa de mortalidad media en todos los estados para todos los períodos de tiempo
+mean(Fatalities$fatal_rate)
+```
+
+Una vez más, es probable que este resultado sea una consecuencia de la omisión de factores en la regresión de un año que influyen en la tasa de mortalidad y están *correlacionados con el impuesto a la cerveza* y *cambian a lo largo del tiempo*. El mensaje es que se debe ser más cuidadoso y controlar esos factores antes de sacar conclusiones sobre el efecto de un aumento en los impuestos a la cerveza.
+
+El enfoque presentado en esta sección descarta información para los años $1983$ a $1987$. Un método que permite usar datos de más de $T = 2$ períodos de tiempo y permite agregar variables de control es el enfoque de regresión de efectos fijos.
+
+## Regresión de efectos fijos
+
+Considere el modelo de regresión de panel
+
+$$Y_{it} = \beta_0 + \beta_1 X_{it} + \beta_2 Z_i +  u_{it}$$
+
+donde $Z_i$ son heterogeneidades invariantes en el tiempo no observadas entre las entidades $i=1,\dots,n$. El objetivo es estimar $\beta_1$, el efecto en $Y_i$ de un cambio en $X_i$ manteniendo constante $Z_i$. Dejando $\alpha_i = \beta_0 + \beta_2 Z_i$ se obtiene el siguiente modelo:
+
+\begin{align}
+Y_{it} = \alpha_i + \beta_1 X_{it} + u_{it} (\#eq:femodel).
+\end{align}
+
+Teniendo intersecciones específicas individuales $\alpha_i$, $i=1,\dots,n$, donde cada una de estas puede entenderse como el efecto fijo de la entidad $i$, este modelo se llama *modelo de efectos fijos*.
+
+La variación en $\alpha_i$, $i=1,\dots,n$  proviene de $Z_i$. \@ref(eq:femodel) se puede reescribir como un modelo de regresión que contiene $n-1$ regresores ficticios y una constante:
+
+\begin{align}
+Y_{it} = \beta_0 + \beta_1 X_{it} + \gamma_2 D2_i + \gamma_3 D3_i + \cdots + \gamma_n Dn_i + u_{it} (\#eq:drmodel).
+\end{align}
+
+El modelo \@ref(eq:drmodel) tiene $n$ intersecciones diferentes --- una para cada entidad. \@ref(eq:femodel) y \@ref(eq:drmodel) son representaciones equivalentes del modelo de efectos fijos.
+
+El modelo de efectos fijos se puede generalizar para que contenga más de un determinante de $Y$ que está correlacionado con $X$ y cambia con el tiempo. El Concepto clave 10.2 presenta el modelo de regresión de efectos fijos generalizados.
+
+```{r, 583, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC10.2">
+<h3 class = "right"> Concepto clave 10.2 </h3>
+<h3 class = "left"> El modelo de regresión de efectos fijos </h3>
+
+El modelo de regresión de efectos fijos es
+
+\\begin{align}
+Y_{it} = \\beta_1 X_{1,it} + \\cdots + \\beta_k X_{k,it} + \\alpha_i + u_{it} (\\#eq:gfemodel)
+\\end{align}
+
+con $i=1,\\dots,n$ y $t=1,\\dots,T$. Los $\\alpha_i$ son intersecciones específicas de entidades que capturan heterogeneidades entre entidades. Una representación equivalente de este modelo viene dada por
+
+\\begin{align}
+Y_{it} = \\beta_0 + \\beta_1 X_{1,it} + \\cdots + \\beta_k X_{k,it} + \\gamma_2 D2_i + \\gamma_3 D3_i + \\cdots + \\gamma_n Dn_i  + u_{it} (\\#eq:gdrmodel)
+\\end{align}
+
+donde $D2_i,D3_i,\\dots,Dn_i$ son variables ficticias.
+
+</div>
+')
+```
+
+```{r, 584, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El modelo de regresión de efectos fijos]{10.2}
+
+El modelo de regresión de efectos fijos es
+
+\\begin{align}
+Y_{it} = \\beta_1 X_{1,it} + \\cdots + \\beta_k X_{k,it} + \\alpha_i + u_{it} \\label{eq:gfemodel}
+\\end{align}
+
+con $i=1,\\dots,n$ y $t=1,\\dots,T$. Los $\\alpha_i$ son intersecciones específicas de entidades que capturan heterogeneidades entre entidades. Una representación equivalente de este modelo viene dada por
+
+\\begin{align}
+Y_{it} = \\beta_0 + \\beta_1 X_{1,it} + \\cdots + \\beta_k X_{k,it} + \\gamma_2 D2_i + \\gamma_3 D3_i + \\cdots + \\gamma_n Dn_i  + u_{it} \\label{eq:gdrmodel}
+\\end{align}
+
+donde $D2_i,D3_i,\\dots,Dn_i$ son variables ficticias.
+
+\\end{keyconcepts}
+')
+```
+
+### Estimación e inferencia {-}
+
+Los paquetes de software utilizan el llamado algoritmo MCO "degradado por entidad" que es computacionalmente más eficiente que estimar modelos de regresión con $k + n$ regresores según sea necesario para los modelos \@ref(eq:gfemodel) y \@ref(eq:gdrmodel).
+
+Tomando promedios en ambos lados de \@ref(eq:femodel) se obtiene:
+
+\begin{align*}
+\frac{1}{n} \sum_{i=1}^n Y_{it} =& \, \beta_1 \frac{1}{n} \sum_{i=1}^n X_{it} + \frac{1}{n} \sum_{i=1}^n a_i + \frac{1}{n} \sum_{i=1}^n u_{it} \\
+\overline{Y} =& \, \beta_1 \overline{X}_i + \alpha_i + \overline{u}_i. 
+\end{align*}
+
+La resta de \@ref(eq:femodel) produce:
+
+\begin{align}
+\begin{split}
+Y_{it} - \overline{Y}_i =& \, \beta_1(X_{it}-\overline{X}_i) + (u_{it} - \overline{u}_i) \\
+\overset{\sim}{Y}_{it} =& \, \beta_1 \overset{\sim}{X}_{it} + \overset{\sim}{u}_{it}. 
+\end{split} (\#eq:edols)
+\end{align}
+
+En este modelo, la estimación de MCO del parámetro de interés $\beta_1$ es igual a la estimación obtenida usando \@ref(eq:drmodel) --- sin la necesidad de estimar $n-1$ ficticias y una intersección.
+
+Se concluye que existen dos formas de estimar $\beta_1$ en la regresión de efectos fijos:
+
+1. MCO del modelo de regresión ficticia como se muestra en \@ref(eq:drmodel)
+
+2. MCO usando los datos degradados de la entidad como en \@ref(eq:edols)
+
+Siempre que se cumplan los supuestos de regresión de efectos fijos establecidos en el Concepto clave 10.3, la distribución muestral del estimador de MCO en el modelo de regresión de efectos fijos es normal en muestras grandes. La varianza de las estimaciones puede estimarse y se pueden calcular errores estándar, estadísticos $t$ e intervalos de confianza para los coeficientes. En la siguiente sección, se ve cómo estimar un modelo de efectos fijos usando **R** y cómo obtener un resumen del modelo que reporta errores estándar robustos a la heterocedasticidad. Dejando de lado las complicadas fórmulas de los estimadores.
+
+### Aplicación a muertes por accidentes de tráfico {-}
+
+Siguiendo el Concepto clave 10.2, el modelo simple de efectos fijos para la estimación de la relación entre las tasas de accidentes de tránsito y los impuestos a la cerveza es
+
+\begin{align}
+\text{Tasa de fatalidad}_{it} = \beta_1 \text{Impuesto a la cerveza}_{it} + \text{Efectos fijos estatales} + u_{it}, (\#eq:fatsemod)
+\end{align}
+
+una regresión de la tasa de mortalidad por accidentes de tráfico en el impuesto a la cerveza y 48 regresores binarios, uno para cada estado federal.
+
+Simplemente se puede usar la función **lm()** para obtener una estimación de $\beta_1$.
+
+```{r, 585}
+fatal_fe_lm_mod <- lm(fatal_rate ~ beertax + state - 1, data = Fatalities)
+fatal_fe_lm_mod
+```
+
+Como se discutió en la sección anterior, también es posible estimar $\beta_1$ aplicando MCO a los datos degradados; es decir, para ejecutar la regresión:
+
+$$\overset{\sim}{\text{Tasa de fatalidad}} = \beta_1 \overset{\sim}{\text{Impuesto a la cerveza}}_{it} + u_{it}. $$
+
+```{r, 586, eval=F}
+# obtener datos degradados
+Fatalities_demeaned <- with(Fatalities,
+            data.frame(fatal_rate = fatal_rate - ave(fatal_rate, state),
+            beertax = beertax - ave(beertax, state)))
+
+# estimar la regresión
+summary(lm(fatal_rate ~ beertax - 1, data = Fatalities_demeaned))
+```
+
+La función **ave** es conveniente para calcular promedios de grupo. Se usa para obtener promedios estatales específicos de la tasa de mortalidad y el impuesto a la cerveza.
+
+Alternativamente, se puede usar **plm()** del paquete con el mismo nombre.
+
+```{r, 587, eval=-2, message=F, warning=F}
+# instalar y cargar el paquete 'plm'
+install.packages("plm")
+library(plm)
+```
+
+En cuanto a **lm()**, se tiene que especificar la fórmula de regresión y los datos que se utilizarán en la llamada de **plm()**. Además, se requiere pasar un vector con los nombres de cada entidad y variables de identificación de tiempo al argumento **index**. Para **Fatalities**, la variable de identificación de las entidades se denomina **state** y la variable de identificación de tiempo es **year**. Dado que el estimador de efectos fijos también se denomina *estimador interno*, se establece **model = "within"**. Finalmente, la función **coeftest()** permite obtener inferencias basadas en errores estándar robustos.
+
+```{r, 588}
+# estimar la regresión de efectos fijos con plm()
+fatal_fe_mod <- plm(fatal_rate ~ beertax, 
+                    data = Fatalities,
+                    index = c("state", "year"), 
+                    model = "within")
+
+# imprimir resumen usando errores estándar robustos
+coeftest(fatal_fe_mod, vcov. = vcovHC, type = "HC1")
+```
+
+El coeficiente estimado es de nuevo $-0.6559$. Se debe tener en cuenta que **plm()** utiliza el algoritmo MCO degradado por entidad y, por lo tanto, no informa coeficientes ficticios. La función de regresión estimada es
+
+\begin{align}
+\widehat{\text{Tasa de fatalidad}} = -\underset{(0.29)}{0.66} \times \text{Impuesto a la cerveza} + \text{Efectos fijos estatales}. (\#eq:efemod)
+\end{align}
+
+El coeficiente de $\text{Impuesto a la cerveza}$ es negativo y significativo. La interpretación es que la reducción estimada en las muertes por accidentes de tránsito debido a un aumento en el impuesto real a la cerveza en $\$1$ es de $0.66$ por $10000$ personas, lo que sigue siendo bastante alto. Si bien la inclusión de efectos fijos estatales elimina el riesgo de sesgo debido a factores omitidos que varían entre los estados, pero no a lo largo del tiempo, se sospecha que hay otras variables omitidas que varían con el tiempo y, por lo tanto, causan un sesgo.
+
+## Regresión con efectos fijos en el tiempo
+
+El control de las variables que son constantes entre entidades pero que varían con el tiempo se puede realizar al incluir efectos fijos en el tiempo. Si existe *solo efectos fijos de tiempo*, el modelo de regresión de efectos fijos se convierte en $$Y_{it} = \beta_0 + \beta_1 X_{it} + \delta_2 B2_t + \cdots + \delta_T BT_t + u_{it},$$ donde solo se incluyen variables ficticias $T-1$ (se omite $B1$), ya que el modelo incluye una intersección. Este modelo elimina el sesgo de variables omitidas causado por la exclusión de variables no observadas que evolucionan con el tiempo, pero son constantes en todas las entidades.
+
+En algunas aplicaciones, es significativo incluir efectos fijos tanto de entidad como de tiempo. El *modelo de efectos fijos de entidad y tiempo* es $$Y_{it} = \beta_0 + \beta_1 X_{it} + \gamma_2 D2_i + \cdots + \gamma_n DT_i + \delta_2 B2_t + \cdots + \delta_T BT_t + u_{it} .$$ El modelo combinado permite eliminar el sesgo de las variables inobservables que cambian con el tiempo, pero son constantes en las entidades y controla los factores que difieren entre las entidades pero que son constantes en el tiempo. Estos modelos se pueden estimar utilizando el algoritmo MCO que se implementa en **R**.
+
+El siguiente fragmento de código muestra cómo estimar la entidad combinada y el modelo de efectos fijos de tiempo de la relación entre las muertes y el impuesto a la cerveza, $$\text{Tasa de fatalidad}_{it} = \beta_1 \text{Impuesto a la cerveza}_{it} + \text{Efectos de estado} + \text{Efectos fijos de tiempo} + u_{it}$$ usando tanto **lm()** como **plm()**. Es sencillo estimar esta regresión con **lm()**, ya que es solo una extensión de \@ref(eq:fatsemod) por lo que solo se tiene que ajustar el argumento **formula** agregando el regresor adicional **year** para efectos fijos de tiempo. En la llamada de **plm()** se establece otro argumento **effect = "twoways"** para la inclusión de variables *ficticias de entidad* y *tiempo*.
+
+```{r, 589}
+# estimar un modelo de regresión combinado de efectos fijos de entidad y tiempo
+
+# a través de lm()
+fatal_tefe_lm_mod <- lm(fatal_rate ~ beertax + state + year - 1, data = Fatalities)
+fatal_tefe_lm_mod
+
+# a través de plm()
+fatal_tefe_mod <- plm(fatal_rate ~ beertax, 
+                      data = Fatalities,
+                      index = c("state", "year"), 
+                      model = "within", 
+                      effect = "twoways")
+
+coeftest(fatal_tefe_mod, vcov = vcovHC, type = "HC1")
+```
+
+Antes de discutir los resultados, se deben convencer de que **state** y **year** son de la clase **factor**.
+
+```{r, 590}
+# marcar la clase de 'state' y 'year'
+class(Fatalities$state)
+class(Fatalities$year)
+```
+
+Las funciones **lm()** convierten los factores en variables ficticias automáticamente. Dado que se excluye la intersección agregando **-1** al lado derecho de la fórmula de regresión, **lm()** estima los coeficientes para las variables binarias $n + (T-1) = 48 + 6 = 54$ (variables ficticias de 6 años y 48 variables ficticias estatales). Una vez más, **plm()** solo informa el coeficiente estimado en $Impuesto a la cerveza$.
+
+La función de regresión estimada es
+
+\begin{align}
+\widehat{\text{Tasa de fatalidad}} =  -\underset{(0.35)}{0.64} \times \text{Impuesto a la cerveza} + \text{Efectos de estado} + \text{Efectos fijos de tiempo}. (\#eq:cbnfemod)
+\end{align}
+
+El resultado $-0.66$ está cerca del coeficiente estimado para el modelo de regresión que incluye solo los efectos fijos de la entidad. Como era de esperar, el coeficiente se estima con menos precisión, pero es significativamente diferente de cero a $10\%$.
+
+En vista de \@ref(eq:efemod) y \@ref(eq:cbnfemod), se concluye que relación estimada entre las muertes por accidentes de tránsito y el impuesto real a la cerveza no se ve afectada por el sesgo de la variable omitida debido a factores que son constantes en el tiempo.
+
+## Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos {#SREFEEREF}
+
+Esta sección se centra en el modelo de efectos fijos de la entidad y presenta los supuestos del modelo que deben cumplirse para que MCO produzca estimaciones insesgadas que normalmente se distribuyen en muestras grandes. Estos supuestos son una extensión de los supuestos hechos para el modelo de regresión múltiple (ver Concepto clave 6.4) y se dan en el Concepto clave 10.3. También se discuten brevemente los errores estándar en los modelos de efectos fijos que difieren de los errores estándar en la regresión múltiple, ya que el error de regresión puede exhibir una correlación serial en los modelos de panel.
+
+```{r, 591, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC10.3">
+<h3 class = "right"> Concepto clave 10.3 </h3>
+<h3 class = "left"> Los supuestos de regresión de efectos fijos </h3>
+
+En el modelo de efectos fijos $$ Y_{it} = \\beta_1 X_{it} + \\alpha_i + u_{it} \\ \\ , \\ \\ i=1,\\dots,n, \\ t=1,\\dots,T, $$ se asume lo siguiente:
+
+1. El término de error $u_{it}$ tiene una media condicional cero; es decir, $E(u_{it}|X_{i1}, X_{i2},\\dots, X_{iT})$.
+2. $(X_{i1}, X_{i2}, \\dots, X_{i3}, u_{i1}, \\dots, u_{iT})$, $i=1,\\dots,n$ son i.i.d. extraidas de su distribución conjunta.
+3. Los valores atípicos grandes son poco probables; es decir, $(X_{it}, u_{it})$ tienen cuartos momentos finitos distintos de cero.
+4. No existe una multicolinealidad perfecta.
+
+Cuando existen varios regresores, $X_{it}$ se reemplaza por $X_{1,it}, X_{2,it}, \\dots, X_{k,it}$.
+
+</div>
+')
+```
+
+```{r, 592, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Los supuestos de regresión de efectos fijos]{10.3}
+En el modelo de efectos fijos $$ Y_{it} = \\beta_1 X_{it} + \\alpha_i + u_{it} \\ \\ , \\ \\ i=1,\\dots,n, \\ t=1,\\dots,T, $$ se asume lo siguiente:\\newline
+
+\\begin{enumerate}
+\\item El término de error $u_{it}$ tiene una media condicional cero; es decir, $E(u_{it}|X_{i1}, X_{i2},\\dots, X_{iT})$.
+\\item $(X_{i1}, X_{i2}, \\dots, X_{i3}, u_{i1}, \\dots, u_{iT})$, $i=1,\\dots,n$ son i.i.d. extraidas de su distribución conjunta.
+\\item Los valores atípicos grandes son poco probables; es decir, $(X_{it}, u_{it})$ tienen cuartos momentos finitos distintos de cero.
+\\item No existe una multicolinealidad perfecta.
+\\end{enumerate}\\vspace{0.5cm}
+
+Cuando existen varios regresores, $X_{it}$ se reemplaza por $X_{1,it}, X_{2,it}, \\dots, X_{k,it}$.
+
+\\end{keyconcepts}
+')
+```
+
+La primera suposición es que el error no está correlacionado con *todas* las observaciones de la variable $X$ para la entidad $i$ a lo largo del tiempo. Si se viola este supuesto, se enfrenta al sesgo de las variables omitidas. El segundo supuesto asegura que las variables sean i.i.d. *en* entidades $i=1,\dots,n$. Esto no requiere que las observaciones no estén correlacionadas *dentro* de una entidad. Los $X_{it}$ pueden estar *autocorrelacionados* dentro de las entidades. Ésta es una propiedad común de los datos de series de tiempo. Lo mismo se permite para los errores $u_{it}$. Consulte el Capítulo \@ref(SREFEEREF) para obtener una explicación detallada de por qué la autocorrelación es plausible en aplicaciones de panel. El segundo supuesto se justifica si las entidades se seleccionan mediante muestreo aleatorio simple. Los supuestos tercero y cuarto son análogos a los supuestos de regresión múltiple realizados en el Concepto clave 6.4.
+
+#### Errores estándar para regresión de efectos fijos {-}
+
+Al igual que para la heterocedasticidad, la autocorrelación invalida las fórmulas de error estándar habituales, así como los errores estándar robustos a la heterocedasticidad, ya que estos se derivan bajo el supuesto de que no hay autocorrelación. Cuando existe *heterocedasticidad* y *autocorrelación*, es necesario utilizar los llamados *errores estándar de heterocedasticidad y autocorrelación consistente (HAC)*. *Los errores estándar agrupados* pertenecen a este tipo de errores estándar. Permiten heterocedasticidad y errores autocorrelacionados dentro de una entidad, pero *no correlación entre entidades*.
+
+Como se muestra en los ejemplos a lo largo de este capítulo, es bastante fácil especificar el uso de errores estándar agrupados en resúmenes de regresión producidos por funciones como **coeftest()** junto con **vcovHC()** del paquete **sandwich**. Convenientemente, **vcovHC()** reconoce los objetos del modelo de panel (objetos de la clase **plm**) y calcula los errores estándar agrupados de forma predeterminada.
+
+Las regresiones realizadas en este capítulo son un buen ejemplo de por qué el uso de errores estándar agrupados es crucial en aplicaciones empíricas de modelos de efectos fijos. Por ejemplo, considere el modelo de efectos fijos de entidad y tiempo para fatalidades. Dado que **fatal_tefe_lm_mod** es un objeto de la clase **lm**, **coeftest()** no calcula los errores estándar agrupados, sino que utiliza errores estándar robustos que solo son válidos en ausencia de errores autocorrelacionados.
+
+```{r, 593}
+# comprobar la clase del objeto modelo
+class(fatal_tefe_lm_mod)
+
+# obtener un resumen basado en errores estándar robustos a heterocedasticidad
+# (sin ajuste solo por heterocedasticidad)
+coeftest(fatal_tefe_lm_mod, vcov = vcovHC, type = "HC1")[1, ]
+
+# comprobar la clase del objeto modelo (plm)
+class(fatal_tefe_mod)
+
+# obtener un resumen basado en los errores estándar de clusterd
+# (ajuste por autocorrelación + heterocedasticidad)
+coeftest(fatal_tefe_mod, vcov = vcovHC, type = "HC1")
+```
+
+Los resultados difieren bastante: Al no imponer autocorrelación, se obtiene un error estándar de $0.25$ que implica una significancia de $\hat\beta_1$, el coeficiente de $\text{Impuesto a la cerveza}$ al nivel de $5\%$. Por el contrario, usar el error estándar agrupado $0.35$ conduce a la aceptación de la hipótesis $H_0: \beta_1 = 0$ en el mismo nivel, ver ecuación \@ref(eq:cbnfemod).
+
+## Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico
+
+Existen dos fuentes principales de sesgo de variables omitidas que no se tienen en cuenta en todos los modelos de la relación entre accidentes de tránsito e impuestos a la cerveza que se han considerado hasta ahora: Las condiciones económicas y las leyes de conducción. Afortunadamente, **Fatalities** tiene datos sobre la edad legal para beber (**drinkage**), castigo (**jail**, **service**) y varios indicadores económicos como la tasa de desempleo (**unemp**) y la renta per cápita (**income**). Se pueden utilizar estas covariables para ampliar el análisis anterior.
+
+Estas covariables se definen de la siguiente manera:
+
+- **unemp**: Una variable numérica que indica la tasa de desempleo específica del estado.
+- **log(income)**: El logaritmo del ingreso real per cápita (en precios de 1988).
+- **miles**: El promedio estatal de millas por conductor.
+- **drinkage**: El estado especifica la edad mínima legal para beber.
+- **drinkagc**: Una versión discretizada de **drinkage** que clasifica los estados en cuatro categorías de edad mínima para beber; $18$, $19$, $20$, $21$ y mayores. **R** denota esto como **[18, 19)**, **[19, 20)**, **[20, 21)** y **[21, 22]**. Estas categorías se incluyen como regresores ficticios donde **[21, 22]** se elige como categoría de referencia.
+- **punish**: Una variable ficticia con niveles **yes** y **no** que mide si conducir en estado de ebriedad es severamente castigado con encarcelamiento obligatorio o servicio comunitario obligatorio (primera condena).
+
+Al principio, se definen las variables de acuerdo con los resultados de la regresión presentados en una tabla.
+
+```{r, 594}
+# discretizar la edad mínima legal para beber
+Fatalities$drinkagec <- cut(Fatalities$drinkage,
+                            breaks = 18:22, 
+                            include.lowest = TRUE, 
+                            right = FALSE)
+
+# establecer la edad mínima para beber [21, 22] como el nivel de referencia
+Fatalities$drinkagec <- relevel(Fatalities$drinkagec, "[21,22]")
+
+# ¿cárcel privada o servicio comunitario?
+Fatalities$punish <- with(Fatalities, factor(jail == "yes" | service == "yes", 
+                                             labels = c("no", "yes")))
+
+# el conjunto de observaciones sobre todas las variables para 1982 y 1988
+Fatalities_1982_1988 <- Fatalities[with(Fatalities, year == 1982 | year == 1988), ]
+```
+
+A continuación, se estiman los siete modelos utilizando **plm()**.
+
+```{r, 595}
+# estimar los siete modelos
+fatalities_mod1 <- lm(fatal_rate ~ beertax, data = Fatalities)
+
+fatalities_mod2 <- plm(fatal_rate ~ beertax + state, data = Fatalities)
+
+fatalities_mod3 <- plm(fatal_rate ~ beertax + state + year,
+                       index = c("state","year"),
+                       model = "within",
+                       effect = "twoways", 
+                       data = Fatalities)
+
+fatalities_mod4 <- plm(fatal_rate ~ beertax + state + year + drinkagec 
+                       + punish + miles + unemp + log(income), 
+                       index = c("state", "year"),
+                       model = "within",
+                       effect = "twoways",
+                       data = Fatalities)
+
+fatalities_mod5 <- plm(fatal_rate ~ beertax + state + year + drinkagec 
+                       + punish + miles,
+                       index = c("state", "year"),
+                       model = "within",
+                       effect = "twoways",
+                       data = Fatalities)
+
+fatalities_mod6 <- plm(fatal_rate ~ beertax + year + drinkage 
+                       + punish + miles + unemp + log(income), 
+                       index = c("state", "year"),
+                       model = "within",
+                       effect = "twoways",
+                       data = Fatalities)
+
+fatalities_mod7 <- plm(fatal_rate ~ beertax + state + year + drinkagec 
+                       + punish + miles + unemp + log(income), 
+                       index = c("state", "year"),
+                       model = "within",
+                       effect = "twoways",
+                       data = Fatalities_1982_1988)
+```
+
+De nuevo, se usa **stargazer()** [@R-stargazer] para generar una presentación tabular completa de los resultados.
+
+```{r, 596, message=F, warning=F, results='asis', eval=F}
+library(stargazer)
+
+# recopilar errores estándar agrupados en una lista
+rob_se <- list(sqrt(diag(vcovHC(fatalities_mod1, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod2, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod3, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod4, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod5, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod6, type = "HC1"))),
+               sqrt(diag(vcovHC(fatalities_mod7, type = "HC1"))))
+
+# generar la tabla
+stargazer(fatalities_mod1, fatalities_mod2, fatalities_mod3, 
+          fatalities_mod4, fatalities_mod5, fatalities_mod6, fatalities_mod7, 
+          digits = 3,
+          header = FALSE,
+          type = "latex", 
+          se = rob_se,
+          title = "Modelos de regresión lineal de panel de accidentes mortales debido a conducción en estado de ebriedad",
+          model.numbers = FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)"))
+```
+
+<!--html_preserve-->
+
+```{r, 597, message=F, warning=F, results='asis', echo=F, eval=my_output == "html"}
+library(stargazer)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(fatalities_mod1, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod2, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod3, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod4, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod5, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod6, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod7, type="HC1")))
+)
+
+stargazer(fatalities_mod1, fatalities_mod2, fatalities_mod3, fatalities_mod4, fatalities_mod5, fatalities_mod6, fatalities_mod7, 
+          digits = 3,
+          type = "html",
+          header = FALSE,
+          se = rob_se,
+          dep.var.caption = "Variable dependiente: Tasa de mortalidad",
+          model.numbers = FALSE,
+          column.labels = c("(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)")
+          )
+
+stargazer_html_title("Modelos de regresión lineal de panel de accidentes mortales debido a conducción en estado de ebriedad", "lprmotfdtdd")
+```
+
+<!--/html_preserve-->
+
+```{r, 598, message=F, warning=F, results='asis', echo=F, eval=my_output == "latex"}
+library(stargazer)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(fatalities_mod1, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod2, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod3, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod4, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod5, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod6, type="HC1"))),
+  sqrt(diag(vcovHC(fatalities_mod7, type="HC1")))
+)
+
+stargazer(fatalities_mod1, fatalities_mod2, fatalities_mod3, fatalities_mod4, fatalities_mod5, fatalities_mod6, fatalities_mod7, 
+          digits = 3,
+          type = "latex",
+          float.env = "sidewaystable",
+          column.sep.width = "-5pt",
+          se = rob_se,
+          header = FALSE,
+          model.names = FALSE,
+          column.labels = c('MCO','','','Regresión de panel lineal'),
+          omit.stat = "f",
+          title = "\\label{tab:lprmotfdtdd} Modelos de regresión lineal de panel de accidentes mortales debido a conducción en estado de ebriedad")
+```
+
+Mientras que las columnas (2) y (3) recapitulan los resultados \@ref(eq:efemod) y \@ref(eq:cbnfemod), la columna (1) presenta una estimación del coeficiente de interés en la regresión MCO ingenua de la tasa de fatalidad sobre el impuesto a la cerveza sin efectos fijos. Se obtiene una estimación *positiva* para el coeficiente del impuesto a la cerveza que probablemente tenga un sesgo al alza. El ajuste del modelo también es bastante malo ($\bar{R}^2 = 0.091$). El signo de la estimación cambia a medida que se amplía el modelo por efectos fijos tanto de entidad como de tiempo en los modelos (2) y (3). Además, $\bar{R}^2$ aumenta sustancialmente a medida que se incluyen efectos fijos en la ecuación del modelo. No obstante, como se discutió anteriormente, las magnitudes de ambas estimaciones pueden ser demasiado grandes.
+
+Las especificaciones del modelo (4) a (7) incluyen covariables que deben capturar el efecto de las condiciones económicas estatales generales, así como el marco legal. Considerando (4) como la especificación de línea de base, se observan cuatro resultados interesantes:
+
+1. La inclusión de las covariables no conduce a una reducción importante del efecto estimado del impuesto a la cerveza. El coeficiente no es significativamente diferente de cero al nivel de $5\%$, ya que la estimación es bastante imprecisa.
+
+2. La edad mínima legal para beber *no* tiene un efecto sobre las muertes por accidentes de tránsito: Ninguna de las tres variables ficticias es significativamente diferente de cero en ningún nivel común de significancia. Además, una prueba $F$ de la hipótesis conjunta de que los tres coeficientes son cero no rechaza la hipótesis nula. El siguiente fragmento de código muestra cómo probar esta hipótesis.
+
+```{r, 599}
+# probar si la edad legal para consumir alcohol no tiene poder explicativo
+linearHypothesis(fatalities_mod4,
+                 test = "F",
+                 c("drinkagec[18,19)=0", "drinkagec[19,20)=0", "drinkagec[20,21)"), 
+                 vcov. = vcovHC, type = "HC1")
+```
+
+3. No existe evidencia de que el castigo para los primeros infractores tenga un efecto disuasorio sobre la conducción en estado de ebriedad: El coeficiente correspondiente no es significativo al nivel de $10\%$.
+
+4. Las variables económicas explican significativamente las muertes por accidentes de tránsito. Se puede comprobar que la tasa de empleo y el ingreso per cápita son conjuntamente significativos al nivel de $0.1\%$.
+
+```{r, 600}
+# probar si los indicadores económicos no tienen poder explicativo
+linearHypothesis(fatalities_mod4, 
+                 test = "F",
+                 c("log(income)", "unemp"), 
+                 vcov. = vcovHC, type = "HC1")
+```
+
+El modelo (5) omite los factores económicos. El resultado apoya la noción de que los indicadores económicos deben permanecer en el modelo, ya que el coeficiente del impuesto a la cerveza es sensible a la inclusión de este último.
+
+Los resultados del modelo (6) demuestran que la edad legal para beber tiene poco poder explicativo y que el coeficiente de interés no es sensible a los cambios en la forma funcional de la relación entre la edad para beber y las muertes por accidentes de tránsito.
+
+La especificación (7) revela que reducir la cantidad de información disponible (aquí solo se usan 95 observaciones para el período 1982 a 1988) infla los errores estándar pero no conduce a cambios drásticos en las estimaciones de los coeficientes.
+
+#### Resumen {-}
+
+No se ha encontrado evidencia de que los castigos severos y el aumento de la edad mínima para beber reduzcan las muertes por accidentes de tránsito debido a la conducción en estado de ebriedad. No obstante, parece haber un efecto negativo de los impuestos sobre el alcohol en las muertes por accidentes de tránsito que; sin embargo, se estima de manera imprecisa y no puede interpretarse como el efecto causal de interés, ya que aún puede haber un sesgo. El problema es que puede haber variables omitidas que *difieren entre los estados* y *cambian con el tiempo, dicho sesgo permanece a pesar de que se usa un enfoque de panel que controla las variables no observables invariantes en el tiempo y específicos de la entidad.
+
+Un método poderoso que se puede utilizar si los enfoques de regresión de panel comunes fallan es la regresión de variables instrumentales. Se volverá a este concepto en el capítulo \@ref(RVI).
+
+## Ejercicios {#Ejercicios-10}
+
+```{r, 601, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+
+En el transcurso de esta sección, trabajará con <tt>Guns</tt>, un panel equilibrado que contiene observaciones sobre variables criminales y demográficas para todos los estados de EE. UU. entre los años 1977-1999. El conjunto de datos viene con el paquete <tt>AER</tt> que ya está instalado para los ejercicios de R interactivos a continuación.
+
+<div  class = "DCexercise">
+
+#### 1. El conjunto de datos de armas {-}
+
+**Instrucciones:**
+
+  + Cargar el paquete <tt>AER</tt> y el conjunto de datos <tt>Guns</tt>. 
+  + Obtener una descripción general del conjunto de datos utilizando la función <tt>summary()</tt>. Utilizar <tt>?Guns</tt> para obtener información detallada sobre las variables.
+  + Verificar que <tt>Guns</tt> sea un panel equilibrado: Extraer el número de años y estados del conjunto de datos y asignarlos a las variables predefinidas <tt>years</tt> y <tt>states</tt>, respectivamente. Luego usar estas variables para una comparación lógica: Verificar que el panel esté balanceado.
+
+<iframe src="DCL/ex10_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+        
+**Sugerencias:**
+  
+  + Usar <tt>library()</tt> y <tt>data()</tt> para adjuntar el paquete y cargar el conjunto de datos, respectivamente.
+  + Utilizar <tt>summary()</tt> para obtener una descripción general completa del conjunto de datos.
+  + Recordar que en un panel balanceado el número de entidades multiplicado por el número de años es igual al número total de observaciones en el conjunto de datos. Las funciones básicas <tt>levels()</tt>, <tt>length()</tt> y <tt>nrow()</tt> pueden ser útiles.
+
+</div>') } else {
+  cat("\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}")
+}
+```
+
+```{r, 602, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2.¿Estricto o suelto? Leyes sobre armas y el efecto sobre el crimen I {-}
+
+Existe un debate controvertido sobre si el derecho a portar un arma influye en el crimen y en qué medida. Los defensores de las leyes de "porte de armas ocultas" (CCW) argumentan que el efecto disuasorio de las armas previene el delito, mientras que los opositores argumentan que la disponibilidad pública de armas aumenta su uso y, por lo tanto, facilita la comisión de delitos. En los siguientes ejercicios investigará empíricamente este tema.
+
+Para empezar, considere el siguiente modelo estimado
+
+$$\\widehat{{\\log(violent_i)}} = 6.135 - 0.443 \\times law_i,$$
+
+con $i=1,\\ldots,51$ donde <tt>violent</tt> es la tasa de delitos violentos (incidentes por cada 100000 residentes) y <tt>law</tt> es una variable binaria que indica la implementación de una Ley de la CCW (1 = sí, 0 = no), respectivamente.
+
+El modelo estimado está disponible como <tt>model</tt> en su entorno de trabajo. Se han cargado los paquetes <tt>AER</tt> y <tt>plm</tt>.
+      
+**Instrucciones:**
+        
+  + Ampliar y estimar el modelo incluyendo efectos fijos de estado usando la función <tt>plm()</tt> y asignar el objeto del modelo a la variable predefinida <tt>model_se</tt>. ¿Puede pensar en una variable no observada que sea capturada por esta especificación de modelo?
+  + Imprimir un resumen del modelo que informe los errores estándar robustos del clúster.
+  + Probar si los efectos de estado fijo son conjuntamente significativos desde cero. Para hacerlo, utilizar la funcióntion <tt>pFtest()</tt>. Usar <tt>?pFtest</tt> para información adicional.
+
+<iframe src="DCL/ex10_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+  
+  + La función <tt>plm()</tt> le permite realizar regresiones con datos de panel y funciona de manera muy similar a <tt>lm()</tt>. Debe especificar la entidad y los indicadores de tiempo dentro como un vector usando el argumento <tt>index</tt> y especificar el estimador que se usará con el argumento <tt>model</tt> (para el estimador de efectos fijos; esto es, <tt>"dentro de o within"</tt>).
+  + Como de costumbre, se puede usar <tt>coeftest()</tt> junto con los argumentos apropiados para obtener una salida resumida con errores estándar robustos.
+  + <tt>pFtest()</tt> espera dos objetos modelo. El primer modelo incluye efectos fijos, el segundo no.
+
+</div>')
+}
+```
+
+```{r, 603, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. ¿Estricto o suelto? Leyes de armas y el efecto sobre el crimen II{-}
+
+Como se mencionó al final del último ejercicio, es razonable incluir también los efectos de tiempo, por lo que ahora se considera el siguiente modelo:
+
+\\begin{align}\\log(violent_i)  & = \\beta_1\\times law_i + \\alpha_i + \\lambda_t + u_i,\\end{align}
+
+para $i=1,\\ldots,51$ y $t=1977,\\ldots,1999$.
+
+Los modelos <tt>model</tt> y <tt>model_se</tt> de los ejercicios anteriores están disponibles en el entorno de trabajo. Se han adjuntado los paquetes <tt>AER</tt> y <tt>plm</tt>.
+
+**Instrucciones:**
+        
+  + Estimar el modelo anterior y asignarlo a la variable <tt>model_sete</tt> usando <tt>plm()</tt>.
+  + Imprimir un resumen del modelo que informe errores estándar robustos.
+  + Probar si los efectos fijos de estado y de tiempo son conjuntamente significativos.
+
+<iframe src="DCL/ex10_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+  
+  + Para incorporar adicionalmente efectos fijos de tiempo, se puede establecer el argumento <tt>effect = "twoways"</tt> dentro de <tt>plm()</tt>.
+  + Se debe tomar en cuenta que se quiere probar si los efectos fijos de *estado* y *tiempo* son conjuntamente significativos.
+  
+</div>')
+}
+```
+
+```{r, 604, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. ¿Estricto o suelto? Leyes de armas y el efecto sobre el crimen III {-}
+
+A pesar de la evidencia de los efectos del estado y del tiempo encontrada en el ejercicio 3, aún podría haber un sesgo debido a las variables omitidas, como las características sociodemográficas. El siguiente modelo da cuenta de este último:
+
+\\begin{align}\\log(violent_i)  & = \\beta_1\\times law_i + \\beta_2\\times density_i + \\beta_3\\times income_i + \\beta_4\\times population_i \\\\&\\quad + \\beta_5\\times afam_i + \\beta_6\\times cauc_i + \\beta_7\\times male_i + \\alpha_i + \\lambda_t + u_i.\\end{align}
+
+Consultar <tt>?Guns</tt> para obtener información detallada sobre las variables adicionales.
+
+Se han cargado los paquetes <tt>AER</tt> y <tt>plm</tt>.
+
+**Instrucciones:**
+        
+  + Estimar el modelo extendido y asígnarlo a la variable predefinida <tt>model_sete_ext</tt>.
+  + Imprimir un resumen sólido del modelo estimado. ¿Qué puede decir sobre el efecto de una ley de CCW?
+
+<iframe src="DCL/ex10_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')
+}
+```
+
+```{r, 605, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Regresión de efectos fijos: Dos períodos de tiempo {-}
+
+Recuerde el modelo de efectos fijos del ejercicio 10.2, pero ahora suponga que solo tiene observaciones para los años 1978 y 1984. Considere las dos especificaciones del modelo
+
+\\begin{align}
+\\log(violent_{i1984}) - \\log(violent_{i1978}) = \\beta_{BA}\\times(law_{i1984}-law_{i1978}) + (u_{i1984} - u_{i1978})
+\\end{align}
+
+y
+
+\\begin{align}
+\\log(violent_{it}) = \\beta_{FE}\\times law_{it} + \\alpha_i + u_{it},\\\\
+\\end{align}
+
+con $i=1,\\ldots,51$ y $t=1978,1984$.
+
+En este ejercicio, se debe demostrar que $\\widehat{\\beta}_{BA}=\\widehat{\\beta}_{FE}$.
+
+Los subconjuntos de <tt>Guns</tt> para los años 1978 y 1984 ya están disponibles como <tt>Guns78</tt> y <tt>Guns84</tt> en el entorno de trabajo. Se han cargado los paquetes <tt>AER</tt> y <tt>plm</tt>.
+
+**Instrucciones:**
+
+  + Calcular las diferencias necesarias para estimar el primer modelo y asignarlas a las variables <tt>diff_logv</tt> y <tt>diff_law</tt>.
+  + Estimar ambos modelos. Utilizar los datos diferenciados para estimar el primer modelo y <tt>plm()</tt> para el segundo.
+  + Verificar con una comparación lógica que ambos procedimientos den numéricamente la misma estimación. Utilizar las variables <tt>coef_diff</tt> y <tt>coef_plm</tt> que contienen los coeficientes relevantes redondeados al cuarto decimal.
+
+<iframe src="DCL/ex10_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+  
+  + Tenga en cuenta que la variable dependiente se transforma logarítmicamente.
+  + Puede usar <tt>plm()</tt> como en los ejercicios anteriores. Tenga en cuenta que solo necesita un subconjunto del conjunto de datos <tt>Guns</tt> original. El argumento <tt>subset</tt> permite crear un subconjunto del conjunto de datos pasado al argumento <tt>data</tt>. Alternativamente, puede unir los dos conjuntos de datos <tt>Guns78</tt> y <tt>Guns84</tt> usando; por ejemplo, <tt>rbind()</tt>.
+  + Utilizar el operador lógico <tt>==</tt> para comparar ambas estimaciones.
+
+</div>')
+}
+```

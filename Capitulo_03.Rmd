@@ -1,0 +1,1596 @@
+# Teoría de la probabilidad {#TP}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 146, child="_setup.Rmd"}
+```
+
+```{r, 147, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Este capítulo revisa algunos conceptos básicos de la teoría de probabilidad y demuestra cómo se pueden aplicar en **R**.
+
+La mayoría de las funciones estadísticas que tienen base en **R** se recopilan en el paquete **stats**. Dicho paquete proporciona funciones simples que calculan medidas descriptivas y facilitan los cálculos que involucran una variedad de distribuciones de probabilidad. También contiene rutinas más sofisticadas que, por ejemplo, permiten al usuario estimar una gran cantidad de modelos fundamentados en los mismos datos o ayudan a realizar estudios de simulación extensos. **stats** es parte de la distribución que tiene base en **R**, lo que significa que está instalado de forma predeterminada, por lo que no es necesario ejecutar `install.packages ("stats")` o `library ("stats")`. En este caso simplemente se necesita ejecutar `library(help ="stats")` en la consola para ver la documentación y una lista completa de todas las funciones reunidas en **stats**. Para la mayoría de los paquetes, existe una documentación que se puede ver en *RStudio*. La documentación se puede invocar usando el operador **?**, por ejemplo, al ejecutar `?stats` la documentación del paquete **stats** se muestra en la pestaña de ayuda del panel inferior derecho.
+
+En lo que sigue, la perspectiva se centra en (algunas de) las distribuciones de probabilidad que maneja **R** y muestra cómo usar las funciones relevantes para resolver problemas simples. De ese modo, se actualizan algunos conceptos básicos de la teoría de la probabilidad. Entre otras cosas, aprenderá a dibujar números aleatorios, a calcular densidades, probabilidades, cuantiles y similares. Como se verá, es muy conveniente confiar en las rutinas o scripts que se mostrarán a continuación.
+
+## Variables aleatorias y distribuciones de probabilidad
+ 
+Resulta de vital importancia repasar brevemente algunos conceptos básicos de la teoría de la probabilidad.
+
+- Los resultados mutuamente excluyentes de un proceso aleatorio se denominan simplemente *resultados*. "Mutuamente excluyente" implica que sólo se puede observar uno de los posibles resultados.
+- La *probabilidad* de un resultado como se refiere a la proporción en que el resultado ocurre a largo plazo; es decir, si el experimento se repite muchas veces.
+- El conjunto de todos los resultados posibles de una variable aleatoria se denomina *espacio muestral*.
+- Un *evento* es un subconjunto del espacio muestral y consta de uno o más resultados.
+
+Estas ideas están unificadas en un concepto llamado *variable aleatoria* que es un resumen numérico de resultados aleatorios. Las variables aleatorias pueden ser *discretas* o *continuas*.
+
+- Las variables aleatorias discretas tienen resultados discretos, por ejemplo, $0$ y $1$ (números enteros).
+- Una variable aleatoria continua puede tomar un continuo de valores posibles, por ejemplo, $0.5$ y $1.25$ (números decimales).
+
+### Distribuciones de probabilidad de variables aleatorias discretas {-}
+
+Un ejemplo típico de una variable aleatoria discreta $D$ es el resultado de lanzar un dado: en términos de un experimento aleatorio, esto no es más que seleccionar al azar una muestra de tamaño $1$ de un conjunto de números que son resultados mutuamente excluyentes. Aquí, el espacio muestral es $\{1,2,3,4,5,6\}$ y se puede pensar en muchos otros eventos, por ejemplo, "el resultado observado se puede encuentra entre $2$ y $5$". 
+
+Una función básica para extraer muestras aleatorias de un conjunto específico de elementos es la función **sample()**, consulte `?Sample`. Se puede usar para simular el resultado aleatorio de una tirada de dados. ¡Se tiran los dados!
+
+```{r, 148, echo = T, eval = T, message = F, warning = F} 
+sample(1:6, 1) 
+```
+
+La distribución de probabilidad (DP) de una variable aleatoria discreta es la lista de todos los valores posibles de la variable y sus probabilidades, que suman $1$. La función de distribución de probabilidad (FDP) acumulada da la probabilidad de que la variable aleatoria sea menor o igual a un valor particular.
+
+Para la tirada de dados, la distribución de probabilidad (DP) y la distribución de probabilidad acumulada (DPA) se resumen en la Tabla \@ref(tab:pdist).
+
+| Resultado                 |  1  |  2  |  3  |  4  |  5  |  6  |
+|---------------------------|:---:|:---:|:---:|:---:|:---:|:---:|
+| Probabilidad              | 1/6 | 1/6 | 1/6 | 1/6 | 1/6 | 1/6 |
+| Probabilidad Acumulada    | 1/6 | 2/6 | 3/6 | 4/6 | 5/6 |  1  |
+
+Table: (\#tab:pdist) Función de Distribución de Probabilidad (FDP) y Función de Distribución de Probabilidad Acumulada (FDPA) de una tirada de dados
+
+Se puede graficar fácilmente ambas funciones usando **R**. Dado que la probabilidad es igual a $1/6$ para cada resultado, se configura el vector **Probabilidad** usando la función **rep()** que replica un valor dado un número específico de veces.
+
+```{r, 149, eval = T, message = F, warning = F, fig.align='center', fig.pos="h"} 
+# generar el vector de probabilidades 
+Probabilidad <- rep(1/6, 6) 
+
+# graficar las probabilidades 
+plot(Probabilidad,
+     xlab = "Resultados",
+     main = "Distribución de Probabilidad (DP)") 
+```
+
+Para la distribución de probabilidad acumulada, se necesitan las probabilidades acumuladas; es decir, se necesitan las sumas acumuladas del vector **Probabilidad**. Dichas sumas se pueden calcular usando **cumsum()**.
+
+```{r, 150, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# generar el vector de probabilidades acumuladas 
+Probabilidad_acumulada <- cumsum(Probabilidad) 
+
+# graficar las probabilidades
+plot(Probabilidad_acumulada, 
+     xlab = "Resultados",
+     main = "Distribución de Probabilidad Acumulada (DPA)") 
+```
+
+### Ensayos de Bernoulli {-}
+
+El conjunto de elementos de los que **sample()** extrae resultados no tiene por qué consistir solo en números. También se podría simular el lanzamiento de una moneda con los resultados $H$ (cara) y $T$ (cruz).
+
+```{r, 151, echo = T, eval = T, message = F, warning = F} 
+sample(c("H", "T"), 1) 
+```
+
+El resultado de un solo lanzamiento de la moneda es una variable aleatoria con distribución de *Bernoulli*; es decir, una variable con dos posibles resultados distintos.
+
+Imagine que está a punto de lanzar una moneda $10$ veces seguidas y se pregunta qué tan probable es que termine con $5$ caras. Este es un ejemplo típico de lo que se llama un *experimento de Bernoulli*, ya que consta de $n = 10$ ensayos de Bernoulli que son independientes entre sí y se está interesado en la probabilidad de observar $k = 5$ éxitos de $H$ que ocurren con probabilidad $p = 0.5$ (asumiendo que la moneda no tiene truco, una moneda justa) en cada prueba. Tenga en cuenta que aquí no importa el orden de los resultados.
+
+Es un [resultado bien conocido](https://en.wikipedia.org/wiki/Binomial_distribution) que el número de éxitos $k$ en un experimento de Bernoulli sigue una distribución binomial. Se denota esto como
+
+$$k \sim B(n,p).$$
+
+La probabilidad de observar $k$ éxitos en el experimento $B(n, p)$ viene dada por
+
+$$f(k)=P(k)=\begin{pmatrix}n\\ k \end{pmatrix} \cdot p^k \cdot (1-p)^{n-k}=\frac{n!}{k!(n-k)!} \cdot p^k \cdot (1-p)^{n-k}$$
+
+con el coeficiente binomial $\begin{pmatrix}n\\ k \end{pmatrix}$.
+
+En **R**, se pueden resolver problemas como el anterior mediante la función **dbinom()** que calcula $P(k\vert n, p)$, la probabilidad de la distribución binomial dados los parámetros **x** ($k$), **tamaño** ($n$) y **prob** ($p$), consulte `?dbinom`. Se calcula $P(k=5\vert n = 10, p = 0.5)$ (se escribe en corto como $P(k=5)$.)
+
+```{r, 152, echo = T, eval = T, message = F, warning = F} 
+dbinom(x = 5,
+       size = 10,
+       prob = 0.5) 
+```
+
+Se concluye que $P(k=5)$, la probabilidad de observar cara $k = 5$ veces cuando se lanza una moneda justa $n = 10$ veces es de aproximadamente $24,6 \%$.
+
+Ahora suponga que se está interesado en $P(4 \leq k \leq 7)$; es decir, la probabilidad de observando éxitos de $4$, $5$, $6$ o $7$ para $B(10, 0.5)$. Esto se puede calcular proporcionando un vector como argumento **x** en la escritura de **dbinom()** y resumiendo usando **sum()**.
+
+```{r, 153, echo = T, eval = T, message = F, warning = F} 
+# calcular P(4 <= k <= 7) usando 'dbinom()'
+sum(dbinom(x = 4:7, size = 10, prob = 0.5))
+```
+
+Un enfoque alternativo es usar **pbinom()**, que es la función de distribución, en específico, de la distribución binomial para calcular $$P(4 \leq k \leq 7) = P(k \leq 7) - P(k\leq3 ).$$
+
+```{r, 154, echo = T, eval = T, message = F, warning = F}
+# calcular P(4 <= k <= 7) usando 'pbinom()'
+pbinom(size = 10, prob = 0.5, q = 7) - pbinom(size = 10, prob = 0.5, q = 3) 
+```
+
+La distribución de probabilidad de una variable aleatoria discreta no es más que una lista de todos los resultados posibles que pueden ocurrir y sus respectivas probabilidades. En el ejemplo del lanzamiento de una moneda, se tienen $11$ posibles resultados para $k$.
+
+```{r, 155, echo = T, eval = T, message = F, warning = F}
+# configurar el vector de posibles resultados
+k <- 0:10
+k
+```
+
+Por lo tanto, para visualizar la función de distribución de probabilidad de $k$ se puede hacer lo siguiente:
+
+```{r, 156, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# asignar las probabilidades
+Probabilidad <- dbinom(x = k,
+                      size = 10, 
+                      prob = 0.5)
+
+# graficar los resultados contra sus probabilidades
+plot(x = k, 
+     y = Probabilidad,
+     main = "Función de Distribución de Probabilidad (FDP)") 
+```
+
+De manera similar, se puede graficar la función de distribución acumulativa de $k$ ejecutando el siguiente fragmento de código:
+
+```{r, 157, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# calcular probabilidades acumuladas
+Probabilidad <- pbinom(q = k, 
+               size = 10, 
+               prob = 0.5)
+
+# graficar las probabilidades acumuladas
+plot(x = k, 
+     y = Probabilidad,
+     main = "Función de Distribución de Probabilidad Acumulada (FDPA)") 
+```
+
+### Valor esperado, media y varianza {-}
+
+El valor esperado de una variable aleatoria es, en términos generales, el valor promedio a largo plazo de sus resultados cuando el número de ensayos repetidos es grande. Para una variable aleatoria discreta, el valor esperado se calcula como un promedio ponderado de sus posibles resultados, por lo que las ponderaciones son las probabilidades relacionadas. Esto se formaliza en el concepto clave 2.1.
+
+```{r, 158, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('<div class = "keyconcept" id="KC2.1"> 
+<h3 class = "right"> Concepto clave 2.1 </h3> 
+<h3 class= "left"> Valor esperado y media </h3> 
+
+<p> 
+Suponga que la variable aleatoria $Y$ toma $k$ valores posibles, $y_1, \\dots, y_k$, donde $y_1$ denota el primer valor, $y_2$ denota el segundo valor, y así sucesivamente, y que la probabilidad que $Y$ toma $y_1$ es $p_1$, la probabilidad de que $Y$ tome $y_2$ es $p_2$ y así sucesivamente. El valor esperado de $Y$, $E(Y)$ se define como
+
+$$ E(Y) = y_1 p_1 + y_2 p_2 + \\cdots + y_k p_k = \\sum_{i=1}^k y_i p_i $$
+
+donde la notación $\\sum_{i=1}^k y_i p_i$ implica "la suma de $y_i$ $p_i$ para $i$ desde $1$ a $k$". El valor esperado de $Y$ también se llama la media de $Y$ o la expectativa de $Y$ y se denota por $\\mu_Y$.
+</p> 
+</div>')
+```
+
+```{r, 159, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[Valor esperado y media]{2.1}
+Suponga que la variable aleatoria $Y$ toma $k$ valores posibles, $y_1, \\ puntos, y_k$, donde $y_1$ denota el primer valor, $y_2$ denota el segundo valor, y así sucesivamente, y que la probabilidad que $Y$ toma $y_1$ es $p_1$, la probabilidad de que $Y$ tome $y_2$ es $p_2$ y así sucesivamente. El valor esperado de $Y$, $E(Y)$ se define como
+
+$$ E(Y) = y_1 p_1 + y_2 p_2 + \\cdots + y_k p_k = \\sum_{i=1}^k y_i p_i $$
+
+donde la notación $\\sum_{i=1}^k y_i p_i$ significa \\"la suma de $y_i$ $p_i$ para $i$ desde $1$ hasta $k$ \\". El valor esperado de $Y$ también se denomina media de $Y$ o la expectativa de $Y$ y se denota por $\\ mu_Y$.
+\\end{keyconcepts}')
+```
+
+En el ejemplo de los dados, la variable aleatoria, $D$ digamos, toma $6$ valores posibles $d_1 = 1, d_2 = 2, \dots, d_6 = 6$. Suponiendo un dado justo, cada uno de los resultados de $6$ ocurre con una probabilidad de $1/6$. Por lo tanto, es fácil calcular el valor exacto de $E(D)$ a mano:
+
+$$ E(D) = 1/6 \sum_{i=1}^6 d_i = 3.5 $$
+
+$E(D)$ es simplemente el promedio de los números naturales de $1$ a $6$ ya que todos los pesos $p_i$ son $1/6$. Esto se puede calcular fácilmente usando la función **mean()** que calcula la media aritmética de un vector numérico.
+
+```{r, 160, echo = T, eval = T, message = F, warning = F} 
+# calcular la media de números naturales del 1 al 6
+mean(1:6)
+```
+
+Un ejemplo de muestreo con reemplazo es tirar un dado tres veces seguidas.
+
+```{r, 161, eval = T, message = F, warning = F} 
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# tira un dado tres veces seguidas
+sample(1:6, 3, replace = T)
+```
+
+Tenga en cuenta que cada llamada de `sample (1: 6, 3, replace = T)` da un resultado diferente, ya que se dibuja con reemplazo al azar. Para permitirle reproducir los resultados de los cálculos que involucran números aleatorios, se usará `set.seed()` para configurar el generador de números aleatorios de R en un estado específico. Debe verificar que realmente funcione: ¡Establezca la semilla en su sesión R en 1 y verifique que obtenga los mismos tres números aleatorios!
+
+```{block2, randomseed, type='rmdknit'}
+Las secuencias de números aleatorios generados por R son números pseudoaleatorios; es decir, no son "verdaderamente" aleatorios sino que se aproximan a las propiedades de las secuencias de números aleatorios. Dado que esta aproximación es suficientemente buena para los propósitos del presete trabajo, piense en los números pseudoaleatorios como números aleatorios a lo largo de este curso.
+
+En general, las secuencias de números aleatorios se generan mediante funciones denominadas "generadores de números pseudoaleatorios" (GNP). El GNP en R funciona realizando alguna operación sobre un valor determinista. Generalmente, este valor es el número anterior generado por el GNP. Sin embargo, la primera vez que se usa el GNP, no existe un valor previo. Una "semilla" es el primer valor de una secuencia de números --- inicializa la secuencia. Cada valor semilla corresponderá a una secuencia de valores diferente. En R, se puede establecer una semilla usando <tt>set.seed()</tt>.
+
+Esto es conveniente para el presente curso:
+
+Si se proporciona la misma semilla dos veces, se obtiene la misma secuencia de números dos veces. Por lo tanto, establecer una semilla antes de ejecutar el código R que involucra números aleatorios hace que el resultado sea reproducible.
+```
+
+Por supuesto, también se podría considerar un número mucho mayor de pruebas, por ejemplo, $10000$. Al hacerlo, no tendría sentido simplemente imprimir los resultados en la consola: por defecto **R** muestra hasta $1000$ entradas de vectores grandes y omite el resto (pruébelo). Observar los números no revela mucho. En su lugar, se calcula el promedio de la muestra de los resultados usando **mean()** y viendo si el resultado se acerca al valor esperado $E(D)=3.5$.
+
+```{r, 162, eval = T, message = F, warning = F} 
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# calcular la media muestral de 10000 tiradas de dados
+mean(sample(1:6, 
+           10000, 
+           replace = T))
+```
+
+Se encuentra que la media muestral está bastante cerca del valor esperado. Este resultado se discutirá en el Capítulo \@ref(MADPM) con más detalle.
+
+Otras medidas que se encuentran con frecuencia son la varianza y la desviación estándar. Ambas son medidas de la *dispersión* de una variable aleatoria.
+
+```{r, 163, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('<div class = "keyconcept" id="KC2.2">
+<h3 class = "right"> Concepto clave 2.2 </h3> 
+<h3 class= "left"> Varianza y desviación estándar </h3> 
+
+<p> 
+La varianza de la variable aleatoria discreta $Y$, denotada $\\sigma^2_Y$, es
+
+$$ \\sigma^2_Y = \\text{Var}(Y) = E\\left[(Y-\\mu_y)^2\\right] = \\sum_{i=1}^k (y_i - \\mu_y)^2 p_i $$
+
+La desviación estándar de $Y$ es $\\sigma_Y$, la raíz cuadrada de la varianza. Las unidades de la desviación estándar son las mismas que las unidades de $Y$.
+</p> 
+</div>')
+```
+
+```{r, 164, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[Varianza y desviación estándar]{2.2}
+La varianza de la \\textit{variable aleatoria discreta} $Y$, denotada $\\sigma^2_Y$, es
+
+$$ \\sigma^2_Y = \\text{Var}(Y) = E\\left[(Y-\\mu_Y)^2\\right] = \\sum_{i=1}^k (y_i - \\mu_Y)^2 p_i $$
+
+La desviación estándar de $Y$ es $\\sigma_Y$, la raíz cuadrada de la varianza. Las unidades de la desviación estándar son las mismas que las unidades de $Y$.
+\\end{keyconcepts}')
+```
+
+La varianza, como se define en el Concepto clave 2.2, siendo una cantidad de población, *no se* implementa como una función en R. En su lugar, se tiene la función **var()** que calcula la *varianza de la muestra*
+
+$$ s^2_Y = \frac{1}{n-1} \sum_{i=1}^n (y_i - \overline{y})^2. $$
+
+Resulta importante recordar que $s^2_Y$ es diferente de la llamada *varianza poblacional* de una variable aleatoria discreta $Y$,
+
+$$ \text{Var}(Y) = \frac{1}{N} \sum_{i=1}^N (y_i - \mu_Y)^2 $$
+
+ya que mide cómo las observaciones de $n$ en la muestra se dispersan alrededor del promedio de la muestra $\overline{y}$. En cambio, $\text{Var}(Y)$ mide la dispersión de toda la población ($N$ miembros) alrededor de la media de la población $\mu_Y$. La diferencia se vuelve clara cuando se mira el ejemplo de lanzamiento de dados. Por $D$ se tiene
+
+$$ \text{Var}(D) = 1/6 \sum_{i=1}^6 (d_i - 3.5)^2 = 2.92  $$
+
+que es obviamente diferente del resultado de $s^2$ calculado por **var()**.
+
+```{r, 165, echo = 1, eval = T, message = F, warning = F} 
+var(1:6)
+```
+
+La varianza muestral calculada por **var()** es un *estimador* de la varianza poblacional. Se puede verificar esto usando el widget a continuación.
+
+```{r, 166, echo=FALSE, results='asis', purl=FALSE}
+write_html(playground = T)
+```
+
+### Distribuciones de probabilidad de variables aleatorias continuas {-}
+
+Dado que una variable aleatoria continua toma un continuo de valores posibles, no se puede usar el concepto de distribución de probabilidad como se usa para las variables aleatorias discretas. En cambio, la distribución de probabilidad de una variable aleatoria continua se resume mediante su *función de densidad de probabilidad* (FDP).
+
+La función de distribución de probabilidad acumulada (DPA) para una variable aleatoria continua se define como en el caso discreto. Por lo tanto, la DPA de una variable aleatoria continua establece la probabilidad de que la variable aleatoria sea menor o igual a un valor particular.
+
+Para completar, se presentan revisiones de los conceptos clave 2.1 y 2.2 para el caso continuo.
+
+```{r, 167, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('<div class = "keyconcept" id="KC2.3"> 
+<h3 class = "right"> Concepto clave 2.3 </h3> 
+<h3 class= "left"> Probabilidades, valor esperado y varianza de una variable aleatoria continua </h3> 
+
+<p> 
+Sea $f_Y(y)$ la función de densidad de probabilidad de $Y$. La probabilidad de que $Y$ caiga entre $a$ y $b$ donde $a < b$ es
+
+$$ P(a \\leq Y \\leq b) = \\int_a^b f_Y(y) \\mathrm{d}y. $$
+
+Además se tiene que $P(-\\infty \\leq Y \\leq \\infty) = 1$ y, por lo tanto, $\\int_{-\\infty}^{\\infty} f_Y(y) \\mathrm{d}y = 1$.
+
+En cuanto al caso discreto, el valor esperado de $Y$ es el promedio ponderado de probabilidad de sus valores. Debido a la continuidad, se usan integrales en lugar de sumas. El valor esperado de $Y$ se define como
+
+$$ E(Y) =  \\mu_Y = \\int y f_Y(y) \\mathrm{d}y. $$
+
+La varianza es el valor esperado de $(Y - \\mu_Y)^2$. Así se tiene
+
+$$\\text{Var}(Y) =  \\sigma_Y^2 = \\int (y - \\mu_Y)^2 f_Y(y) \\mathrm{d}y.$$ 
+</p> 
+</div>')
+```
+
+```{r, 168, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('
+\\begin{keyconcepts}[Probabilidades\\comma Valor esperado y varianza de una variable aleatoria continua]{2.3}
+Sea $f_Y(y)$ la función de densidad de probabilidad de $Y$. La probabilidad de que $Y$ caiga entre $a$ y $b$ donde $a < b$ es
+
+$$ P(a \\leq Y \\leq b) = \\int_a^b f_Y(y) \\mathrm{d}y. $$
+
+Además se tiene que $P(-\\infty \\leq Y \\leq \\infty) = 1$ y, por lo tanto, $\\int_{-\\infty}^{\\infty} f_Y(y) \\mathrm{d}y = 1$.
+
+En cuanto al caso discreto, el valor esperado de $Y$ es el promedio ponderado de probabilidad de sus valores. Debido a la continuidad, se usan integrales en lugar de sumas. El valor esperado de $Y$ se define como
+
+$$ E(Y) =  \\mu_Y = \\int y f_Y(y) \\mathrm{d}y. $$
+
+La varianza es el valor esperado de $(Y - \\mu_Y)^2$. Así se tiene
+
+$$\\text{Var}(Y) =  \\sigma_Y^2 = \\int (y - \\mu_Y)^2 f_Y(y) \\mathrm{d}y.$$ 
+\\end{keyconcepts}')
+```
+
+Se analiza un ejemplo:
+
+Considere la variable aleatoria continua $X$ con FDP
+
+$$ f_X(x) = \frac{3}{x^4}, x>1. $$
+
+- Se puede mostrar analíticamente que la integral de $f_X (x)$ sobre la línea real es igual a $1$.
+
+\begin{align}
+ \int f_X(x) \mathrm{d}x =&  \int_{1}^{\infty} \frac{3}{x^4} \mathrm{d}x \\
+  =& \lim_{t \rightarrow \infty} \int_{1}^{t} \frac{3}{x^4} \mathrm{d}x \\
+  =& \lim_{t \rightarrow \infty}  -x^{-3} \rvert_{x=1}^t \\
+  =& -\left(\lim_{t \rightarrow \infty}\frac{1}{t^3} - 1\right) \\
+  =& 1
+\end{align}
+
+- La expectativa de $X$ se puede calcular de la siguiente manera:
+
+\begin{align}
+ E(X) = \int x \cdot f_X(x) \mathrm{d}x =&  \int_{1}^{\infty} x \cdot \frac{3}{x^4} \mathrm{d}x \\
+  =& - \frac{3}{2} x^{-2} \rvert_{x=1}^{\infty} \\
+  =& -\frac{3}{2} \left( \lim_{t \rightarrow \infty} \frac{1}{t^2} - 1 \right) \\
+  =& \frac{3}{2}
+\end{align}
+
+- Se debe tener en cuenta que la varianza de $X$ se puede expresar como $\text{Var}(X) = E(X^2) - E(X)^2$. Dado que $E(X)$ se ha calculado en el paso anterior, se busca $E(X^2)$:
+
+\begin{align}
+ E(X^2)= \int x^2 \cdot f_X(x) \mathrm{d}x =&  \int_{1}^{\infty} x^2 \cdot \frac{3}{x^4} \mathrm{d}x \\
+  =& -3 x^{-1} \rvert_{x=1}^{\infty} \\
+  =& -3 \left( \lim_{t \rightarrow \infty} \frac{1}{t} - 1 \right) \\
+  =& 3
+\end{align}
+
+Así que se ha demostrado que el área bajo la curva es igual a uno, que la expectativa es  $E(X)=\frac{3}{2}$ y se encontró que la varianza es $\text{Var}(X) = \frac{3}{4}$. Sin embargo, esto fue tedioso y, como veremos, un enfoque analítico no es aplicable para algunas FDP, por ejemplo, si las integrales no tienen soluciones de forma cerrada.
+
+Afortunadamente, **R** también permite encontrar fácilmente los resultados derivados anteriormente. La herramienta que se usan para esto es la función **integrate()**. Primero, se tienen que definir las funciones para las que se quieren calcular integrales como funciones **R**; es decir, la FDP $f_X(x)$ así como las expresiones $x\cdot f_X(x)$ y $x^2\cdot f_X(x)$.
+
+```{r, 169, echo = T, eval = T, message = F, warning = F}
+# definir funciones
+f <- function(x) 3 / x^4
+g <- function(x) x * f(x)
+h <- function(x) x^2 * f(x)
+```
+
+A continuación, se usa **integrate()** y se establecen los límites superior e inferior de integración en $1$ y $\infty$ usando argumentos **lower** y **upper**. De forma predeterminada, **integrate()** imprime el resultado junto con una estimación del error de aproximación en la consola. Sin embargo, el resultado no es un valor numérico con el que se puedan hacer más cálculos fácilmente. Para obtener solo un valor numérico de la integral, se necesita usar el operador **\$** junto con **value**. El operador **\$** se usa para extraer elementos por nombre de un objeto de tipo **list**.
+
+```{r, 170, echo = T, eval = T, message = F, warning = F}
+# calcular el área bajo la curva de densidad
+area <- integrate(f, 
+                 lower = 1, 
+                 upper = Inf)$value
+area 
+
+# calcular E(X)
+EX <- integrate(g,
+                lower = 1,
+                upper = Inf)$value
+EX
+
+# calcular Var(X)
+VarX <- integrate(h,
+                  lower = 1,
+                  upper = Inf)$value - EX^2 
+VarX
+```
+
+Aunque existe una amplia variedad de distribuciones, las que se encuentran con mayor frecuencia en econometría son las distribuciones normal, chi-cuadrado, Student $t$ y $F$. Por lo tanto, se discutiran algunas funciones básicas **R** que permiten hacer cálculos que involucran densidades, probabilidades y cuantiles de estas distribuciones.
+
+Cada distribución de probabilidad que maneja **R** tiene cuatro funciones básicas cuyos nombres consisten en un prefijo seguido de un nombre raíz. Se tiene como ejemplo la distribución normal. El nombre raíz de las cuatro funciones asociadas con la distribución normal es **norm**. Los cuatro prefijos son:
+
+- **d** para "densidad" - función de probabilidad / función de densidad de probabilidad
+- **p** para "probabilidad" - función de distribución acumulativa
+- **q** para "cuantil" - función cuantil (función de distribución acumulativa inversa)
+- **r** para "aleatorio" - generador de números aleatorios
+
+Así, para la distribución normal se tienen las funciones **R** **dnorm()**, **pnorm()**, **qnorm()** y **rnorm()**.
+
+### La distribución normal {-}
+
+La distribución de probabilidad probablemente más importante considerada aquí es la distribución normal. Esto se debe sobre todo al papel especial de la distribución normal estándar y al teorema del límite central, que se tratará en breve. Las distribuciones normales son simétricas y en forma de campana. Una distribución normal se caracteriza por su media $\mu$ y su desviación estándar $\sigma$, expresada de manera concisa por $\mathcal{N}(\mu,\sigma^2)$. La distribución normal tiene el FDP:
+
+\begin{align}
+f(x) = \frac{1}{\sqrt{2 \pi} \sigma} \exp{-(x - \mu)^2/(2 \sigma^2)}.
+\end{align}
+
+Para la distribución normal estándar se tiene $\mu = 0$ y $\sigma = 1$. Las variantes normales estándar a menudo se indican con $Z$. Por lo general, la FDP normal estándar se indica con $\phi$ y la FDPA normal estándar se indica con $\Phi$. Por eso,
+
+$$ \phi(c) = \Phi'(c) \ \ , \ \ \Phi(c) = P(Z \leq c) \ \ , \ \ Z \sim \mathcal{N}(0,1).$$ 
+
+Tenga en cuenta que la notación X $\sim$ Y se lee como "X se distribuye como Y". En **R**, se puede obtener convenientemente densidades de distribuciones normales usando la función **dnorm()**. Es momento de dibujar una gráfica de la función de densidad normal estándar usando **curve()** junto con **dnorm()**.
+
+```{r, 171, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# dibujar un gráfico de la FDP N(0,1)
+curve(dnorm(x),
+      xlim = c(-3.5, 3.5),
+      ylab = "Densidad", 
+      main = "Función de densidad normal estándar") 
+```
+
+Se puede obtener la densidad en diferentes posiciones pasando un vector por **dnorm()**.
+
+```{r, 172, echo = T, eval = T, message = F, warning = F}
+# calcular la densidad en x = -1.96, x = 0 y x = 1.96
+dnorm(x = c(-1.96, 0, 1.96))
+```
+
+Similar a la FDP, se puede trazar la FDPA normal estándar usando **curve()**. Se podría usar **dnorm()** para esto, pero es mucho más conveniente confiar en **pnorm()**.
+
+```{r, 173, echo = T, eval = T, message = F, warning = F, fig.align='center'}
+# graficar la FDPA normal estándar
+curve(pnorm(x), 
+      xlim = c(-3.5, 3.5), 
+      ylab = "Probabilidad", 
+      main = "Función de distribución acumulativa normal estándar")
+```
+
+También se puede usar **R** para calcular la probabilidad de eventos asociados con una variable normal estándar.
+
+Suponiendo que se está interesado en $P(Z\leq 1.337)$. Para alguna variable aleatoria continua $Z$ en $[-\infty, \infty]$ con densidad $g(x)$ se tendría que determinar $G(x)$, la anti-derivada de $g(x)$ así que 
+
+$$ P(Z \leq 1.337 ) = G(1.337) = \int_{-\infty}^{1.337} g(x) \mathrm{d}x.  $$
+
+Si $Z \sim \mathcal{N}(0,1)$, se tiene $g(x)=\phi(x)$. No existe una solución analítica para la integral anterior. Afortunadamente, **R** ofrece buenas aproximaciones. El primer enfoque hace uso de la función **integrate()** que permite resolver problemas de integración unidimensionales utilizando un método numérico. Para esto, primero se define la función de la que se quiere calcular la integral como una función **R** **f**. En el ejemplo, **f** es la función de densidad normal estándar y, por lo tanto, toma un solo argumento **x**. Siguiendo la definición de $\phi(x)$ se define **f** como
+
+```{r, 174, echo = T, eval = T, message = F, warning = F} 
+# definir la FDP normal estándar como una función R
+f <- function(x) {
+  1/(sqrt(2 * pi)) * exp(-0.5 * x^2)
+}
+```
+
+Se debe comprobar si esta función calcula densidades normales estándar pasando un vector.
+
+```{r, 175, echo = T, eval = T, message = F, warning = F}
+# definir un vector de reales
+quants <- c(-1.96, 0, 1.96)
+
+# calcular densidades
+f(quants)
+
+# comparar con los resultados producidos por 'dnorm()'
+f(quants) == dnorm(quants)
+```
+
+Los resultados producidos por **f()** son, de hecho, equivalentes a los dados por **dnorm()**.
+
+A continuación, se llama a **integrate()** en **f()** y se especifican los argumentos **lower** y **upper**, los límites inferior y superior de integración.
+
+```{r, 176, echo = T, eval = T, message = F, warning = F}
+# integrar f()
+integrate(f, 
+          lower = -Inf, 
+          upper = 1.337)
+```
+
+Se encuentra que la probabilidad de observar $Z \leq 1.337$ es aproximadamente $90.94\% $.
+
+Una segunda y mucho más conveniente forma es usar la función **pnorm()**, la función de distribución acumulativa normal estándar.
+
+```{r, 177, echo = T, eval = T, message = F, warning = F} 
+# calcular la probabilidad usando pnorm()
+pnorm(1.337)
+```
+
+El resultado coincide con el resultado del enfoque utilizando **integrate()**.
+
+Es momento de analizar algunos ejemplos adicionales:
+
+Un resultado comúnmente conocido es que $95\%$ de la masa de probabilidad de una normal estándar se encuentra en el intervalo $[-1.96, 1.96]$; es decir, en una distancia de aproximadamente $2$ desviaciones estándar de la media. Se puede confirmar esto fácilmente calculando $$ P(-1.96 \leq Z \leq 1.96) = 1-2\times P(Z \leq -1.96) $$ debido a la simetría de la FDP normal estándar. Gracias a **R**, se puede abandonar la tabla de la FDPA normal estándar que se encuentra en muchos otros libros de texto y, en su lugar, resolver esto rápidamente usando **pnorm()**.
+
+```{r, 178, echo = T, eval = T, message = F, warning = F} 
+# calcula la probabilidad
+1 - 2 * (pnorm(-1.96)) 
+```
+
+Para hacer afirmaciones sobre la probabilidad de observar resultados de $Y$ en algún rango específico es conveniente estandarizar primero como se muestra en el Concepto clave 2.4.
+
+```{r, 179, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('<div class = "keyconcept" id="KC2.4">
+<h3 class = "right"> Concepto clave 2.4 </h3> 
+<h3 class = "left"> Calcular probabilidades que involucran variables aleatorias normales </h3>
+
+<p>
+Suponga que $Y$ se distribuye normalmente con la media $\\mu$ y la varianza $\\sigma^2$:
+
+$$Y \\sim \\mathcal{N}(\\mu, \\sigma^2)$$ 
+
+Entonces $Y$ se estandariza restando su media y dividiendo por su desviación estándar: 
+
+$$ Z = \\frac{Y -\\mu}{\\sigma} $$ 
+
+Sea que $c_1$ y $c_2$ denotan dos números en los que $c_1 < c_2$ y más $d_1 = (c_1 - \\mu)/\\sigma$ y $d_2 = (c_2 - \\mu)/\\ sigma$. Luego
+
+\\begin{align*} 
+P(Y \\leq c_2) =& \\, P(Z \\leq d_2) = \\Phi(d_2), \\\\ 
+P(Y \\geq c_1) =& \\, P(Z \\geq d_1) = 1 - \\Phi(d_1), \\\\ 
+P(c_1 \\leq Y \\leq c_2) =& \\, P(d_1 \\leq Z \\leq d_2) = \\Phi(d_2) - \\Phi(d_1). 
+\\end{align*}
+</p> 
+</div>')
+```
+
+```{r, 180, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[Calcular probabilidades que involucran variables aleatorias normales]{2.4}
+Suponga que $Y$ se distribuye normalmente con la media $\\mu$ y la varianza $\\sigma^2$:
+
+$$Y \\sim \\mathcal{N}(\\mu, \\sigma^2)$$ 
+
+Entonces $Y$ se estandariza restando su media y dividiendo por su desviación estándar: 
+
+$$ Z = \\frac{Y -\\mu}{\\sigma} $$ 
+
+Sea que $c_1$ y $c_2$ denotan dos números en los que $c_1 < c_2$ y más $d_1 = (c_1 - \\mu)/\\sigma$ y $d_2 = (c_2 - \\mu)/\\ sigma$. Luego
+
+\\begin{align*} 
+P(Y \\leq c_2) =& \\, P(Z \\leq d_2) = \\Phi(d_2), \\\\ 
+P(Y \\geq c_1) =& \\, P(Z \\geq d_1) = 1 - \\Phi(d_1), \\\\ 
+P(c_1 \\leq Y \\leq c_2) =& \\, P(d_1 \\leq Z \\leq d_2) = \\Phi(d_2) - \\Phi(d_1). 
+\\end{align*}
+\\end{keyconcepts}')
+```
+
+Ahora considere una variable aleatoria $Y$ con $Y \sim \mathcal{N}(5, 25)$. Las funciones de **R** que utilizan la distribución normal pueden realizar la estandarización. Si se está interesado en $P(3 \leq Y \leq 4)$ se puede usar **pnorm()** y ajustar por una media y/o una desviación estándar que se desvíe de $\mu = 0$ y $\sigma = 1$ especificando los argumentos **mean** y **sd**, respectivamente. **Atención**: ¡El argumento **sd** requiere la desviación estándar, no la varianza!
+
+```{r, 181, echo = T, eval = T, message = F, warning = F} 
+pnorm(4, mean = 5, sd = 5) - pnorm(3, mean = 5, sd = 5) 
+```
+
+Una extensión de la distribución normal en un entorno univariante es la distribución normal multivariante. La FDP conjunta de dos variables normales aleatorias $X$ y $Y$ viene dada por
+
+\begin{align}
+\begin{split}
+g_{X,Y}(x,y) =& \, \frac{1}{2\pi\sigma_X\sigma_Y\sqrt{1-\rho_{XY}^2}} \\ 
+\cdot & \, \exp \left\{ \frac{1}{-2(1-\rho_{XY}^2)} \left[ \left( \frac{x-\mu_x}{\sigma_X} \right)^2 - 2\rho_{XY}\left( \frac{x-\mu_X}{\sigma_X} \right)\left( \frac{y-\mu_Y}{\sigma_Y} \right) + \left( \frac{y-\mu_Y}{\sigma_Y} \right)^2 \right]  \right\}.
+\end{split} (\#eq:bivnorm)
+\end{align}
+
+La ecuación \@ref(eq:bivnorm) contiene la FDP normal bivariado. Es un poco difícil obtener información a partir de esta complicada expresión. En su lugar, se considera el caso especial en el que $X$ y $Y$ son variables aleatorias normales estándar no correlacionadas con densidades $f_X(x)$ y $f_Y(y)$ con distribución normal conjunta. Entonces se tienen los parámetros $\sigma_X = \sigma_Y = 1$, $\mu_X = \mu_Y = 0$ (debido a la normalidad estándar marginal) y $\rho_{XY} = 0$ (debido a la independencia). La densidad conjunta de $X$ y $Y$ se convierte en:
+
+$$ g_{X,Y}(x,y) = f_X(x) f_Y(y) = \frac{1}{2\pi} \cdot \exp \left\{ -\frac{1}{2} \left[x^2 + y^2 \right]  \right\}, \tag{2.2}  $$ 
+
+la FDP de la distribución normal estándar bivariada. El siguiente widget proporciona un gráfico tridimensional interactivo de (<a href="#mjx-eqn-2.2">2.2</a>).
+
+```{r, 182, echo=F, purl=FALSE}
+library("knitr")
+library("usethis")
+library("devtools")
+url<-"https://plot.ly/~mca_unidue/22.embed?width=550&height=550?showlink=false" 
+plotly_iframe <- paste("<center><iframe scrolling='no' seamless='seamless' style='border:none' src='", url, 
+    "/800/1200' width='600' height='400'></iframe></center>", sep = "")
+```
+
+`r I(plotly_iframe)`
+
+Al mover el cursor sobre el gráfico, puede ver que la densidad es invariante en rotación; es decir, la densidad en $(a, b)$ depende únicamente de la distancia de $(a, b)$ al origen: geométricamente, regiones de igual densidad son los bordes de círculos concéntricos en el plano $XY$, centrados en $(\mu_X = 0, \mu_Y = 0)$.
+
+La distribución normal tiene algunas características notables. Por ejemplo, para dos variables distribuidas normalmente conjuntamente $X$ y $Y$, la función de expectativa condicional es lineal: se puede mostrar que 
+
+$$ E(Y\vert X) = E(Y) + \rho \frac{\sigma_Y}{\sigma_X} (X - E(X)). $$
+
+El widget interactivo a continuación ofrece datos de una muestra bivariada estándar distribuida normalmente junto con la función de expectativa condicional $E(Y\vert X)$ y las densidades marginales de $X$ y $Y$. Todos los elementos se ajustan en consecuencia a medida que varían los parámetros.
+
+```{r, 183, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<center>
+<iframe height="880" width="770" frameborder="0" scrolling="no" src="DCL/Normal_Bivariado.html"></iframe>
+</center>
+')
+} else {
+  cat("\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}")
+}
+```
+
+<a name="chisquare"></a>
+
+### La distribución chi-cuadrado {-}
+
+La distribución chi-cuadrado es otra distribución relevante en econometría. A menudo es necesario cuando se prueban tipos especiales de hipótesis que se encuentran con frecuencia cuando se trabaja con modelos de regresión.
+
+La suma de las variables aleatorias distribuidas normales estándar independientes de $M$ al cuadrado sigue una distribución de chi-cuadrado con $M$ grados de libertad:
+
+\begin{align*}
+Z_1^2 + \dots + Z_M^2 = \sum_{m=1}^M Z_m^2 \sim \chi^2_M \ \ \text{with} \ \ Z_m \overset{i.i.d.}{\sim} \mathcal{N}(0,1) (\#eq:chisq)
+\end{align*}
+
+Una variable aleatoria distribuida $\chi^2$ con $M$ grados de libertad tiene expectativa $M$, moda en $M-2$ para $M \geq 2$ y varianza $2 \cdot M$. Por ejemplo, para
+
+$$ Z_1,Z_2,Z_3 \overset{i.i.d.}{\sim} \mathcal{N}(0,1) $$
+
+se sostiene que
+
+$$ Z_1^2+Z_2^2+Z_3^2 \sim \chi^2_3. \tag{2.3} $$
+
+Usando el código a continuación, se puede mostrar la FDP y la FDPA de una variable aleatoria $\chi^2_3$ en un solo gráfico. Esto se logra estableciendo el argumento **add = TRUE** en la segunda llamada de **curve()**. Además, se ajustan los límites de ambos ejes usando **xlim** y **ylim** y se eligen diferentes colores para que ambas funciones se distingan mejor. La trama se completa agregando una leyenda con la ayuda de **legend()**.
+
+```{r, 184, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# graficar el FDP
+curve(dchisq(x, df = 3), 
+      xlim = c(0, 10), 
+      ylim = c(0, 1), 
+      col = "blue",
+      ylab = "",
+      main = "F.D.P y F.D.P.A de la distribución chi-cuadrado, M = 3")
+
+# Agregar la FDPA al gráfico
+curve(pchisq(x, df = 3), 
+      xlim = c(0, 10), 
+      add = TRUE, 
+      col = "red")
+
+# agregar una leyenda al gráfico
+legend("topleft", 
+       c("FDP", "FDPA"), 
+       col = c("blue", "red"), 
+       lty = c(1, 1))
+```
+
+Dado que los resultados de una variable aleatoria distribuida $\chi^2_M$ son siempre positivos, el soporte de la FDP y FDPA relacionadas es $\mathbb{R}_{\geq0}$.
+
+Como la expectativa y la varianza dependen (¡únicamente!) de los grados de libertad, la forma de la distribución cambia drásticamente si se varía el número de normales estándar cuadradas que se resumen. Dicha relación a menudo se describe superponiendo densidades para diferentes $M$, consulte el siguiente <a href="https://en.wikipedia.org/wiki/Chi-squared_distribution"> artículo de Wikipedia </a>.
+
+Se reproduce esto aquí trazando la densidad de la distribución $\chi_1^2$ en el intervalo $[0, 15]$ con **curve()**. En el siguiente paso, se recorren los grados de libertad $M = 2, ..., 7$ y se agrega una curva de densidad para cada $M$ al gráfico. También se ajusta el color de la línea para cada iteración del ciclo estableciendo **col = M**. Por último, se agrega una leyenda que muestra los grados de libertad y los colores asociados.
+
+```{r, 185, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# graficar la densidad para M = 1
+curve(dchisq(x, df = 1), 
+      xlim = c(0, 15), 
+      xlab = "x", 
+      ylab = "Densidad", 
+      main = "Variables aleatorias distribuidas de chi-cuadrado")
+
+# agregar densidades para M = 2, ..., 7 al gráfico usando un bucle 'for()'
+for (M in 2:7) {
+  curve(dchisq(x, df = M),
+        xlim = c(0, 15), 
+        add = T, 
+        col = M)
+}
+
+# agrega una leyenda
+legend("topright", 
+       as.character(1:7), 
+       col = 1:7 , 
+       lty = 1, 
+       title = "F.D.")
+```
+
+Al aumentar los grados de libertad, la distribución se desplaza hacia la derecha (la moda se vuelve más grande) y aumenta la dispersión (la varianza de la distribución aumenta).
+
+### La distribución t de Student {-#thetdist}
+
+<a name="tdist"></a>
+
+Sea $Z$ una variable normal estándar, $W$ una variable aleatoria $\chi^2_M$ y suponiendo además que $Z$ y $W$ son independientes. Entonces se sostiene que
+
+$$ \frac{Z}{\sqrt{W/M}} =:X \sim t_M $$
+
+y $X$ sigue una distribución *$t$ de Student* (o simplemente distribución $t$) con $M$ grados de libertad.
+
+Similar a la distribución $\chi^2_M$, la forma de una distribución $t_M$ depende de $M$. Las distribuciones $t$ son simétricas, en forma de campana y se ven similares a una distribución normal, especialmente cuando $M$ es grande. Esto no es una coincidencia: para un $M$ suficientemente grande, la distribución $t_M$ puede aproximarse mediante la distribución normal estándar. Esta aproximación funciona razonablemente bien para $M\geq 30$. Como se ilustrará más adelante mediante un pequeño estudio de simulación, la distribución $t_{\infty}$ *es la distribución normal estándar*.
+
+En $t_{\infty}$ una variable aleatoria distribuida $X$ tiene una expectativa si $M > 1$ y tiene una variación si $M > 2$.
+
+\begin{align}
+  E(X) =& 0, \ M>1 \\
+  \text{Var}(X) =& \frac{M}{M-2}, \ M>2
+\end{align}
+
+Es momento de graficar algunas distribuciones de $t$ con diferentes $M$ y compararlas con la distribución normal estándar.
+
+```{r, 186, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# graficar la densidad normal estándar
+curve(dnorm(x), 
+      xlim = c(-4, 4), 
+      xlab = "x", 
+      lty = 2, 
+      ylab = "Densidad", 
+      main = "Densidades de distribuciones t")
+
+# graficar la densidad t para M = 2
+curve(dt(x, df = 2), 
+      xlim = c(-4, 4), 
+      col = 2, 
+      add = T)
+
+# graficar la densidad t para M = 4
+curve(dt(x, df = 4), 
+      xlim = c(-4, 4), 
+      col = 3, 
+      add = T)
+
+# graficar la densidad t para M = 25
+curve(dt(x, df = 25), 
+      xlim = c(-4, 4), 
+      col = 4, 
+      add = T)
+
+# agrega una leyenda
+legend("topright", 
+       c("N(0, 1)", "M=2", "M=4", "M=25"), 
+       col = 1:4, 
+       lty = c(2, 1, 1, 1))
+```
+
+El gráfico ilustra lo que se ha dicho en el párrafo anterior: a medida que aumentan los grados de libertad, la forma de la distribución $t$ se acerca a la de una curva de campana normal estándar. Ya para $M = 25$ se encuentra poca diferencia con la densidad normal estándar. Si $M$ es pequeño, se encuentra que la distribución tiene colas más pesadas que una normal estándar; es decir, tiene una forma de campana "más gruesa".
+
+### La distribución F {-}
+
+Otra razón de variables aleatorias importante para los econometristas es la razón de dos variables aleatorias independientes distribuidas $\chi^2$ que se dividen por sus grados de libertad $M$ y $n$. La cantidad
+
+$$ \frac{W/M}{V/n} \sim F_{M,n} \ \ \text{with} \ \ W \sim \chi^2_M \ \ , \ \ V \sim \chi^2_n $$
+
+sigue una distribución $F$ con grados de libertad del numerador $M$ y grados de libertad del denominador $n$, denotado $F_{M,n}$. La distribución fue derivada por primera vez por George Snedecor, pero recibió su nombre en honor a [Sir Ronald Fisher](https://en.wikipedia.org/wiki/Ronald_Fisher).
+
+Por definición, el soporte de la FDP y FDPA de una variable aleatoria distribuida $F_{M,n}$ es $\mathbb{R}_{\geq0}$.
+
+Suponiendo que se tiene una variable aleatoria $Y$ distribuida $F$ con grados de libertad de numerador $3$ y grados de libertad de denominador $14$ y se está interesado en $P(Y \geq 2)$. Esto se puede calcular con la ayuda de la función **pf()**. Al establecer el argumento **lower.tail** en **FALSE**, se debe asegurar que **R** calcula $1- P(Y \leq 2)$; es decir, la masa de probabilidad en la cola derecha de $2$.
+
+```{r, 187, echo = T, eval = T, message = F, warning = F}
+pf(2, df1 = 3, df2 = 14, lower.tail = F)
+```
+
+Se puede visualizar dicha probabilidad dibujando una gráfica de lineal de la densidad relacionada y agregar un sombreado de color con **polygon()**.
+
+```{r, 188, echo = T, eval = T, message = F, warning = F, fig.align='center'}
+# definir vectores de coordenadas para los vértices del polígono
+x <- c(2, seq(2, 10, 0.01), 10)
+y <- c(0, df(seq(2, 10, 0.01), 3, 14), 0)
+
+# graficar la densidad de F_{3, 14}
+curve(df(x ,3 ,14), 
+      ylim = c(0, 0.8), 
+      xlim = c(0, 10), 
+      ylab = "Densidad",
+      main = "Función de densidad")
+
+# graficar el polígono
+polygon(x, y, col = "orange")
+```
+
+La distribución $F$ está relacionada con muchas otras distribuciones. Un caso especial importante encontrado en econometría surge si los grados de libertad del denominador son grandes de tal manera que la distribución $F_{M,n}$ puede aproximarse mediante la distribución $F_{M,\infty}$ que resulta ser simplemente la distribución de una variable aleatoria $\chi^2_M$ dividida por sus grados de libertad $M$,
+
+$$ W/M \sim F_{M,\infty} \ \ , \ \ W \sim \chi^2_M. $$
+
+```{r, 189, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<iframe src="DCL/playground.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+')
+}  
+```
+
+## Muestreo aleatorio y distribución de promedios muestrales {#MADPM}
+
+Para aclarar la idea básica del muestreo aleatorio, volviendo al ejemplo de tirar los dados:
+
+Suponga que se tirando los dados $n$ veces. Esto significa que se está interesado en los resultados aleatorios de $Y_i$, $i = 1, ..., n$ que se caracterizan por la misma distribución. Dado que estos resultados se seleccionan al azar, son *variables aleatorias* en sí mismas y sus resultados diferirán cada vez que se extraiga una muestra; es decir, cada vez que se tiren los dados $n$ veces. Además, cada observación se extrae aleatoriamente de la misma población; es decir, los números de $1$ hasta $6$, y su distribución individual es la misma. Por tanto, $Y_1, \dots, Y_n$ se distribuyen de forma idéntica.
+
+Además, se sabe que el valor de cualquiera de los $Y_i$ no proporciona ninguna información sobre el resto de los resultados. En el ejemplo, sacar un seis como la primera observación en la muestra no altera las distribuciones de $Y_2, \dots , Y_n$: Todos los números tienen la misma probabilidad de ocurrir. Esto significa que todos los $Y_i$ también se distribuyen de forma independiente. Por tanto, $Y_1, \dots, Y_n$ son independientes e idénticamente distribuidos (*i.i.d*).
+
+El ejemplo de los dados usa este esquema de muestreo más simple. Por eso se llama *muestreo aleatorio simple*. Este concepto se resume en el Concepto clave 2.5.
+
+```{r, 190, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('
+<div class = "keyconcept" id="KC2.5">
+<h3 class = "right"> Concepto clave 2.5 </h3> 
+<h3 class = "left"> Muestreo aleatorio simple y Variables aleatorias independientes e idénticamente distribuidas (i.i.d) </h3>
+<p>
+En un muestreo aleatorio simple, $n$ objetos se extraen al azar de una población. Es igualmente probable que cada objeto termine en la muestra. Se denota el valor de la variable aleatoria $Y$ para el objeto $i^{th}$ dibujado al azar como $Y_i$. Dado que todos los objetos tienen la misma probabilidad de ser tomados y la distribución de $Y_i$ es la misma para todos los $i$, los $Y_i, \\dots, Y_n$ son independientes e idénticamente distribuidos (i.i.d.). Esto significa que la distribución de $Y_i$ es la misma para todos los $i=1,\\dots,n$ y $Y_1$ se distribuyen independientemente de $Y_2, \\dots, Y_n$ y $Y_2$ se distribuyen independientemente de $Y_1, Y_3, \\dots, Y_n$ y así sucesivamente.
+</p> 
+</div>')
+```
+
+```{r, 191, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[Muestreo aleatorio simple e i.i.d. Variables aleatorias]{2.5}
+En un muestreo aleatorio simple, $n$ objetos se extraen al azar de una población. Es igualmente probable que cada objeto termine en la muestra. Se denota el valor de la variable aleatoria $Y$ para el objeto $i^{th}$ dibujado al azar como $Y_i$. Dado que todos los objetos tienen la misma probabilidad de ser tomados y la distribución de $Y_i$ es la misma para todos los $i$, los $Y_i, \\dots, Y_n$ son independientes e idénticamente distribuidos (i.i.d.). Esto significa que la distribución de $Y_i$ es la misma para todos los $i=1,\\dots,n$ y $Y_1$ se distribuyen independientemente de $Y_2, \\dots, Y_n$ y $Y_2$ se distribuyen independientemente de $Y_1, Y_3, \\dots, Y_n$ y así sucesivamente.
+\\end{keyconcepts}')
+```
+
+¿Qué sucede si se consideran funciones de los datos de la muestra? Considere, una vez más, el ejemplo de lanzar un dado dos veces seguidas. Una muestra ahora consta de dos extracciones aleatorias independientes del conjunto $\{1,2,3,4,5,6\}$. Es evidente que cualquier función de estas dos variables aleatorias también es aleatoria; por ejemplo, su suma. Convénzase ejecutando el siguiente código varias veces.
+
+```{r, 192, echo = T, eval = T, message = F, warning = F} 
+sum(sample(1:6, 2, replace = T))
+```
+
+Claramente, esta suma, llamada $S$, es una variable aleatoria, dado que depende de sumandos extraídos aleatoriamente. Para este ejemplo, se pueden enumerar completamente todos los resultados y, por lo tanto, escribir la distribución de probabilidad teórica de la función de los datos de la muestra $S$:
+
+En esta situación se está enfrentando a $6^2 = 36$ pares posibles. Esos pares son:
+
+\begin{align*}
+  &(1,1)	(1,2)	(1,3)	(1,4)	(1,5)	(1,6) \\ 
+  &(2,1)	(2,2)	(2,3)	(2,4)	(2,5)	(2,6) \\ 
+  &(3,1)	(3,2)	(3,3)	(3,4)	(3,5)	(3,6) \\ 
+  &(4,1)	(4,2)	(4,3)	(4,4)	(4,5)	(4,6) \\ 
+  &(5,1)	(5,2)	(5,3)	(5,4)	(5,5)	(5,6) \\ 
+  &(6,1)	(6,2)	(6,3)	(6,4)	(6,5)	(6,6)
+\end{align*}
+
+Por lo tanto, los posibles resultados para $S$ son:
+
+$$ \left\{ 2,3,4,5,6,7,8,9,10,11,12 \right\} . $$
+
+Enumeración de rendimientos de los resultados:
+
+\begin{align}
+  P(S) = 
+  \begin{cases} 
+    1/36, \ & S = 2 \\ 
+    2/36, \ & S = 3 \\
+    3/36, \ & S = 4 \\
+    4/36, \ & S = 5 \\
+    5/36, \ & S = 6 \\
+    6/36, \ & S = 7 \\
+    5/36, \ & S = 8 \\
+    4/36, \ & S = 9 \\
+    3/36, \ & S = 10 \\
+    2/36, \ & S = 11 \\
+    1/36, \ & S = 12
+  \end{cases}
+\end{align}
+
+También se puede calcular $E(S)$ y $\text{Var}(S)$ como se indica en el Concepto clave 2.1 y el Concepto clave 2.2.
+
+```{r, 193, echo = T, eval = T, message = F, warning = F} 
+# Vector de resultados
+S <- 2:12
+
+# Vector de probabilidades
+PS <- c(1:6, 5:1) / 36
+
+# Expectativa de S
+ES <- sum(S * PS)
+ES
+
+# Varianza de S
+VarS <- sum((S - c(ES))^2 * PS)
+VarS
+```
+
+Entonces se conoce la distribución de $S$. También es evidente que su distribución difiere considerablemente de la distribución marginal; es decir, la distribución del resultado de una sola tirada de dados, $D$. Se puede visualizar esto usando gráficos de barras.
+
+```{r, 194, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# divide el área de trazado en una fila con dos columnas
+par(mfrow = c(1, 2))
+
+# graficar la distribución de S
+barplot(PS, 
+        ylim = c(0, 0.2), 
+        xlab = "S", 
+        ylab = "Probabilidad", 
+        col = "steelblue", 
+        space = 0, 
+        main = "Suma de dos lanzamientos")
+
+# graficar la distribución de D
+probability <- rep(1/6, 6)
+names(probability) <- 1:6
+
+barplot(probability, 
+        ylim = c(0, 0.2), 
+        xlab = "D", 
+        col = "steelblue", 
+        space = 0, 
+        main = "Resultado de un solo lanzamiento")
+```
+
+Muchos procedimientos econométricos tratan con promedios de datos muestreados. Por lo general, se asume que las observaciones se extraen al azar de una población desconocida más grande. Como se demostró para la función de muestra $S$, calcular el promedio de una muestra aleatoria tiene el efecto de que el promedio es una variable aleatoria en sí misma. Dicha variable aleatoria, a su vez, tiene una distribución de probabilidad, denominada distribución de muestreo. Por tanto, el conocimiento sobre la distribución muestral del promedio es fundamental para comprender el desempeño de los procedimientos econométricos.
+
+El *promedio de la muestra* de una muestra de $n$ observaciones $Y_1, \dots, Y_n$ es
+
+$$ \overline{Y} = \frac{1}{n} \sum_{i=1}^n Y_i = \frac{1}{n} (Y_1 + Y_2 + \cdots + Y_n). $$
+
+$\overline{Y}$ también se denomina media muestral.
+
+### Media y varianza de la media muestral {-}
+
+Suponga que $Y_1,\dots,Y_n$ son i.i.d. y se denota $\mu_Y$ y $\sigma_Y^2$ como la media y la varianza de $Y_i$. Entonces se tiene que:
+
+$$ E(\overline{Y}) = E\left(\frac{1}{n} \sum_{i=1}^n Y_i \right) = \frac{1}{n} E\left(\sum_{i=1}^n Y_i\right) = \frac{1}{n} \sum_{i=1}^n E\left(Y_i\right) = \frac{1}{n} \cdot n \cdot \mu_Y = \mu_Y    $$
+
+y
+
+\begin{align*}
+  \text{Var}(\overline{Y}) =& \text{Var}\left(\frac{1}{n} \sum_{i=1}^n Y_i \right) \\
+  =& \frac{1}{n^2} \sum_{i=1}^n \text{Var}(Y_i) + \frac{1}{n^2} \sum_{i=1}^n \sum_{j=1, j\neq i}^n \text{cov}(Y_i,Y_j) \\
+  =& \frac{\sigma^2_Y}{n} \\
+  =& \sigma_{\overline{Y}}^2.
+\end{align*}
+
+El segundo sumando desaparece desde $\text{cov}(Y_i,Y_j)=0$ para $i\neq j$  debido a la independencia. En consecuencia, la desviación estándar de la media muestral viene dada por 
+
+$$\sigma_{\overline{Y}} = \frac{\sigma_Y}{\sqrt{n}}.$$
+
+Vale la pena mencionar que estos resultados se mantienen independientemente de la distribución subyacente de $Y_i$.
+
+#### La distribución de muestreo de $\overline{Y}$ cuando $Y$ se distribuye normalmente {-}
+
+Si $Y_1,\dots,Y_n$ son i.i.d. se extrae de una distribución normal con media $\mu_Y$ y varianza $\sigma_Y^2$, lo siguiente es válido para su promedio de muestra $\overline{Y}$:
+
+$$ \overline{Y} \sim \mathcal{N}(\mu_Y, \sigma_Y^2/n) \tag{2.4} $$
+
+Por ejemplo, si una muestra $Y_i$ con $i=1,\dots,10$ se extrae de una distribución normal estándar con media $\mu_Y = 0$ y varianza $\sigma_Y^2=1$ se sigue que:
+
+$$ \overline{Y} \sim \mathcal{N}(0,0.1).$$
+
+Se puede usar la instalación de generación de números aleatorios de **R** para verificar el resultado. La idea básica es simular los resultados de la distribución real de $\overline{Y}$ extrayendo repetidamente muestras aleatorias de 10 observaciones de la distribución  $\mathcal{N}(0,1)$ y calculando sus respectivos promedios. Si se hace esto para un gran número de repeticiones, el conjunto de datos simulados de promedios debería reflejar con bastante precisión la distribución teórica de $\overline{Y}$ si el resultado teórico se cumple.
+
+El enfoque esbozado anteriormente es un ejemplo de lo que se conoce comúnmente como *Simulación de Monte Carlo* o *Experimento de Monte Carlo*. Para realizar esta simulación en **R** se debe proceder de la siguiente manera:
+
+1. Elegir un tamaño de muestra **n** y el número de muestras que se extraerán, **reps**.
+2. Utilizar la función **replicate()** junto con **rnorm()** para extraer **n** observaciones de la distribución normal estándar **rep** veces.
+
+    **Nota**: El resultado de **replicate()** es una matriz con dimensiones **n** $\times$ **rep**. Contiene las muestras extraídas como *columnas*.
+    
+3. Calcular las medias de la muestra utilizando **colMeans()**. Esta función calcula la media de cada columna; es decir, de cada muestra y devuelve un vector.
+
+```{r, 195, echo = T, eval = T, message = F, warning = F} 
+# establecer el tamaño de la muestra y el número de muestras
+n <- 10
+reps <- 10000
+
+# realizar muestreo aleatorio
+muestras <- replicate(reps, rnorm(n)) # 10 x 10000 sample matrix
+
+# calcular medias de muestra
+muestra.promedios <- colMeans(muestras)
+```
+
+Luego se termina con un vector de promedios muestrales (medias muestrales). Se puede verificar la propiedad vectorial de **muestra.promedios**:
+
+```{r, 196, echo = T, eval = T, message = F, warning = F} 
+# comprobar que 'muestra.promedios' es un vector
+is.vector(muestra.promedios) 
+
+# imprimir las primeras entradas en la consola
+head(muestra.promedios)
+```
+
+Un enfoque sencillo para examinar la distribución de datos numéricos univariados es trazarlos como un histograma y compararlos con alguna distribución conocida o supuesta. De forma predeterminada, **hist()** da un histograma de frecuencia; es decir, un gráfico de barras donde las observaciones se agrupan en rangos, también llamados bins. La ordenada informa el número de observaciones que caen en cada uno de los contenedores. En cambio, se quiere que informe estimaciones de densidad con fines de comparación. Esto se logra estableciendo el argumento **freq = FALSE**. El número de bins se ajusta mediante el argumento **breaks**.
+
+Usando **curve()**, se superpone el histograma con una línea roja, la densidad teórica de una variable aleatoria $\mathcal{N}(0, 0.1)$ . Recuerde usar el argumento **add = TRUE** para agregar la curva al gráfico actual. De lo contrario, **R** abrirá un nuevo dispositivo gráfico y descartará el gráfico anterior.^[*Sugerencia:* **T** y **F** son alternativas para **TRUE** y **FALSE**.]
+
+```{r, 197, echo = T, eval = T, message = F, warning = F, fig.align='center'}
+# Grafique el histograma de densidad
+hist(muestra.promedios, 
+     ylim = c(0, 1.4), 
+     col = "steelblue" , 
+     freq = F, 
+     breaks = 20)
+
+# Superponga la distribución teórica de los promedios de la muestra en la parte superior del histograma
+curve(dnorm(x, sd = 1/sqrt(n)), 
+      col = "red", 
+      lwd = "2", 
+      add = T)
+```
+
+La distribución de muestreo de $\overline{Y}$ es, de hecho, muy cercana a la de una distribución $\mathcal{N}(0, 0.1)$, por lo que la simulación de Monte Carlo respalda la afirmación teórica.
+
+Analizando otro ejemplo en que el uso del muestreo aleatorio simple en una configuración de simulación ayuda a verificar un resultado bien conocido. Como se discutió antes, la distribución [Chi-cuadrado](#chi-cuadrado) con $M$ grados de libertad surge como la distribución de la suma de $M$ variables aleatorias independientes distribuidas de forma normalmente estándar al cuadrado.
+
+Para visualizar el argumento expresado en la ecuación (<a href="#mjx-eqn-2.3">2.3</a>), se procede de manera similar al ejemplo anterior:
+
+1. Elija los grados de libertad, **DF** (Degrees of Freedom) y el número de muestras que se extraerán *repeticiones*.
+2. Graficar las **reps** de las muestras aleatorias de tamaño **DF** de la distribución normal estándar usando **replicate()**.
+3. Para cada muestra, potencie los resultados al cuadrado y súmelos en columnas. Almacene los resultados.
+
+Nuevamente, se produce una estimación de densidad para la distribución subyacente a los datos simulados usando un histograma de densidad y se superpone con un gráfico lineal de la función de densidad teórica de la distribución $\chi^2_3$.
+
+```{r, 198, echo = T, eval = T, message = F, warning = F, fig.align='center'} 
+# número de repeticiones
+reps <- 10000
+
+# establecer grados de libertad de una distribución chi-cuadrada
+DF <- 3 
+
+# muestra 10000 vectores de columna à 3 N (0,1) R.V.S
+Z <- replicate(reps, rnorm(DF)) 
+
+# columna sumas de cuadrados
+X <- colSums(Z^2)
+
+# histograma de columnas de sumas de cuadrados
+hist(X, 
+     freq = F, 
+     col = "steelblue", 
+     breaks = 40, 
+     ylab = "Densidad", 
+     main = "")
+
+# agregar densidad teórica
+curve(dchisq(x, df = DF), 
+      type = 'l', 
+      lwd = 2, 
+      col = "red", 
+      add = T)
+```
+
+### Aproximaciones de muestras grandes para distribuciones de muestreo {-}
+
+Las distribuciones muestrales consideradas en la última sección juegan un papel importante en el desarrollo de métodos econométricos. Existen dos enfoques principales para caracterizar las distribuciones muestrales: Un enfoque "exacto" y un enfoque "aproximado".
+
+El enfoque exacto tiene como objetivo encontrar una fórmula general para la distribución muestral, que se mantiene para cualquier tamaño de muestra $n$. A esto se le llama *distribución exacta* o *distribución de muestra finita*. En los ejemplos anteriores de lanzamiento de dados y variantes normales, se ha tratado con funciones de variables aleatorias cuyas distribuciones de muestra son *exactamente conocidas* en el sentido de que se pueden escribir como expresiones analíticas. Sin embargo, esto no siempre es posible. Para $\overline{Y}$, el resultado (<a href="#mjx-eqn-2.4">2.4</a>) indica que la normalidad de $Y_i$  implica la normalidad de $\overline{Y}$ (se demuestra esto para el caso especial de $Y_i \overset{i.i.d.}{\sim} \mathcal{N}(0,1)$ con $n=10$  usando un estudio de simulación que involucra un muestreo aleatorio simple). Desafortunadamente, la distribución *exacta* de $\overline{Y}$ es generalmente desconocida y, a menudo, difícil de derivar (o incluso imposible de rastrear) si se descarta la suposición de que $Y_i$ tiene una distribución normal.
+
+Por lo tanto, como se puede adivinar por su nombre, el enfoque "aproximado" tiene como objetivo encontrar una aproximación a la distribución muestral donde se requiere que el tamaño de la muestra $n$ sea grande. Una distribución que se utiliza como una aproximación de muestra grande a la distribución muestral también se denomina *distribución asintótica*. Esto se debe al hecho de que la distribución asintótica *es  la distribución de muestreo* para $n \rightarrow \infty$; es decir, la aproximación se vuelve exacta si el tamaño de la muestra llega al infinito. Sin embargo, la diferencia entre la distribución muestral y la distribución asintótica es insignificante para tamaños de muestra moderados o incluso pequeños, por lo que las aproximaciones que utilizan la distribución asintótica son útiles.
+
+En esta sección se discurtirán dos resultados bien conocidos que se utilizan para aproximar distribuciones muestrales y, por lo tanto, constituyen herramientas clave en la teoría econométrica: la *ley de los grandes números* y el *teorema del límite central*. La ley de los números grandes establece que en muestras grandes, $\overline{Y}$ está cerca de $\mu_Y$ con alta probabilidad. El teorema del límite central dice que la distribución muestral de los promedios muestrales estandarizados; es decir, $(\overline{Y} - \mu_Y)/\sigma_{\overline{Y}}$ tiene una distribución asintóticamente normal. Es particularmente interesante que ambos resultados no dependen de la distribución de $Y$. En otras palabras, al no poder describir la complicada distribución muestral de $\overline{Y}$ si $Y$ no es normal, las aproximaciones de este último utilizando el teorema del límite central simplifican enormemente el desarrollo y la aplicabilidad de los procedimientos econométricos. Este es un componente clave que subyace a la teoría de la inferencia estadística para modelos de regresión. Ambos resultados se resumen en el Concepto clave 2.6 y el Concepto clave 2.7.
+
+```{r, 199, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('
+<div class = "keyconcept" id="KC2.6">
+<h3 class = "right"> Concepto clave 2.6 </h3> 
+<h3 class = "left"> Convergencia en probabilidad, consistencia y la ley de los números grandes </h3>
+<p>
+El promedio de la muestra $\\overline{Y}$ converge en probabilidad a $\\mu_Y$: $\\overline{Y}$ es *consistente* para $\\mu_Y$ si la probabilidad de que $\\overline{Y}$ está en el rango $(\\mu_Y - \\epsilon)$ a $(\\mu_Y + \\epsilon)$ se vuelve arbitrario cerca de $1$ a medida que $n$ aumenta para cualquier $\\epsilon > 0$. Se escribe esto como:
+
+$$ P(\\mu_Y-\\epsilon \\leq \\overline{Y} \\leq \\mu_Y + \\epsilon) \\rightarrow 1, \\, \\epsilon > 0 \\text{ as } n\\rightarrow\\infty. $$
+
+Considere las variables aleatorias distribuidas de forma independiente e idéntica $Y_i, i=1,\\dots,n$ con expectativa $E(Y_i)=\\mu_Y$ y varianza $\\text{Var}(Y_i)=\\sigma^2_Y$. Bajo la condición de que $\\sigma^2_Y< \\infty$; es decir, los valores atípicos grandes son poco probables, la ley de los números grandes establece que
+
+$$ \\overline{Y} \\xrightarrow[]{p} \\mu_Y. $$
+
+La siguiente aplicación simula una gran cantidad de lanzamientos de monedas (puede establecer el número de intentos usando el control deslizante) con una moneda justa. Asimismo, calcula la fracción de caras observadas para cada lanzamiento adicional. El resultado es una ruta aleatoria que, como lo establece la ley de los números grandes, muestra una tendencia a acercarse al valor de $0.5$ a medida que $n$ crece.
+
+<iframe height="570" width="800" frameborder="0" scrolling="no" src="DCL/Lanzamiento_Moneda.html"></iframe>
+</p> 
+</div>')
+```
+
+```{r, 200, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[Convergencia en la probabilidad\\comma La coherencia y la ley de los números grandes]{2.6}
+El promedio de la muestra $\\overline{Y}$ converge en probabilidad a $\\mu_Y$: $\\overline{Y}$ es *consistente* para $\\mu_Y$ si la probabilidad de que $\\overline{Y}$ está en el rango $(\\mu_Y - \\epsilon)$ a $(\\mu_Y + \\epsilon)$ se vuelve arbitrario cerca de $1$ a medida que $n$ aumenta para cualquier $\\epsilon > 0$. Se escribe esto como:
+
+$$ P(\\mu_Y-\\epsilon \\leq \\overline{Y} \\leq \\mu_Y + \\epsilon) \\rightarrow 1, \\, \\epsilon > 0 \\text{ as } n\\rightarrow\\infty. $$
+
+Considere las variables aleatorias distribuidas de forma independiente e idéntica $Y_i, i=1,\\dots,n$ con expectativa $E(Y_i)=\\mu_Y$ y varianza $\\text{Var}(Y_i)=\\sigma^2_Y$. Bajo la condición de que $\\sigma^2_Y< \\infty$; es decir, los valores atípicos grandes son poco probables, la ley de los números grandes establece que
+
+$$ \\overline{Y} \\xrightarrow[]{p} \\mu_Y. $$
+
+La siguiente aplicación simula una gran cantidad de lanzamientos de monedas (puede establecer el número de intentos usando el control deslizante) con una moneda justa. Asimismo, calcula la fracción de caras observadas para cada lanzamiento adicional. El resultado es una ruta aleatoria que, como lo establece la ley de los números grandes, muestra una tendencia a acercarse al valor de $0.5$ a medida que $n$ crece.
+\\begin{center}
+\\textit{Esta aplicación interactiva solo está disponible en la versión HTML.}
+\\end{center}
+\\end{keyconcepts}')
+```
+
+El enunciado central de la ley de los grandes números es que, en condiciones bastante generales, la probabilidad de obtener un promedio de muestra $\overline{Y}$ que esté cerca de $\mu_Y$ es alta si se tiene un tamaño de muestra grande.
+
+Al considerar el ejemplo de lanzar repetidamente una moneda donde $Y_i$ es el resultado del lanzamiento de la moneda  $i^{th}$. $Y_i$ es una variable aleatoria distribuida de Bernoulli con $p$ la probabilidad de observar la cara
+
+$$ P(Y_i) = \begin{cases} p, & Y_i = 1 \\ 1-p, & Y_i = 0 \end{cases} $$
+
+donde $p = 0.5$ como se asume una moneda justa. Es sencillo demostrar que
+
+$$ \mu_Y = p = 0.5. $$
+
+Sea $R_n$ la proporción de caras en los primeros $n$ lanzamientos,
+
+$$ R_n = \frac{1}{n} \sum_{i=1}^n Y_i. \tag{2.5}$$
+
+De acuerdo con la ley de los números grandes, la proporción observada de caras converge en probabilidad a $\mu_Y = 0.5$, la probabilidad de lanzar cara en un *solo* lanzamiento de moneda, 
+
+$$ R_n \xrightarrow[]{p} \mu_Y=0.5 \ \ \text{as} \ \ n \rightarrow \infty.$$  
+
+Este resultado es ilustrado por la aplicación interactiva en el Concepto clave 2.6. Ahora se debe demostrar cómo replicar esto usando **R**.
+
+El procedimiento es el siguiente:
+
+1. Muestra de **N** observaciones de la distribución de Bernoulli, por ejemplo, usar **sample()**.
+
+2. Calcular la proporción de caras $R_n$ como en (<a href="#mjx-eqn-2.5">2.5</a>). Una forma de lograr esto es llamar a **cumsum()** en el vector de observaciones **Y** para obtener su suma acumulada y luego dividir por el número respectivo de observaciones.
+
+Se continua trazando la ruta y también agregando una línea discontinua para la probabilidad de referencia $p = 0.5$.
+
+```{r, 201, eval = T, message = F, warning = F, fig.align='center'} 
+# sembrar semilla
+set.seed(1)
+
+# establecer el número de lanzamientos de monedas y simular
+N <- 30000
+Y <- sample(0:1, N, replace = T)
+
+# calcular R_n para 1: N
+S <- cumsum(Y)
+R <- S/(1:N)
+
+# graficar el camino
+plot(R, 
+     ylim = c(0.3, 0.7), 
+     type = "l", 
+     col = "steelblue", 
+     lwd = 2, 
+     xlab = "n", 
+     ylab = "R_n",
+     main = "Cuota convergente de caras en el lanzamiento repetido de monedas")
+
+# agregar una línea discontinua para R_n = 0.5
+lines(c(0, N), 
+      c(0.5, 0.5), 
+      col = "darkred", 
+      lty = 2, 
+      lwd = 1)
+```
+
+Hay varias cosas que decir sobre esta trama.
+
+- El gráfico azul muestra la proporción observada de caras al lanzar una moneda $n$ veces.
+
+- Dado que $Y_i$ son variables aleatorias, $R_n$ también es una variable aleatoria. La ruta representada es solo una de las muchas realizaciones posibles de $R_n$, ya que está determinada por las observaciones de $30000$ muestreadas de la distribución de Bernoulli.
+
+- Si el número de lanzamientos de moneda $n$ es pequeño, la proporción de caras puede ser cualquier cosa menos cercana a su valor teórico, $\mu_Y = 0.5$. Sin embargo, a medida que se incluyen más y más observaciones en la muestra, se encuentra que la trayectoria se estabiliza en el vecindario de $0.5$. El promedio de múltiples ensayos muestra una clara tendencia a converger a su valor esperado a medida que aumenta el tamaño de la muestra, tal como lo afirma la ley de los grandes números.
+
+```{r, 202, eval = my_output == "html", results='asis', echo=FALSE, purl=FALSE}
+cat('
+<div class = "keyconcept" id="KC2.7">
+<h3 class = "right"> Concepto clave 2.7 </h3> 
+<h3 class = "left"> El teorema del límite central </h3>
+<p>
+Suponga que $Y_1,\\dots,Y_n$ son variables aleatorias independientes y distribuidas de forma idéntica con expectativa $E(Y_i)=\\mu_Y$ y varianza $\\text{Var}(Y_i)=\\sigma^2_Y$ donde $0<\\sigma^2_Y<\\infty$. El Teorema del Límite Central (TLC) establece que, si el tamaño de la muestra $n$ llega al infinito, la distribución del promedio muestral estandarizado
+
+$$ \\frac{\\overline{Y} - \\mu_Y}{\\sigma_{\\overline{Y}}} = \\frac{\\overline{Y} - \\mu_Y}{\\sigma_Y/\\sqrt{n}} \\ $$
+
+se aproxima arbitrariamente bien por la distribución normal estándar.
+
+La siguiente aplicación demuestra el TLC para el promedio de la muestra de variables aleatorias distribuidas normalmente con una media de $5$ y una varianza de $25^2$. Se pueden comprobar las siguientes propiedades:\\newline
+
++ La distribución del promedio de la muestra es normal.
++ A medida que aumenta el tamaño de la muestra, la distribución de $\\overline{Y}$ se ajusta alrededor de la media real de $5$.
++ La distribución del promedio muestral estandarizado está cerca de la distribución normal estándar para grandes $n$.
+
+<iframe height="620" width="800" frameborder="0" scrolling="no" src="DCL/Distribución_Muestral.html"></iframe>
+</p> 
+</div>')
+```
+
+```{r, 203, eval = my_output == "latex", results='asis', echo=FALSE, purl=FALSE}
+cat('\\begin{keyconcepts}[El teorema del límite central]{2.7}
+Suponga que $Y_1,\\dots,Y_n$ son variables aleatorias independientes y distribuidas de forma idéntica con expectativa $E(Y_i)=\\mu_Y$ y varianza $\\text{Var}(Y_i)=\\sigma^2_Y$ donde $0<\\sigma^2_Y<\\infty$. El Teorema del Límite Central (TLC) establece que, si el tamaño de la muestra $n$ llega al infinito, la distribución del promedio muestral estandarizado
+
+$$ \\frac{\\overline{Y} - \\mu_Y}{\\sigma_{\\overline{Y}}} = \\frac{\\overline{Y} - \\mu_Y}{\\sigma_Y/\\sqrt{n}} \\ $$
+
+se aproxima arbitrariamente bien por la distribución normal estándar.
+
+La siguiente aplicación demuestra el TLC para el promedio de la muestra de variables aleatorias distribuidas normalmente con una media de $5$ y una varianza de $25^2$. Se pueden comprobar las siguientes propiedades:\\newline
+
+\\begin{itemize}
+\\item La distribución del promedio de la muestra es normal.
+\\item A medida que aumenta el tamaño de la muestra, la distribución de $\\overline{Y}$ se ajusta alrededor de la media real de $5$.
+\\item La distribución del promedio muestral estandarizado está cerca de la distribución normal estándar para grandes $n$.
+\\end{itemize}
+\\vspace{0.5cm}
+\\begin{center}
+\\textit{Esta aplicación interactiva solo está disponible en la versión HTML.}
+\\end{center}
+
+\\end{keyconcepts}
+')
+```
+
+Según el TLC, la distribución de la media muestral $\overline{Y}$ de las variables aleatorias distribuidas de Bernoulli $Y_i$, $i=1,...,n$, está bien aproximada por la distribución normal con parámetros $\mu_Y=p=0.5$ y $\sigma^2_{Y} = p(1-p)/n = 0.25/n$ para $n$ grandes. En consecuencia, para la media muestral estandarizada, se llega a la conclusión de que 
+
+$$\frac{\overline{Y} - 0.5}{0.5/\sqrt{n}} \tag{2.6}$$ 
+
+debería estar bien aproximado por la distribución normal estándar $\mathcal{N}(0,1)$. Se emplea otro estudio de simulación para demostrar esto gráficamente. La idea es la siguiente.
+
+Extraiga una gran cantidad de muestras aleatorias, suponiendo $10000$, de tamaño $n$ de la distribución de Bernoulli y calcular los promedios de las muestras. Estandarizar los promedios como se muestra en (<a href="#mjx-eqn-2.6">2.6</a>). A continuación, visualizar la distribución de los promedios muestrales estandarizados generados por medio de un histograma y comparar con la distribución normal estándar. Repetir esto para diferentes tamaños de muestra $n$ para ver cómo el aumento del tamaño de muestra $n$ afecta la distribución simulada de los promedios.
+
+En **R**, se puede dar cuenta de esto de la siguiente manera:
+
+1. Comenzar por definir que las siguientes cuatro figuras generadas posteriormente se dibujarán en una matriz $2\times2$ de manera que puedan compararse fácilmente. Esto se hace llamando a `par(mfrow = c(2, 2))` antes de generar las figuras.
+
+2. Definir el número de repeticiones **reps** como $10000$ y crear un vector de tamaños de muestra llamado **sample.sizes**. Considerar muestras de tamaños de $5$, $20$, $75$ y $100$.
+
+3. A continuación, combinar dos bucles **for()** para simular los datos y graficar las distribuciones. El ciclo interno genera muestras aleatorias de $10000$, cada una de las cuales consta de **n** observaciones que se extraen de la distribución de Bernoulli, y calcula los promedios estandarizados. El ciclo externo ejecuta el ciclo interno para los diferentes tamaños de muestra **n** y produce una gráfica para cada iteración.
+
+```{r, 204, echo = T, eval = T, message = F, warning = F, cache=T, fig.align='center'} 
+# subdividir el panel de la trama en una matriz de 2 por 2
+par(mfrow = c(2, 2))
+
+# establecer el número de repeticiones y los tamaños de muestra
+reps <- 10000
+sample.sizes <- c(5, 20, 75, 100)
+
+# sembrar la semilla para la reproducibilidad
+set.seed(123)
+
+# bucle externo (bucle sobre los tamaños de muestra)
+  for(n in sample.sizes){
+    samplemean <- rep(0, reps) # inicializar el vector de medias muestrales
+    stdsamplemean <- rep(0, reps) # inicializar el vector de medias muestrales estandarizadas
+
+# bucle interno (bucle sobre repeticiones)   
+    for(i in 1:reps){
+      x <- rbinom(n, 1, 0.5)
+      samplemean[i] <- mean(x)
+      stdsamplemean[i] <- sqrt(n)*(mean(x) - 0.5)/0.5
+    }
+    
+# graficar el histograma y superponer la densidad N(0,1) en cada iteración  
+    hist(stdsamplemean, 
+         col = "steelblue", 
+         freq = FALSE, 
+         breaks = 40,
+         xlim = c(-3, 3), 
+         ylim = c(0, 0.8), 
+         xlab = paste("n =", n), 
+         main = "")
+    
+    curve(dnorm(x), 
+          lwd = 2, 
+          col = "darkred", 
+          add = TRUE)
+  }  
+```
+
+Se puede ver que la distribución muestral simulada del promedio estandarizado tiende a desviarse fuertemente de la distribución normal estándar si el tamaño de la muestra es pequeño, por ejemplo, para $n = 5$ y $n = 10$. Sin embargo, a medida que crece $n$, los histogramas se acercan a la distribución normal estándar. La aproximación funciona bastante bien, vea $n = 100$.
+
+```{r, 205, echo=FALSE, results='asis', purl=FALSE}
+write_html(playground = T)
+```
+
+## Ejercicios {#Ejercicios-2}
+
+```{r, 206, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Muestreo {-}
+
+Suponga que usted es el hada de la lotería en una lotería semanal, donde se extraen $6$ de $49$ *números únicos*.
+
+**Instrucciones:**
+
+  + Trazar los números ganadores de esta semana.
+
+<iframe src="DCL/ex2_1.html" frameborder="0" scrolling="no" style="width:100%;height:360px"></iframe>
+
+**Sugerencias:**
+
+  + Puede usar la función <tt>sample()</tt> para trazar números aleatorios, vea <tt>?Sample</tt>.
+
+  + El conjunto de elementos a muestrear desde aquí es $\\{1,...,49\\}$.
+
+</div>')
+} else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 207, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Función de densidad de probabilidad {-}
+
+Considere una variable aleatoria $X$ con función de densidad de probabilidad (FDP)
+
+$$f_X(x)=\\frac{x}{4}e^{-x^2/8},\\quad x\\geq 0.$$
+
+**Instrucciones:**
+
+  + Definir la FDP desde arriba como una función <tt>f()</tt>. <tt>exp(a)</tt> calcular $e^a$.
+
+  + Comprobar si la función que se ha definido es realmente una FDP.
+
+<iframe src="DCL/ex2_2.html" frameborder="0" scrolling="no" style="width:100%;height:360px"></iframe>
+
+**Sugerencias:**
+
+  + Usar <tt>function(x) {...}</tt> para definir una función que toma el argumento <tt>x</tt>.
+
+  + Para que <tt>f()</tt> sea una FDP, su integral en todo el dominio tiene que ser igual a 1: $\\int_0^\\infty f_X(x)\\mathrm{d}x=1$.
+
+  + La función <tt>integrate()</tt> realiza la integración. Debe especificar la función a integrar, así como los límites superior e inferior de integración. Estos se pueden establecer en $[- \\infty, \\infty]$ estableciendo los argumentos correspondientes en <tt>-Inf</tt> e <tt>Inf</tt>. Puede acceder al valor numérico de la integral calculada agregando <tt>$value</tt>. Consulte <tt>?Integral</tt> para obtener una descripción detallada de la función.
+
+</div>
+')}
+```
+
+```{r, 208, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 3. Valor esperado y variación {-}
+
+En este ejercicio debe calcular el valor esperado y la varianza de la variable aleatoria $X$ considerada en el ejercicio anterior.
+
+La FDP <tt>f()</tt> del ejercicio anterior está disponible en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Definir una función adecuada <tt>ex()</tt> que se integre al valor esperado de $X$.
+
+  + Calcular el valor esperado de $X$. Almacene el resultado en <tt>expected_value</tt>.
+
+  + Definir una función adecuada <tt>ex2()</tt> que se integre al valor esperado de $ X^2 $.
+
+  + Calcular la varianza de $X$. Almacene el resultado en <tt>variance</tt>.
+
+<iframe src="DCL/ex2_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El valor esperado de $X$ se define como $E(X)=\\int_0^\\infty xf_X(x)dx$.
+
+  + El valor de una integral calculado por <tt>integrate()</tt> se puede obtener a través de <tt>\\$value</tt>.
+
+  + La varianza de $X$ se define como $Var(X)=E(X^2)-E(X)^2$, donde $E(X^2)=\\int_0^\\infty x^2f_X(x)\\mathrm{d}x$.
+
+</div>')}
+```
+
+```{r, 209, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 4. Distribución normal estándar I {-}
+
+Sea $Z\\sim\\mathcal{N}(0, 1)$.
+
+**Instrucciones:**
+
+  + Calcular $\\phi(3)$, es decir, el valor de la densidad normal estándar en $c=3$.
+
+<iframe src="DCL/ex2_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Valores de $\\phi(\\cdot)$ se puede calcular usando <tt>dnorm()</tt>. Tenga en cuenta que por defecto <tt>dnorm()</tt> usa <tt>mean = 0</tt> y <tt>sd = 1</tt> por lo que no es necesario establecer los argumentos correspondientes cuando desee obtener valores de densidad de la distribución normal estándar.
+
+</div>')}
+```
+
+```{r, 210, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Distribución normal estándar II {-}
+
+Sea $Z\\sim\\mathcal{N}(0, 1)$.
+
+**Instrucciones:**
+
+  + Calcular $P(|Z|\\leq 1.64)$ usando la función <tt>pnorm()</tt>.
+
+<iframe src="DCL/ex2_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + $P(|Z|\\leq z) = P(-z \\leq Z \\leq z)$.
+
+  + Probabilidades de la forma $P(a \\leq Z \\leq b)$ se puede calcular como $P(Z\\leq b)-P(Z\\leq a)=F_Z(b)-F_Z(a)$ with $F_Z(\\cdot)$ la función de distribución acumulativa (FDPA) de $Z$. Alternativamente, puede aprovechar la simetría de la distribución normal estándar.
+
+</div>')}
+```
+
+```{r, 211, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Distribución normal I {-}
+
+Sea $Y\\sim\\mathcal{N}(5, 25)$.
+
+**Instrucciones:**
+
+  + Calcular el cuantil del 99% de la distribución dada, es decir, encontrar $y$ tal que $\\Phi(\\frac{y-5}{5})=0.99$.
+
+<iframe src="DCL/ex2_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Se pueden calcular cuantiles de la distribución normal utilizando la función <tt>qnorm()</tt>.
+
+  + Además del cuantil a calcular, se debe especificar la media y la desviación estándar de la distribución. Esto se hace mediante los argumentos <tt>mean</tt> y <tt>sd</tt>. Se debe tener en cuenta que <tt>sd</tt> establece la desviación estándar, no la varianza.
+
+  + <tt>sqrt(a)</tt> devuelve la raíz cuadrada del argumento numérico <tt>a</tt>.
+
+</div>')}
+```
+
+```{r, 212, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Distribución normal II {-}
+
+Sea $Y\\sim\\mathcal{N}(2, 12)$.
+
+**Instrucciones:**
+
+  + Generar $10$ números aleatorios a partir de esta distribución.
+
+<iframe src="DCL/ex2_7.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Usar <tt>rnorm()</tt> para extraer números aleatorios de una distribución normal.
+
+  + Además del número de sorteos, se debe especificar la media y la desviación estándar de la distribución. Esto se puede hacer a través de los argumentos <tt>mean</tt> y <tt>sd</tt>. Se debe tener en cuenta que <tt>sd</tt> requiere la desviación estándar, no la varianza.
+
+</div>')}
+```
+
+```{r, 213, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 8. Distribución chi-cuadrado I {-}
+
+Sea $W\\sim\\chi^2_{10}$.
+
+**Instrucciones:**
+
+  + Trazar la FDP correspondiente usando <tt>curve()</tt>. Especificar el rango de valores x como $[0,25]$ a través del argumento <tt>xlim</tt>.
+
+<iframe src="DCL/ex2_8.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + <tt>curve()</tt> espera una función y sus parámetros como argumentos (aquí <tt>dchisq()</tt> y los grados de libertad <tt>df</tt>).
+
+  + El rango de valores x en <tt>xlim</tt> se puede pasar como un vector de límites de intervalo.
+
+</div>')}
+```
+
+```{r, 214, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 9. Distribución de chi-cuadrado II {-}
+
+Sea $X_1$ y $X_2$ ser dos variables aleatorias independientes normalmente distribuidas con $\\mu=0$ y $\\sigma^2=15$.
+
+**Instrucciones:**
+
+  + Calcular $P(X_1^2+X_2^2>10)$.
+
+<iframe src="DCL/ex2_9.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Se debe tener en cuenta que $X_1$ y $X_2$ no son $\\mathcal{N}(0,1)$, pero $\\mathcal{N}(0,15)$ repartido. Por lo tanto, debe escalar adecuadamente. Luego puede usar <tt>pchisq()</tt> para calcular la probabilidad.
+  + El argumento <tt>lower.tail</tt> puede resultar útil.
+
+</div>')}
+```
+
+```{r, 215, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 10. Distribución t de Student I {-}
+
+Sea $X\\sim t_{10000}$ y $Z\\sim\\mathcal{N}(0,1)$.
+
+**Instrucciones:**
+
+  + Calcular el cuantil $95\\%$ de ambas distribuciones. ¿Que notaste?
+
+<iframe src="DCL/ex2_10.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Puede usar <tt>qt()</tt> y <tt>qnorm()</tt> para calcular cuantiles de las distribuciones dadas.
+
+  + Para la distribución $t$ se deben especificar los grados de libertad <tt>df</tt>.
+
+</div>')}
+```
+
+```{r, 216, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 11. Distribución t de Student II {-}
+
+Sea $X\\sim t_1$. Una vez que se haya inicializado la sesión, se verá el gráfico de la función de densidad de probabilidad (FDP) correspondiente.
+
+**Instrucciones:**
+
+  + Generar números aleatorios de $1000$ a partir de esta distribución y asígnar a la variable <tt>x</tt>.
+
+  + Calcular la media muestral de <tt>x</tt>. ¿Puede explicar el resultado?
+
+<iframe src="DCL/ex2_11.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Puede usar <tt>rt()</tt> para dibujar números aleatorios de una distribución t.
+
+  + Se debe tener en cuenta que la distribución t está completamente determinada a través de los grados de libertad. Especificarlos mediante el argumento <tt>df</tt>.
+
+  + Para calcular la media muestral de un vector, se puede usar la función <tt>mean()</tt>.
+
+</div>')}
+```
+
+```{r, 217, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 12. F Distribución I {-}
+
+Sea $Y\\sim F(10, 4)$.
+
+**Instrucciones:**
+
+  + Graficar la función cuantil de la distribución dada usando la función <tt>curve()</tt>.
+
+<iframe src="DCL/ex2_12.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + <tt>curve()</tt> expectativa de la función con sus respectivos parámetros (aquí: grados de libertad <tt>df1</tt> y <tt>df2</tt>) como argumento.
+
+</div>')}
+```
+
+```{r, 218, echo=FALSE, results='asis', purl=FALSE}
+if (my_output=="html"){
+  cat('
+<div  class = "DCexercise">
+
+#### 13. F Distribución II {-}
+
+Sea $Y\\sim F(4,5)$.
+
+**Instrucciones:**
+
+  + Calcular $P(1<Y<10)$ mediante la integración de la FDP.
+
+<iframe src="DCL/ex2_13.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Además de proporcionar la función que se va a integrar, se deben especificar los límites superior e inferior de integración.
+
+  + Los parámetros adicionales de la distribución (aquí <tt>df1</tt> y <tt>df2</tt>) también deben pasarse *dentro* de la llamada de <tt>integrate()</tt>.
+
+  + El valor de la integral se puede obtener mediante <tt>\\$value</tt>.
+
+</div>')}
+```

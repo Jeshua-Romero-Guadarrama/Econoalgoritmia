@@ -1,0 +1,1086 @@
+# Evaluación de estudios basados en regresión múltiple {#EEBRM}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 524, child="_setup.Rmd"}
+```
+
+```{r, 525, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+```{r, 526, echo=F, purl=F, message=FALSE}
+# cargar el paquete AER
+library(AER)   
+
+# cargar el conjunto de datos en el espacio de trabajo
+data(CASchools) 
+
+# calcular STR y agregarlo a CASchools
+CASchools$STR <- CASchools$students/CASchools$teachers 
+
+# calcular TestScore y agregarlo a CASchools
+CASchools$score <- (CASchools$read + CASchools$math)/2  
+
+# Agregar HiSTR a CASchools
+CASchools$HiSTR <- as.numeric(CASchools$STR >= 20)
+
+# Agregar HiEL a CASchools
+CASchools$HiEL <- as.numeric(CASchools$english >= 10)
+
+# modelo (2) para California
+TestScore_mod2 <- lm(score ~ STR + english + lunch + log(income), data = CASchools)
+```
+
+La mayor parte del capítulo 9 es de naturaleza teórica. Por lo tanto, esta sección revisa brevemente los conceptos de validez interna y externa, en general, y analiza ejemplos de amenazas a la validez interna y externa de modelos de regresión múltiple, en particular. De igual forma, se discuten las consecuencias de:
+
+- Especificación incorrecta de la forma funcional de la función de regresión.
+- Errores de medición.
+- Datos faltantes y selección de muestras
+- Causalidad simultánea
+
+Asimismo, se abordan las fuentes de inconsistencia de los errores estándar de MCO. También se revisan las preocupaciones respecto a la validez interna y externa en el contexto de la predicción mediante modelos de regresión.
+
+El capítulo cierra con una aplicación en **R** donde se evalúa si los resultados encontrados por regresión múltiple usando los datos de **CASchools** se pueden generalizar a los distritos escolares de otro estado federal de los Estados Unidos.
+
+Para un tratamiento más detallado de estos temas, se recomienda que lea el siguiente **[artículo](https://core.ac.uk/download/pdf/224733178.pdf)**.
+
+Los siguientes paquetes y sus dependencias son necesarios para la reproducción de los fragmentos de código presentados a lo largo de este capítulo:
+
++ **AER**
++ **mvtnorm** 
++ **stargazer**
+
+```{r, 527, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(mvtnorm)
+library(stargazer)
+```
+
+## Validez interna y externa
+
+```{r, 528, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat("
+<div class = 'keyconcept' id='KC9.1'>
+<h3 class = 'right'> Concepto clave 9.1 </h3>
+<h3 class = 'left'> Validez interna y externa </h3>
+
+Un análisis estadístico tiene validez *interna* si la inferencia estadística realizada sobre los efectos causales es válida para la población considerada.
+
+Se dice que un análisis tiene validez *externa* si las inferencias y la conclusión son válidas para la población de los estudios y pueden generalizarse a otras poblaciones y entornos.
+
+</div>
+")
+```
+
+```{r, 529, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat("\\begin{keyconcepts}[Validez interna y externa]{9.1}
+
+Un análisis estadístico tiene validez \\textit{interna} si la inferencia estadística realizada sobre los efectos causales es válida para la población considerada.\\newline
+
+Se dice que un análisis tiene validez \\textit{externa} si las inferencias y la conclusión son válidas para la población de los estudios y pueden generalizarse a otras poblaciones y entornos.
+
+\\end{keyconcepts}
+")
+```
+
+#### Amenazas a la validez interna {-}
+
+Existen dos condiciones para que se cumpla con la validez interna:
+
+1. El estimador del efecto causal, en el que se miden los coeficientes de interés, debe ser insesgado y consistente.
+
+2. La inferencia estadística es válida; es decir, las pruebas de hipótesis deben tener el tamaño deseado y los intervalos de confianza deben tener la probabilidad de cobertura deseada.
+
+En regresión múltiple, se estiman los coeficientes del modelo usando MCO. Por lo tanto, para que se cumpla la condición 1, se necesita que el estimador MCO sea insesgado y consistente. Para que la segunda condición sea válida, los errores estándar deben ser válidos de manera que la prueba de hipótesis y el cálculo de los intervalos de confianza produzcan resultados confiables. Recuerde que una condición suficiente para que se cumplan las condiciones 1. y 2. es que se cumplan los supuestos del Concepto clave 6.4.
+
+#### Amenazas a la validez externa {-}
+
+La validez externa puede no ser válida:
+
+1. Si existen diferencias entre la población estudiada y la población de interés.
+
+2. Si existen diferencias en los *entornos* de las poblaciones consideradas; por ejemplo, el marco legal o el momento histórico de la investigación.
+
+## Amenazas a la validez interna del análisis de regresión múltiple {#AVIARM}
+
+Esta sección trata cinco fuentes que causan que el estimador de MCO en modelos de regresión (múltiple) sea sesgado e inconsistente para el efecto causal de interés y discute posibles soluciones. Las cinco fuentes implican una violación del primer supuesto de mínimos cuadrados presentado en el Concepto clave 6.4.
+
+Esta sección trata:
+
+- Sesgo de variable omitida.
+
+- Especificación incorrecta de la forma funcional.
+
+- Errores de medición.
+
+- Datos faltantes y selección de muestras.
+
+- Sesgo de causalidad simultánea.
+
+Además de estas amenazas para la cosistencia del estimador, también se discuten brevemente las causas de la estimación inconsistente de los errores estándar de MCO.
+
+#### Sesgo de variable omitida {-}
+
+```{r, 530, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.2">
+<h3 class = "right"> Concepto clave 9.2 </h3>
+<h3 class = "left"> Sesgo de variable omitida: ¿Debería incluir más variables en mi regresión? </h3>
+
+La inclusión de variables adicionales reduce el riesgo de sesgo de variable omitida, pero puede aumentar la varianza del estimador del coeficiente de interés.
+
+Se presentan algunas pautas que ayudan a decidir si incluir una variable adicional:
+
+1. Especificar el o los coeficientes de interés.
+2. Identificar las fuentes potenciales más importantes de sesgo de variables omitidas utilizando el conocimiento disponible *antes* de estimar el modelo. Debería terminar con una especificación de referencia y un conjunto de regresores que son cuestionables.
+3. Utilizar diferentes especificaciones de modelo para probar si los regresores cuestionables tienen coeficientes diferentes de cero.
+4. Utilizar tablas para proporcionar una divulgación completa de sus resultados; es decir, presentar diferentes especificaciones de modelos que apoyen su argumento y permitan al lector ver el efecto de incluir regresores cuestionables.
+
+</div>
+')
+```
+
+```{r, 531, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Sesgo de variable omitida: ¿Debería incluir más variables en mi regresión?]{9.2}
+
+La inclusión de variables adicionales reduce el riesgo de sesgo de variable omitida, pero puede aumentar la varianza del estimador del coeficiente de interés.\\newline
+
+Se presentan algunas pautas que ayudan a decidir si incluir una variable adicional:\\newline
+
+\\begin{itemize}
+\\item Especificar el o los coeficientes de interés.
+\\item Identificar las fuentes potenciales más importantes de sesgo de variables omitidas utilizando el conocimiento disponible \\textit{antes} de estimar el modelo. Debería terminar con una especificación de referencia y un conjunto de regresores que son cuestionables.
+\\item Utilizar diferentes especificaciones de modelo para probar si los regresores cuestionables tienen coeficientes diferentes de cero.
+\\item Utilizar tablas para proporcionar una divulgación completa de sus resultados; es decir, presentar diferentes especificaciones de modelos que apoyen su argumento y permitan al lector ver el efecto de incluir regresores cuestionables.
+\\end{itemize}
+
+\\end{keyconcepts}
+')
+```
+
+A estas alturas, debe conocer el sesgo de variable omitida y sus consecuencias. El Concepto clave 9.2 da algunas pautas sobre cómo proceder si hay variables de control que posiblemente permitan reducir el sesgo de las variables omitidas. Si incluir variables adicionales para mitigar el sesgo no es una opción porque no hay controles adecuados, existen diferentes enfoques para resolver el problema:
+
++ Usar métodos de datos de panel (discutido en el Capítulo \@ref(RDP))
+
++ Usar regresiones de variables instrumentales (discutido en el Capítulo \@ref(RVI))
+
++ Usar experimentos de control aleatorio (discutido en el Capítulo \@ref(EC))
+
+#### Especificación incorrecta de la forma funcional de la función de regresión {-}
+
+Si la función de regresión de la población no es lineal pero la función de regresión es lineal, la forma funcional del modelo de regresión está mal especificada. Esto conduce a un sesgo del estimador MCO.
+
+```{r, 532, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.3">
+<h3 class = "right"> Concepto clave 9.3 </h3>
+<h3 class = "left"> Especificación incorrecta de la forma funcional </h3>
+
+Se dice que una regresión adolece de una especificación incorrecta de la forma funcional cuando la forma funcional del modelo de regresión estimado difiere de la forma funcional de la función de regresión poblacional. La especificación incorrecta de la forma funcional conduce a estimadores de coeficientes sesgados e inconsistentes. Una forma de detectar la especificación incorrecta de la forma funcional es trazar la función de regresión estimada y los datos. Esto también puede resultar útil para elegir la forma funcional correcta.
+
+</div>
+')
+```
+
+```{r, 533, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Especificación incorrecta de la forma funcional]{9.3}
+
+Se dice que una regresión adolece de una especificación incorrecta de la forma funcional cuando la forma funcional del modelo de regresión estimado difiere de la forma funcional de la función de regresión poblacional. La especificación incorrecta de la forma funcional conduce a estimadores de coeficientes sesgados e inconsistentes. Una forma de detectar la especificación incorrecta de la forma funcional es trazar la función de regresión estimada y los datos. Esto también puede resultar útil para elegir la forma funcional correcta.
+
+\\end{keyconcepts}
+')
+```
+
+Es fácil encontrar ejemplos de especificación incorrecta de la forma funcional: Considere el caso en el que la función de regresión de la población es $$Y_i = X_i^2$$, pero el modelo utilizado es $$Y_i = \beta_0 + \beta_1 X_i + u_i.$$ Claramente, la función de regresión está mal especificada aquí. Ahora, simulando y visualizándo los datos.
+
+```{r, 534, fig.align='center'}
+# sembrar la semilla para la reproducibilidad
+set.seed(3)
+
+# simular conjunto de datos
+X <- runif(100, -5, 5)
+Y <- X^2 + rnorm(100)
+
+# estimar la función de regresión
+ms_mod <- lm(Y ~ X)
+ms_mod
+```
+
+```{r, 535, fig.align='center'}
+# graficar los datos
+plot(X, Y, 
+     main = "Especificación incorrecta de la forma funcional",
+     pch = 20,
+     col = "steelblue")
+
+# graficar la línea de regresión lineal
+abline(ms_mod, 
+       col = "darkred",
+       lwd = 2)
+```
+
+Es evidente que los errores de regresión son relativamente pequeños para observaciones cercanas a $X = -3$ y $X = 3$, pero que los errores aumentan para valores de $X$ más cercanos a cero e incluso más para valores superiores a $-4$ y $4$. Las consecuencias son drásticas: La intersección se estima en $8.1$ y para el parámetro de pendiente se obtiene una estimación obviamente muy cercana a cero. Este problema no desaparece a medida que aumenta el número de observaciones porque la MCO está *sesgada* y es *inconsistente* debido a la especificación incorrecta de la función de regresión.
+
+#### Error de medición y sesgo de errores en variables {-}
+
+```{r, 536, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.4">
+<h3 class = "right"> Concepto clave 9.4 </h3>
+<h3 class = "left"> Errores en sesgo variable </h3>
+
+Cuando las variables independientes se miden de manera imprecisa, se habla de sesgo de errores en las variables. Este sesgo no desaparece si el tamaño de la muestra es grande. Si el error de medición tiene media cero y es independiente de la variable afectada, el estimador MCO del coeficiente respectivo está sesgado hacia cero.
+
+</div>
+')
+```
+
+```{r, 537, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Errores en sesgo variable]{9.4}
+
+Cuando las variables independientes se miden de manera imprecisa, se habla de sesgo de errores en las variables. Este sesgo no desaparece si el tamaño de la muestra es grande. Si el error de medición tiene media cero y es independiente de la variable afectada, el estimador MCO del coeficiente respectivo está sesgado hacia cero.
+
+\\end{keyconcepts}
+')
+```
+
+Suponga que está midiendo incorrectamente el regresor único $X_i$, de modo que existe un error de medición y observa $\overset{\sim}{X}_i$, en lugar de $X_i$. Entonces, en lugar de estimar la población, el modelo de regresión $$ Y_i = \beta_0 + \beta_1 X_i + u_i $$ terminas estimando
+
+\begin{align*}
+  Y_i =& \, \beta_0 + \beta_1 \overset{\sim}{X}_i + \underbrace{\beta_1 (X_i - \overset{\sim}{X}_i) + u_i}_{=v_i} \\
+  Y_i =& \, \beta_0 + \beta_1 \overset{\sim}{X}_i + v_i
+\end{align*}
+
+donde $\overset{\sim}{X}_i$ y el término de error $v_i$ están correlacionados. Por lo tanto, MCO estaría sesgado e inconsistente para el verdadero $\beta_1$ en este ejemplo. Se puede demostrar que la dirección y la fuerza del sesgo dependen de la correlación entre el regresor observado, $\overset{\sim}{X}_i$, y el error de medición, $w_i =X_i - \overset{\sim}{X}_i$. Esta correlación, a su vez, depende del tipo de error de medición cometido.
+
+El modelo de error de medición clásico supone que el error de medición, $w_i$, tiene media cero y que no está correlacionado con la variable, $X_i$, y el término de error del modelo de regresión poblacional, $u_i$:
+
+\begin{equation}
+  \overset{\sim}{X}_i = X_i + w_i, \ \ \rho_{w_i,u_i}=0, \ \ \rho_{w_i,X_i}=0 
+\end{equation}
+
+Entonces sostiene que:
+
+\begin{equation}
+  \widehat{\beta}_1 \xrightarrow{p}{\frac{\sigma_{X}^2}{\sigma_{X}^2 + \sigma_{w}^2}} \beta_1 (\#eq:cmembias)
+\end{equation}
+
+lo que implica una inconsistencia como $\sigma_{X}^2, \sigma_{w}^2 > 0$, tal que la fracción en \@ref(eq:cmembias) es menor que $1$. Se debe tener en cuenta que se deben reconocer dos casos extremos:
+
+1. Si no existe ningún error de medición, $\sigma_{w}^2=0$ tal que $\widehat{\beta}_1 \xrightarrow{p}{\beta_1}$. 
+
+2. Si $\sigma_{w}^2 \gg \sigma_{X}^2$, se tiene $\widehat{\beta}_1 \xrightarrow{p}{0}$. Este es el caso si el error de medición es tan grande que esencialmente no hay información sobre $X$ en los datos que pueda usarse para estimar $\beta_1$.
+
+La forma más obvia de lidiar con el sesgo de errores en las variables es usar un $X$ medido con precisión. Si esto no es posible, la regresión de variables instrumentales es una opción. También se podría abordar el problema mediante el uso de un modelo matemático del error de medición y ajustar las estimaciones de manera apropiada: Si es plausible que se aplique el modelo clásico de error de medición y si existe información que se pueda utilizar para estimar la razón en la ecuación \@ref(eq:cmembias), se podría calcular una estimación que corrija el sesgo a la baja.
+
+Por ejemplo, considere dos variables aleatorias bivariadas distribuidas normalmente $X, Y$. Es un [resultado bien conocido](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case) que la función de expectativa condicional de $Y$ dado $X$ tiene la forma:
+
+\begin{align}
+  E(Y\vert X) = E(Y) + \rho_{X,Y} \frac{\sigma_{Y}}{\sigma_{X}}\left[X-E(X)\right]. (\#eq:bnormexpfn) 
+\end{align} Thus for 
+\begin{align}
+  (X, Y) \sim \mathcal{N}\left[\begin{pmatrix}50\\ 100\end{pmatrix},\begin{pmatrix}10 & 5 \\ 5 & 10 \end{pmatrix}\right] (\#eq:bvnormd)
+\end{align} de acuerdo con \@ref(eq:bnormexpfn), la función de regresión poblacional es
+\begin{align*}
+  Y_i =& \, 100 + 0.5 (X_i - 50) \\
+      =& \, 75 + 0.5 X_i. (\#eq:bnormregfun)
+\end{align*}
+
+Ahora suponga que recopila datos sobre $X$ y $Y$, pero que solo puede medir $\overset{\sim}{X_i} = X_i + w_i$ con $w_i \overset{i.i.d.}{\sim} \mathcal{N}(0,10)$. Dado que $w_i$ son independientes de $X_i$, no hay correlación entre $X_i$ y $w_i$, por lo que se tiene un caso del modelo clásico de error de medición. Ahora se ilustra este ejemplo en **R** usando el paquete **mvtnorm** [@R-mvtnorm].
+
+```{r, 538, eval = T}
+# sembrar semilla
+set.seed(1)
+
+# cargar el paquete 'mvtnorm' y simular datos normales bivariados
+library(mvtnorm)
+dat <- data.frame(
+  rmvnorm(1000, c(50, 100), 
+          sigma = cbind(c(10, 5), c(5, 10))))
+
+# establecer nombres de columnas
+colnames(dat) <- c("X", "Y")
+```
+
+Ahora se estima una regresión lineal simple de $Y$ en $X$ usando estos datos de muestra y se vuelve a ejecutar la misma regresión, pero esta vez se agregan i.i.d. $\mathcal{N}(0,10)$ errores agregados a $X$.
+
+```{r, 539, eval = T}
+# estimar el modelo (sin error de medición)
+noerror_mod <- lm(Y ~ X, data = dat)
+
+# estimar el modelo (con error de medición en X)
+dat$X <- dat$X + rnorm(n = 1000, sd = sqrt(10))
+error_mod <- lm(Y ~ X, data = dat)
+
+# imprimir los coeficientes estimados en la consola
+noerror_mod$coefficients
+error_mod$coefficients
+```
+
+A continuación, se visualizan los resultados y se comparan con la función de regresión poblacional.
+
+```{r, 540, fig.align='center'}
+# graficar datos de muestra
+plot(dat$X, dat$Y, 
+     pch = 20, 
+     col = "steelblue",
+     xlab = "X",
+     ylab = "Y")
+
+# agregar función de regresión poblacional
+abline(coef = c(75, 0.5), 
+       col = "darkgreen",
+       lwd  = 1.5)
+
+# agregar funciones de regresión estimadas
+abline(noerror_mod, 
+       col = "purple",
+       lwd  = 1.5)
+
+abline(error_mod, 
+       col = "darkred",
+       lwd  = 1.5)
+
+# agregar leyenda
+legend("topleft",
+       bg = "transparent",
+       cex = 0.8,
+       lty = 1,
+       col = c("darkgreen", "purple", "darkred"), 
+       legend = c("Población","Sin errores","Errores"))
+```
+
+En la situación sin error de medición, la función de regresión estimada está cerca de la función de regresión de la población. Las cosas son diferentes cuando se usa el regresor mal medido $X$: Tanto la estimación de la intersección como la estimación del coeficiente en $X$ difieren considerablemente de los resultados obtenidos usando los datos "limpios" en $X$. En particular $\widehat{\beta}_1 = 0.255$, por lo que existe un sesgo a la baja. Se está en una situación cómoda para conocer $\sigma_X^2$ y $\sigma^2_w$. Lo anterior permite corregir el sesgo usando \@ref(eq:cmembias). Con esta información se obtiene la estimación con corrección sesgada $$\frac{\sigma_X^2 + \sigma_w^2}{\sigma_X^2} \cdot \widehat{\beta}_1 = \frac{10+10}{10} \cdot 0.255 = 0.51$$ que está bastante cerca de $\beta_1=0.5$, el verdadero coeficiente de la función de regresión poblacional.
+
+Se debe tener en cuenta que el análisis anterior utiliza una sola muestra. Por tanto, se puede argumentar que los resultados son solo una coincidencia. ¿Se puede demostrar lo contrario utilizando un estudio de simulación?
+
+#### Selección de muestra y datos faltantes {-}
+
+```{r, 541, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.5">
+<h3 class = "right"> Concepto clave 9.5 </h3>
+<h3 class = "left"> Sesgo de selección de muestra </h3>
+
+Cuando el proceso de muestreo influye en la disponibilidad de datos y cuando existe una relación de este proceso de muestreo con la variable dependiente que va más allá de la dependencia de los regresores, se dice que existe un sesgo de selección de la muestra. Este sesgo se debe a la correlación entre uno o más regresores y el término de error. La selección de la muestra implica tanto sesgo como inconsistencia del estimador MCO.
+
+</div>
+')
+```
+
+```{r, 542, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Sesgo de selección de muestra]{9.5}
+
+Cuando el proceso de muestreo influye en la disponibilidad de datos y cuando existe una relación de este proceso de muestreo con la variable dependiente que va más allá de la dependencia de los regresores, se dice que existe un sesgo de selección de la muestra. Este sesgo se debe a la correlación entre uno o más regresores y el término de error. La selección de la muestra implica tanto sesgo como inconsistencia del estimador MCO.
+
+\\end{keyconcepts}
+')
+```
+
+Existen tres casos de selección de muestras. Solo uno de ellos representa una amenaza para la validez interna de un estudio de regresión. Los tres casos son:
+
+1. Faltan datos al azar.
+
+2. Faltan datos basados en el valor de un regresor.
+
+3. Faltan datos debido a un proceso de selección relacionado con la variable dependiente.
+
+Volviendo al ejemplo de las variables $X$ y $Y$ distribuidas como se indica en la ecuación \@ref(eq:bvnormd) y se ilustran los tres casos usando **R**.
+
+Si faltan datos al azar, esto no es más que perder observaciones. Por ejemplo, perder $50\%$ de la muestra sería lo mismo que no haber visto nunca la mitad (elegida al azar) de la muestra observada. Por lo tanto, los datos faltantes no introducen un sesgo de estimación y "solo" conducen a estimadores menos eficientes.
+
+```{r, 543, fig.align='center'}
+# sembrar semilla
+set.seed(1)
+
+# simular datos
+dat <- data.frame(
+  rmvnorm(1000, c(50, 100), 
+          sigma = cbind(c(10, 5), c(5, 10))))
+
+colnames(dat) <- c("X", "Y")
+
+# marcar 500 observaciones seleccionadas al azar
+id <- sample(1:1000, size = 500)
+
+plot(dat$X[-id], 
+     dat$Y[-id], 
+     col = "steelblue", 
+     pch = 20,
+     cex = 0.8,
+     xlab = "X",
+     ylab = "Y")
+
+points(dat$X[id], 
+       dat$Y[id],
+       cex = 0.8,
+       col = "gray", 
+       pch = 20)
+
+# agregar la función de regresión poblacional
+abline(coef = c(75, 0.5), 
+       col = "darkgreen",
+       lwd  = 1.5)
+
+# agregar la función de regresión estimada para la muestra completa
+abline(noerror_mod)
+
+# estimar el caso del modelo 1 y agregar la línea de regresión
+dat <- dat[-id, ]
+
+c1_mod <- lm(dat$Y ~ dat$X, data = dat)
+abline(c1_mod, col = "purple")
+
+# agrega una leyenda
+legend("topleft",
+       lty = 1,
+       bg = "transparent",
+       cex = 0.8,
+       col = c("darkgreen", "black", "purple"), 
+       legend = c("Población","Muestra completa","500 observaciones seleccionado aleatoriamente"))
+```
+
+Los puntos grises representan las observaciones descartadas de $500$. Cuando se utilizan las observaciones restantes, los resultados de la estimación se desvían solo marginalmente de los resultados obtenidos con la muestra completa.
+
+La selección de datos aleatoriamente basada en el valor de un regresor también tiene el efecto de reducir el tamaño de la muestra y no introduce sesgo de estimación. Ahora se descartan todas las observaciones con $X > 45$, se estimará el modelo nuevamente y se comparará.
+
+```{r, 544, fig.align='center'}
+# establecer semilla aleatoria
+set.seed(1)
+
+# simular datos
+dat <- data.frame(
+  rmvnorm(1000, c(50, 100), 
+          sigma = cbind(c(10, 5), c(5, 10))))
+
+colnames(dat) <- c("X", "Y")
+
+# marcar observaciones
+id <- dat$X >= 45
+
+plot(dat$X[-id], 
+     dat$Y[-id], 
+     col = "steelblue",
+     cex = 0.8,
+     pch = 20,
+     xlab = "X",
+     ylab = "Y")
+
+points(dat$X[id], 
+       dat$Y[id], 
+       col = "gray",
+       cex = 0.8,
+       pch = 20)
+
+# agregar función de regresión poblacional
+abline(coef = c(75, 0.5), 
+       col = "darkgreen",
+       lwd  = 1.5)
+
+# agregar la función de regresión estimada para la muestra completa
+abline(noerror_mod)
+
+# estimar el caso del modelo 1, agregar la línea de regresión
+dat <- dat[-id, ]
+
+c2_mod <- lm(dat$Y ~ dat$X, data = dat)
+abline(c2_mod, col = "purple")
+
+# agregar leyenda
+legend("topleft",
+       lty = 1,
+       bg = "transparent",
+       cex = 0.8,
+       col = c("darkgreen", "black", "purple"), 
+       legend = c("Población","Muestra completa","Observaciones con X <= 45"))
+```
+
+Tenga en cuenta que, aunque se redujeron todas las observaciones en más del $90\%$, la función de regresión estimada está muy cerca de la línea estimada basada en la muestra completa.
+
+En el tercer caso, se enfrenta a un sesgo de selección de la muestra. Se puede ilustrar esto usando solo observaciones con $X_i < 55$ y $Y_i > 100$. Estas observaciones se identifican fácilmente usando la función **which()** y los operadores lógicos: `which (dat $ X <55 & dat $ Y> 100)`
+
+```{r, 545, fig.align='center'}
+# establecer semilla aleatoria
+set.seed(1)
+
+# simular datos
+dat <- data.frame(
+  rmvnorm(1000, c(50,100), 
+          sigma = cbind(c(10,5), c(5,10))))
+
+colnames(dat) <- c("X","Y")
+
+# marcar observaciones
+id <- which(dat$X <= 55 & dat$Y >= 100)
+
+plot(dat$X[-id], 
+       dat$Y[-id], 
+       col = "gray",
+       cex = 0.8,
+       pch = 20,
+       xlab = "X",
+       ylab = "Y")
+
+points(dat$X[id], 
+     dat$Y[id], 
+     col = "steelblue",
+     cex = 0.8,
+     pch = 20)
+
+# agregar función de regresión poblacional
+abline(coef = c(75, 0.5), 
+       col = "darkgreen",
+       lwd  = 1.5)
+
+# agregar la función de regresión estimada para la muestra completa
+abline(noerror_mod)
+
+# estimar el caso del modelo 1, agregar la línea de regresión
+dat <- dat[id, ]
+
+c3_mod <- lm(dat$Y ~ dat$X, data = dat)
+abline(c3_mod, col = "purple")
+
+# agregar leyenda
+legend("topleft",
+       lty = 1,
+       bg = "transparent",
+       cex = 0.8,
+       col = c("darkgreen", "black", "purple"), 
+       legend = c("Población", "Muestra completa", "X <= 55 & Y >= 100"))
+```
+
+Se puede ver que el proceso de selección conduce a resultados de estimación sesgados.
+
+Existen métodos que permiten corregir el sesgo de selección de la muestra. Sin embargo, estos métodos están más allá del alcance del presente curso y, por lo tanto, no se consideran aquí. El concepto de sesgo de selección de la muestra se resume en el Concepto clave 9.5.
+
+#### Causalidad simultánea {-}
+
+```{r, 546, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.6">
+<h3 class = "right"> Concepto clave 9.6 </h3>
+<h3 class = "left"> Sesgo de causalidad simultáneo </h3>
+
+Hasta ahora se ha asumido que los cambios en la variable independiente $X$ son responsables de los cambios en la variable dependiente $Y$. Cuando lo contrario también es cierto, se dice que existe *causalidad simultánea* entre $X$ y $Y$. Esta causalidad inversa conduce a una correlación entre $X$ y el error en la regresión poblacional de interés, de modo que el coeficiente de $X$ se estima con sesgo.
+
+</div>
+')
+```
+
+```{r, 547, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Simultaneous Causality Bias]{9.6}
+
+Hasta ahora se ha asumido que los cambios en la variable independiente $X$ son responsables de los cambios en la variable dependiente $Y$. Cuando lo contrario también es cierto, se dice que existe \\textit{causalidad simultánea} entre $X$ y $Y$. Esta causalidad inversa conduce a una correlación entre $X$ y el error en la regresión poblacional de interés, de modo que el coeficiente de $X$ se estima con sesgo.
+
+\\end{keyconcepts}
+')
+```
+
+Suponga que se está interesado en estimar el efecto de un aumento de $20\%$ en los precios de los cigarrillos sobre el consumo de cigarrillos en los Estados Unidos utilizando un modelo de regresión múltiple. Esto se puede investigar utilizando el conjunto de datos **CigarettesSW** que es parte del paquete **AER**. **CigarettesSW** es un conjunto de datos de panel sobre el consumo de cigarrillos para los 48 estados federales continentales de EE. UU. desde 1985-1995 y proporciona datos sobre indicadores económicos y precios locales promedio, impuestos y consumo de paquetes per cápita.
+
+Después de cargar el conjunto de datos, se seleccionan observaciones para el año 1995 y se trazan los logaritmos del precio por paquete, **price**, contra el consumo del paquete, **packs**, y se estima un modelo de regresión lineal simple.
+
+```{r, 548}
+# cargar el conjunto de datos
+library(AER)
+data("CigarettesSW")
+c1995 <- subset(CigarettesSW, year == "1995")
+
+# estimar el modelo
+cigcon_mod <- lm(log(packs) ~ log(price), data = c1995)
+cigcon_mod
+```
+
+```{r, 549}
+# trazar la línea de regresión estimada y los datos
+plot(log(c1995$price), log(c1995$packs),
+     xlab = "ln(Precio)",
+     ylab = "ln(Consumo)",
+     main = "Demanda de cigarrillos",
+     pch = 20,
+     col = "steelblue")
+
+abline(cigcon_mod, 
+       col = "darkred", 
+       lwd = 1.5)
+```
+
+Recuerde del Capítulo \@ref(FRNL) que, debido a la especificación log-log, en la regresión poblacional el coeficiente del logaritmo del precio se interpreta como la elasticidad precio del consumo. El coeficiente estimado sugiere que un aumento de $1\%$ en los precios de los cigarrillos reduce el consumo de cigarrillos en aproximadamente $1.2\%$, en promedio. ¿Se ha estimado una curva de demanda? La respuesta es no: Este es un ejemplo clásico de causalidad simultánea, ver Concepto clave 9.6. Las observaciones son equilibrios de mercado que están determinados tanto por cambios en la oferta como por cambios en la demanda. Por lo tanto, el precio está correlacionado con el término de error y el estimador de MCO está sesgado. No se puede estimar una curva de oferta ni de demanda de manera consistente utilizando este enfoque.
+
+Se volverá a este tema en el Capítulo \@ref(RVI) que trata la regresión de variables instrumentales, un enfoque que permite una estimación consistente cuando hay causalidad simultánea.
+
+#### Fuentes de inconsistencia de errores estándar de MCO {-}
+
+Existen dos amenazas centrales para el cálculo de errores estándar consistentes de MCO:
+
+1. Heteroscedasticidad: Las implicaciones de la heterocedasticidad se han discutido en el Capítulo \@ref(PHICMRLS). Los errores estándar robustos a la heterocedasticidad calculados por la función **vcovHC()** del paquete **sandwich** producen errores estándar válidos bajo heterocedasticidad.
+
+2. Correlación en serie: Si el error de regresión de la población está correlacionado entre las observaciones, se tiene una correlación en serie. Esto sucede a menudo en aplicaciones en las que se utilizan observaciones repetidas; por ejemplo, en estudios de datos de panel. En cuanto a la heterocedasticidad, **vcovHC()** se puede utilizar para obtener errores estándar válidos cuando existe correlación serial.
+
+Los errores estándar inconsistentes producirán pruebas de hipótesis no válidas e intervalos de confianza incorrectos. Por ejemplo, cuando se prueba el valor nulo de que algún coeficiente del modelo es cero, ya no se puede confiar en el resultado porque la prueba puede no tener un tamaño de $5\%$ debido al error estándar calculado incorrectamente.
+
+El Concepto clave 9.7 resume todas las amenazas a la validez interna discutidas anteriormente.
+
+```{r, 550, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC9.7">
+<h3 class = "right"> Concepto clave 9.7 </h3>
+<h3 class = "left"> Amenazas a la validez interna de un estudio de regresión </h3>
+
+Las cinco amenazas principales a la validez interna de un estudio de regresión múltiple son:
+
+1. Variables omitidas.
+2. Especificación incorrecta de la forma funcional.
+3. Errores en las variables (errores de medición en los regresores).
+4. Selección de muestras.
+5. Causalidad simultánea.
+
+Todas estas amenazas conducen al fracaso del primer supuesto de mínimos cuadrados $$E(u_i\\vert X_{1i},\\dots ,X_{ki}) \\neq 0$$ de modo que el estimador de MCO está *sesgado* y es *inconsistente*.<br>
+
+Además, si uno no ajusta por heterocedasticidad *y*/*o* correlación serial, los errores estándar incorrectos pueden ser una amenaza para la validez interna del estudio.
+
+</div>
+')
+```
+
+```{r, 551, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Amenazas a la validez interna de un estudio de regresión]{9.7}
+
+Las cinco amenazas principales a la validez interna de un estudio de regresión múltiple son:\\newline
+
+\\begin{enumerate}
+\\item Variables omitidas.
+\\item Especificación incorrecta de la forma funcional.
+\\item Errores en las variables (errores de medición en los regresores).
+\\item Selección de muestras.
+\\item Causalidad simultánea.
+\\end{enumerate}\\vspace{0.5cm}
+
+Todas estas amenazas conducen al fracaso del primer supuesto de mínimos cuadrados $$E(u_i\\vert X_{1i},\\dots ,X_{ki}) \\neq 0$$ de modo que el estimador de MCO está \\textit{sesgado} y es \\textit{inconsistente}.\\newline
+
+Además, si uno no ajusta por heterocedasticidad \\textit{y}/\\textit{o} correlación serial, los errores estándar incorrectos pueden ser una amenaza para la validez interna del estudio.
+
+\\end{keyconcepts}
+')
+```
+
+## Validez interna y externa cuando la regresión se usa para pronosticar
+
+Recuerde la regresión de los puntajes de las pruebas en la proporción alumno-maestro ($STR$) realizada en el Capítulo \@ref(RLR):
+
+```{r, 552}
+linear_model <- lm(score ~ STR, data = CASchools)
+linear_model
+```
+
+La función de regresión estimada fue
+
+$$ \widehat{TestScore} = 698.9 - 2.28 \times STR.$$
+
+Se analiza el ejemplo de un padre que se muda a un área metropolitana y planea elegir dónde vivir en función de la calidad de las escuelas locales: El puntaje promedio de las pruebas de un distrito escolar es una medida adecuada de la calidad. Sin embargo, el padre solo tiene información sobre la proporción de alumnos por maestro, de modo que es necesario predecir los puntajes de las pruebas. Aunque se ha establecido que existe un sesgo de variable omitida en este modelo debido a la omisión de variables como las oportunidades de aprendizaje de los estudiantes fuera de la escuela, la proporción de estudiantes de inglés, entre otros, **modelo_lineal** puede, de hecho, ser útil para los padres:
+
+Al padre no le importa si el coeficiente de $STR$ tiene una interpretación causal, quiere que $STR$ explique la mayor variación posible en los puntajes de las pruebas. Por lo tanto, a pesar del hecho de que **linear_model** no se puede usar para estimar el *efecto causal* de un cambio en $STR$ en los puntajes de las pruebas, se puede considerar un *predictor confiable* de los puntajes de las pruebas en general.
+
+Por lo tanto, las amenazas a la validez interna resumidas en el Concepto clave 9.7 son insignificantes para el padre. Esto es diferente para un superintendente al que se le ha encomendado tomar medidas que aumenten los puntajes de las pruebas: Necesita un modelo más confiable que no sufra las amenazas enumeradas en el Concepto clave 9.7.
+
+## Ejemplo: Puntajes de exámenes y tamaño de la clase {#EPETC}
+
+Esta sección analiza la validez interna y externa de los resultados obtenidos del análisis de los datos de las calificaciones de las pruebas de California utilizando modelos de regresión múltiple.
+
+#### Validez externa del estudio {-}
+
+La validez externa del análisis de puntaje de la prueba de California significa que sus resultados se pueden generalizar. Que esto sea posible depende de la población y el entorno. Se realiza el mismo análisis utilizando datos para estudiantes de cuarto grado en distritos escolares públicos de $220$ en Massachusetts en 1998. Al igual que **CASchools**, el conjunto de datos **MASchools** es parte del paquete **AER** [@R-AER]. Se puede utilizar la función de ayuda (`?MASchools`) para obtener información sobre las definiciones de todas las variables contenidas.
+
+Se debe comenzar cargando el conjunto de datos y procediendo a calcular algunas estadísticas resumidas.
+
+```{r, 553, warning=FALSE, message=FALSE}
+library("AER")
+
+# adjuntar el conjunto de datos 'MASchools'
+data("MASchools")
+summary(MASchools)
+```
+
+Es bastante fácil replicar los componentes clave en una tabla usando **R**. Para ser coherentes con los nombres de las variables utilizadas en el conjunto de datos **CASchools**, se aplican algunos formatos de antemano.
+
+```{r, 554}
+# variables personalizadas en MASchools
+MASchools$score <- MASchools$score4 
+MASchools$STR <- MASchools$stratio
+
+# crear la tabla
+vars <- c("score", "STR", "english", "lunch", "income")
+
+cbind(CA_mean = sapply(CASchools[, vars], mean),
+      CA_sd   = sapply(CASchools[, vars], sd),
+      MA_mean = sapply(MASchools[, vars], mean),
+      MA_sd   = sapply(MASchools[, vars], sd))
+```
+
+Las estadísticas resumidas revelan que el puntaje promedio de las pruebas es más alto para los distritos escolares de Massachusetts. La prueba que se usa en Massachusetts es algo diferente a la que se usa en California (la calificación de la prueba de Massachusetts también incluye los resultados de la materia escolar "Ciencias"), por lo que no es apropiada una comparación directa de las calificaciones de las pruebas. También se puede ver que, en promedio, las clases son más pequeñas en Massachusetts que en California y que el ingreso promedio del distrito, el porcentaje promedio de estudiantes de inglés y el porcentaje promedio de estudiantes que reciben almuerzos subsidiados difieren considerablemente de los promedios calculados para California. También existen diferencias notables en la dispersión observada de las variables.
+
+Examinando la relación entre los ingresos del distrito y los puntajes de las pruebas en Massachusetts como se hizo antes en el Capítulo \@ref(FRNL) para los datos de California y se produce una gráfica.
+
+```{r, 555}
+# estimar modelo lineal
+Linear_model_MA <- lm(score ~ income, data = MASchools)
+Linear_model_MA
+
+# estimar modelo lineal logarítmico
+Linearlog_model_MA <- lm(score ~ log(income), data = MASchools) 
+Linearlog_model_MA
+
+# estimar modelo cúbico
+cubic_model_MA <- lm(score ~ I(income) + I(income^2) + I(income^3), data = MASchools)
+cubic_model_MA
+```
+
+```{r, 556, fig.align='center'}
+# graficar datos
+plot(MASchools$income, MASchools$score,
+     pch = 20,
+     col = "steelblue",
+     xlab = "Ingresos del distrito",
+     ylab = "Resultado de la prueba",
+     xlim = c(0, 50),
+     ylim = c(620, 780))
+
+# agregar una línea de regresión estimada para el modelo lineal
+abline(Linear_model_MA, lwd = 2)
+
+# agregar función de regresión estimada para el modelo lineal logarítmico
+order_id  <- order(MASchools$income)
+
+lines(MASchools$income[order_id],
+      fitted(Linearlog_model_MA)[order_id], 
+      col = "darkgreen", 
+      lwd = 2)
+
+# agregar función de regresión cúbica estimada
+lines(x = MASchools$income[order_id], 
+      y = fitted(cubic_model_MA)[order_id],
+      col = "orange", 
+      lwd = 2) 
+
+# agrega una leyenda
+legend("topleft",
+       legend = c("Lineal","Lineal logarítmico","Cúbico"),
+       lty = 1,
+       col = c("Black", "darkgreen", "orange"))
+```
+
+La gráfica indica que la especificación cúbica se ajusta mejor a los datos. Curiosamente, esto es diferente de los datos de **CASchools**, donde el patrón de no linealidad se describe mejor mediante la especificación del modelo lineal logarítmico.
+
+Se continua estimando la mayoría de las especificaciones del modelo utilizadas para el análisis del conjunto de datos **CASchools** en el Capítulo \@ref(FRNL) y usando **stargazer()** [@R-stargazer] para generar una representación tabular de los resultados de la regresión.
+
+```{r, 557, eval=TRUE, message=FALSE, warning=FALSE}
+# agregar 'HiEL' a 'MASchools'
+MASchools$HiEL <- as.numeric(MASchools$english > median(MASchools$english))
+
+# estimar las especificaciones del modelo a partir de la tabla
+TestScore_MA_mod1 <- lm(score ~ STR, data = MASchools)
+
+TestScore_MA_mod2 <- lm(score ~ STR + english + lunch + log(income), 
+                        data = MASchools)
+
+TestScore_MA_mod3 <- lm(score ~ STR + english + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+
+TestScore_MA_mod4 <- lm(score ~ STR + I(STR^2) + I(STR^3) + english + lunch + income 
+                        + I(income^2) + I(income^3), data = MASchools)
+
+TestScore_MA_mod5 <- lm(score ~ STR + I(income^2) + I(income^3) + HiEL:STR + lunch 
+                        + income, data = MASchools)
+
+TestScore_MA_mod6 <- lm(score ~ STR + I(income^2) + I(income^3) + HiEL + HiEL:STR + lunch 
+                        + income, data = MASchools)
+
+# recopilar errores estándar robustos
+rob_se <- list(sqrt(diag(vcovHC(TestScore_MA_mod1, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_MA_mod2, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_MA_mod3, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_MA_mod4, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_MA_mod5, type = "HC1"))),
+               sqrt(diag(vcovHC(TestScore_MA_mod6, type = "HC1"))))
+```
+
+```{r, 558, results='asis', echo=T, cache=T, message=FALSE, warning=FALSE, eval=FALSE}
+# generar una tabla con 'stargazer()'
+library(stargazer)
+
+stargazer(Linear_model_MA, TestScore_MA_mod2, TestScore_MA_mod3, 
+          TestScore_MA_mod4, TestScore_MA_mod5, TestScore_MA_mod6,
+          title = "Regresiones usando datos de puntajes de las prueba en Massachusetts",
+          type = "latex",
+          digits = 3,
+          header = FALSE,
+          se = rob_se,
+          object.names = TRUE,
+          model.numbers = FALSE,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)", "(VI)"))
+```
+
+<!--html_preserve-->
+
+```{r, 559, results='asis', echo=F, cache=T, message=FALSE, warning=FALSE, eval=my_output == "html"}
+library(stargazer)
+MASchools$HiEL <- as.numeric(MASchools$english > median(MASchools$english))
+TestScore_MA_mod1 <- lm(score ~ STR, data = MASchools)
+TestScore_MA_mod2 <- lm(score ~ STR + english + lunch + log(income), 
+                        data = MASchools)
+TestScore_MA_mod3 <- lm(score ~ STR + english + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod4 <- lm(score ~ STR + I(STR^2) + I(STR^3) + english + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod5 <- lm(score ~ STR + HiEL + HiEL:STR + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod6 <- lm(score ~ STR + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(TestScore_MA_mod1, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod2, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod3, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod4, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod5, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod6, type="HC1")))
+)
+
+stargazer(TestScore_MA_mod1, TestScore_MA_mod2, TestScore_MA_mod3, TestScore_MA_mod4, TestScore_MA_mod5, TestScore_MA_mod6, 
+          se = rob_se,
+          type = "html",
+          header = FALSE,
+          model.numbers = FALSE,
+          dep.var.caption = "Variable dependiente: Puntaje",
+          column.sep.width = "1pt",
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)", "(VI)")
+          )
+
+stargazer_html_title("Regresiones usando datos de puntajes de las prueba en Massachusetts", "rumtsd")
+```
+
+<!--/html_preserve-->
+
+```{r, 560, results='asis', echo=F, cache=T, message=FALSE, warning=FALSE, eval=my_output == "latex"}
+library(stargazer)
+MASchools$HiEL <- as.numeric(MASchools$english > median(MASchools$english))
+TestScore_MA_mod1 <- lm(score ~ STR, data = MASchools)
+TestScore_MA_mod2 <- lm(score ~ STR + english + lunch + log(income), 
+                        data = MASchools)
+TestScore_MA_mod3 <- lm(score ~ STR + english + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod4 <- lm(score ~ STR + I(STR^2) + I(STR^3) + english + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod5 <- lm(score ~ STR + HiEL + HiEL:STR + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+TestScore_MA_mod6 <- lm(score ~ STR + lunch + income + I(income^2) 
+                        + I(income^3), data = MASchools)
+
+rob_se <- list(
+  sqrt(diag(vcovHC(TestScore_MA_mod1, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod2, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod3, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod4, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod5, type="HC1"))),
+  sqrt(diag(vcovHC(TestScore_MA_mod6, type="HC1")))
+)
+
+stargazer(TestScore_MA_mod1, TestScore_MA_mod2, TestScore_MA_mod3, TestScore_MA_mod4, TestScore_MA_mod5, TestScore_MA_mod6,
+          digits = 3,
+          title = "\\label{tab:rumtsd} Regresiones usando datos de puntajes de las prueba en Massachusetts",
+          type = "latex",
+          float.env = "sidewaystable",
+          column.sep.width = "-7pt",
+          se = rob_se,
+          omit.stat = "f",
+          model.numbers = FALSE,
+          column.labels = c("(I)", "(II)", "(III)", "(IV)", "(V)", "(VI)")
+          )
+```
+
+A continuación, se reproducen los estadísticos $F$ y los valores de $p$ para probar la exclusión de grupos de variables.
+
+```{r, 561, eval=FALSE, message=FALSE, warning=FALSE}
+# modelo de prueba F (3)
+linearHypothesis(TestScore_MA_mod3, 
+                 c("I(income^2)=0", "I(income^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+# modelo de pruebas F (4)
+linearHypothesis(TestScore_MA_mod4, 
+                 c("STR=0", "I(STR^2)=0", "I(STR^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+linearHypothesis(TestScore_MA_mod4, 
+                 c("I(STR^2)=0", "I(STR^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+linearHypothesis(TestScore_MA_mod4, 
+                 c("I(income^2)=0", "I(income^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+# modelo de pruebas F (5)
+linearHypothesis(TestScore_MA_mod5, 
+                 c("STR=0", "STR:HiEL=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+linearHypothesis(TestScore_MA_mod5, 
+                 c("I(income^2)=0", "I(income^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+linearHypothesis(TestScore_MA_mod5, 
+                 c("HiEL=0", "STR:HiEL=0"), 
+                 vcov. = vcovHC, type = "HC1")
+
+# modelo de prueba F (6)
+linearHypothesis(TestScore_MA_mod6, 
+                 c("I(income^2)=0", "I(income^3)=0"), 
+                 vcov. = vcovHC, type = "HC1")
+```
+
+Se puede ver que, en términos de $\bar{R}^2$, la especificación (3), que usa un cúbico para modelar la relación entre el ingreso del distrito y los puntajes de las pruebas, funciona mejor que la especificación de registro lineal (2). Usando diferentes pruebas $F$ en los modelos (4) y (5), no se puede rechazar la hipótesis de que no existe una relación no lineal entre la proporción de alumnos por maestro y el puntaje de la prueba y también que la proporción de estudiantes de inglés tiene una influencia en la relación de interés. Además, la regresión (6) muestra que el porcentaje de estudiantes de inglés se puede omitir como regresor. Debido a que las especificaciones del modelo hechas en (4) a (6) no conducen a resultados sustancialmente diferentes a los de la regresión (3), se elige el modelo (3) como la especificación más adecuada.
+
+En comparación con los datos de California, se observan los siguientes resultados:
+
+1. Controlar las características de antecedentes de los estudiantes en la especificación del modelo (2) reduce el coeficiente de interés (proporción estudiante-maestro) en aproximadamente $60\%$. Los coeficientes estimados están próximos entre sí.
+
+2. El coeficiente de la proporción alumno-maestro siempre es significativamente diferente de cero al nivel de $1\%$ para ambos conjuntos de datos. Esto es válido para todas las especificaciones del modelo consideradas en ambos estudios.
+
+3. En ambos estudios, la proporción de estudiantes de inglés en un distrito escolar es de poca importancia para el impacto estimado de un cambio en la proporción de estudiantes por maestro en el puntaje de la prueba.
+
+La mayor diferencia es que, en contraste con los resultados de California, no se encuentra evidencia de una relación no lineal entre los puntajes de las pruebas y la proporción de alumnos por maestro para los datos de Massachusetts, ya que las pruebas correspondientes de $F$ para el modelo (4) no rechazan la hipótesis nula.
+
+Como se señala, los puntajes de las pruebas de California y Massachusetts tienen diferentes unidades porque las pruebas subyacentes son diferentes. Por lo tanto, los coeficientes estimados en la proporción alumno-maestro en ambas regresiones no se pueden comparar antes de estandarizar los puntajes de las pruebas a las mismas unidades que $$\frac{Testscore - \overline{TestScore}}{\sigma_{TestScore}}$$ para todas las observaciones en ambos conjuntos de datos y ejecutando las regresiones de interés utilizando nuevamente los datos estandarizados. Se puede demostrar que el coeficiente de la proporción de alumnos por maestro en la regresión que utiliza las puntuaciones de las pruebas estandarizadas es el coeficiente de la regresión original dividido por la desviación estándar de las puntuaciones de las pruebas.
+
+Para el modelo (3) de los datos de Massachusetts, el coeficiente estimado de la proporción alumno-maestro es de $-0.64$. Se predice que una reducción de la proporción de estudiantes por maestro en dos estudiantes aumentará los puntajes de las pruebas en $-2 \cdot (-0.64) = 1.28$ puntos. Por lo tanto, se puede calcular el efecto de una reducción de la proporción de estudiantes por maestro de dos estudiantes en los puntajes de las pruebas estandarizadas de la siguiente manera:
+
+```{r, 562}
+TestScore_MA_mod3$coefficients[2] / sd(MASchools$score) * (-2)
+```
+
+Para Massachusetts, el aumento previsto de los puntajes de las pruebas debido a una reducción de la proporción de estudiantes por maestro en dos estudiantes es de $0.085$ desviaciones estándar de la distribución observada de los puntajes de las pruebas.
+
+Utilizando la especificación lineal (2) para California, el coeficiente estimado de la proporción alumno-maestro es $-0.73$, por lo que el aumento previsto de las puntuaciones de las pruebas inducido por una reducción de la proporción alumno-maestro por dos estudiantes es $-0.73 \cdot (-2) = 1.46$. Usando **R** para calcular el cambio previsto en las unidades de desviación estándar:
+
+```{r, 563}
+TestScore_mod2$coefficients[2] / sd(CASchools$score) * (-2)
+```
+
+Esto muestra que el aumento previsto de los puntajes de las pruebas debido a una reducción de la proporción de estudiantes por maestro en dos estudiantes es de $0.077$ desviación estándar de la distribución observada de los puntajes de las pruebas para los datos de California.
+
+En cuanto a los resultados de las pruebas estandarizadas, el cambio previsto es esencialmente el mismo para los distritos escolares de California y Massachusetts.
+
+En conjunto, los resultados apoyan la validez externa de las inferencias hechas utilizando datos sobre los distritos de escuelas primarias de California, al menos para Massachusetts.
+
+#### Validez interna del estudio {-}
+
+La validez externa del estudio *no asegura su validez interna*. Aunque la especificación del modelo elegido mejora sobre un modelo de regresión lineal simple, la validez interna aún puede violarse debido a algunas de las amenazas enumeradas en el Concepto clave 9.7. Dichas amenazas son:
+ 
+- Sesgo variable omitido.
+
+- Especificación incorrecta de la forma funcional.
+
+- Errores en variables.
+
+- Problemas de selección de muestras.
+
+- Causalidad simultánea.
+
+- Heterocedasticidad.
+
+- Correlación de errores entre observaciones.
+
+#### Resumen {-}
+
+Se ha encontrado que *existe un efecto pequeño pero estadísticamente significativo* de la proporción de alumnos por maestro en los puntajes de las pruebas. Sin embargo, no está claro si de hecho se ha estimado el efecto causal de interés ya que --- a pesar de que el enfoque incluye variables de control, teniendo en cuenta las no linealidades en la función de regresión de la población y la inferencia estadística utilizando errores estándar robustos --- los resultados aún podrían estar sesgados; por ejemplo, si hay factores omitidos que no se han considerado. Por tanto, la *validez interna* del estudio sigue siendo cuestionable. Como se concluyó de la comparación con el análisis del conjunto de datos de Massachusetts, este resultado puede ser *válido externamente*.
+
+Los siguientes capítulos abordan técnicas que pueden ser remedios para todas las amenazas a la validez interna enumeradas en el Concepto clave 9.7 si la regresión múltiple por sí sola es insuficiente. Esto incluye regresión usando datos de panel y enfoques que emplean variables instrumentales.
+
+## Ejercicios {#Ejercicios-9}
+
+```{r, 564, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Estudio de simulación: especificación incorrecta de la forma funcional {-}
+
+Como se indicó en el Capítulo \\@ref(AVIARM), la especificación incorrecta de la función de regresión viola el supuesto 1 del Concepto clave 6.3, por lo que el estimador MCO estará sesgado e inconsistente. Se ha ilustrado el sesgo de $\\hat{\\beta}_0$ para el ejemplo de la función de regresión poblacional cuadrática
+
+$$Y_i = X_i^2 $$
+
+y el modelo lineal $$Y_i = \\beta_0 + \\beta_1 X_i + u_i, \\, u_i \\sim \\mathcal{N}(0,1)$$ usando 100 observaciones generadas aleatoriamente. Estrictamente hablando, este hallazgo podría ser solo una coincidencia porque se considera solo una estimación obtenida usando un solo conjunto de datos.
+
+En este ejercicio, se debe generar evidencia de simulación para el sesgo de $\\hat{\\beta}_0$ en el modelo $$Y_i = \\beta_0 + \\beta_1 X_i + u_i$$ si la función de regresión de la población es $$Y_i = X_i^2.$$
+
+**Instrucciones:**
+
+Asegúrese de utilizar las definiciones sugeridas en el código esqueleto en <tt>script.R</tt> para completar las siguientes tareas:
+
+  + Genere 1000 estimaciones de MCO de $\\beta_0$ en el modelo anterior utilizando un bucle <tt>for()</tt> donde $X_i \\sim \\mathcal{U}[-5,5]$, $u_i \\sim \\mathcal{N}(0,1)$ usando muestras de tamaño $100$. Guardar las estimaciones en <tt>beta_hats</tt>.
+
+  + Comparar la media muestral de las estimaciones con el parámetro verdadero utilizando el operador <tt>==</tt>.
+
+<iframe src="DCL/ex9_1.html" frameborder="0" scrolling="no" style="width:100%;height:360px"></iframe>
+
+**Sugerencia:**
+
+  + Puede generar números aleatorios a partir de una distribución uniforme utilizando <tt>runif()</tt>.
+
+</div>') } else {
+  cat("\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}")
+}
+```
+
+```{r, 565, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Estudio de simulación: Sesgo de errores en variables {-}
+
+Considere nuevamente la aplicación del modelo clásico de error de medición presentado en el Capítulo \\@ref(AVIARM):
+
+El regresor único $X_i$ se mide con error de modo que en su lugar se observa $\\overset{\\sim}{X}_i$. Por tanto, se estima $\\beta_1$ en
+
+\\begin{align*}
+  Y_i =& \\, \\beta_0 + \\beta_1 \\overset{\\sim}{X}_i + \\underbrace{\\beta_1 (X_i -\\overset{\\sim}{X}_i) + u_i}_{=v_i} \\\\
+  Y_i =& \\, \\beta_0 + \\beta_1 \\overset{\\sim}{X}_i + v_i
+\\end{align*}
+
+en lugar de 
+
+$$Y_i = \\beta_0 + \\beta_1 X_i + u_i,$$
+
+con el error medio cero $w_i$ no correlacionado con $X_i$ y $u_i$. Entonces $\\beta_1$ es estimado de manera inconsistente por MCO:
+
+\\begin{equation}
+  \\widehat{\\beta}_1 \\xrightarrow{p}{\\frac{\\sigma_{X}^2}{\\sigma_{X}^2 + \\sigma_{w}^2}} \\beta_1
+\\end{equation}
+
+Deje 
+
+$$(X, Y) \\sim \\mathcal{N}\\left[\\begin{pmatrix}50\\\\ 100\\end{pmatrix},\\begin{pmatrix}10 & 5 \\\\ 5 & 10 \\end{pmatrix}\\right].$$ 
+
+Recuerde de \\@ref(eq:bnormexpfn) que $E(Y_i\\vert X_i) = 75 + 0.5 X_i$ en este caso. Además, suponga que $\\overset{\\sim}{X_i} = X_i + w_i$ con $w_i \\overset{i.i.d}{\\sim} \\mathcal{N}(0,10)$.
+
+Como se mencionó en el ejercicio 1, el capítulo \\@ref(AVIARM) analiza las consecuencias del error de medición para el estimador de MCO de $\\beta_1$ en este entorno basado en una *única muestra* y, por lo tanto, *una sola estimación*. Estrictamente hablando, la conclusión obtenida podría ser incorrecta porque el sesgo observado puede deberse a una variación aleatoria. Una simulación de Monto Carlo es más apropiada aquí.
+
+**Instrucciones:**
+
+Muestre que $\\beta_1$ se estima con un sesgo utilizando un estudio de simulación. Asegúrese de utilizar las definiciones sugeridas en el código esqueleto en <tt>script.R</tt> para completar las siguientes tareas:
+
+  + Generar 1000 estimaciones de $\\beta_1$ en el modelo de regresión simple $$Y_i = \\beta_0 + \\beta_1 X_i + u_i.$$ Usar <tt>rmvnorm()</tt> para generar muestras de 100 observaciones aleatorias de la distribución normal bivariada indicada anteriormente.
+
+  + Guardar las estimaciones en <tt>beta_hats</tt>.
+
+  + Calcular la media muestral de las estimaciones.
+
+<iframe src="DCL/ex9_2.html" frameborder="0" scrolling="no" style="width:100%;height:400px"></iframe>
+
+</div>')}
+```

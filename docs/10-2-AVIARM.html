@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>10.2 Amenazas a la validez interna del análisis de regresión múltiple | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="10.2 Amenazas a la validez interna del análisis de regresión múltiple | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="10.2 Amenazas a la validez interna del análisis de regresión múltiple | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-30" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="10-1-validez-interna-y-externa.html"/>
+<link rel="next" href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="AVIARM" class="section level2" number="10.2">
+<h2><span class="header-section-number">10.2</span> Amenazas a la validez interna del análisis de regresión múltiple</h2>
+<p>Esta sección trata cinco fuentes que causan que el estimador de MCO en modelos de regresión (múltiple) sea sesgado e inconsistente para el efecto causal de interés y discute posibles soluciones. Las cinco fuentes implican una violación del primer supuesto de mínimos cuadrados presentado en el Concepto clave 6.4.</p>
+<p>Esta sección trata:</p>
+<ul>
+<li><p>Sesgo de variable omitida.</p></li>
+<li><p>Especificación incorrecta de la forma funcional.</p></li>
+<li><p>Errores de medición.</p></li>
+<li><p>Datos faltantes y selección de muestras.</p></li>
+<li><p>Sesgo de causalidad simultánea.</p></li>
+</ul>
+<p>Además de estas amenazas para la cosistencia del estimador, también se discuten brevemente las causas de la estimación inconsistente de los errores estándar de MCO.</p>
+<div id="sesgo-de-variable-omitida" class="section level4 unnumbered">
+<h4>Sesgo de variable omitida</h4>
+<div id="KC9.2" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.2
+</h3>
+<h3 class="left">
+Sesgo de variable omitida: ¿Debería incluir más variables en mi regresión?
+</h3>
+<p>La inclusión de variables adicionales reduce el riesgo de sesgo de variable omitida, pero puede aumentar la varianza del estimador del coeficiente de interés.</p>
+<p>Se presentan algunas pautas que ayudan a decidir si incluir una variable adicional:</p>
+<ol style="list-style-type: decimal">
+<li>Especificar el o los coeficientes de interés.</li>
+<li>Identificar las fuentes potenciales más importantes de sesgo de variables omitidas utilizando el conocimiento disponible <em>antes</em> de estimar el modelo. Debería terminar con una especificación de referencia y un conjunto de regresores que son cuestionables.</li>
+<li>Utilizar diferentes especificaciones de modelo para probar si los regresores cuestionables tienen coeficientes diferentes de cero.</li>
+<li>Utilizar tablas para proporcionar una divulgación completa de sus resultados; es decir, presentar diferentes especificaciones de modelos que apoyen su argumento y permitan al lector ver el efecto de incluir regresores cuestionables.</li>
+</ol>
+</div>
+<p>A estas alturas, debe conocer el sesgo de variable omitida y sus consecuencias. El Concepto clave 9.2 da algunas pautas sobre cómo proceder si hay variables de control que posiblemente permitan reducir el sesgo de las variables omitidas. Si incluir variables adicionales para mitigar el sesgo no es una opción porque no hay controles adecuados, existen diferentes enfoques para resolver el problema:</p>
+<ul>
+<li><p>Usar métodos de datos de panel (discutido en el Capítulo <a href="11-RDP.html#RDP">11</a>)</p></li>
+<li><p>Usar regresiones de variables instrumentales (discutido en el Capítulo <a href="13-RVI.html#RVI">13</a>)</p></li>
+<li><p>Usar experimentos de control aleatorio (discutido en el Capítulo <a href="14-EC.html#EC">14</a>)</p></li>
+</ul>
+</div>
+<div id="especificación-incorrecta-de-la-forma-funcional-de-la-función-de-regresión" class="section level4 unnumbered">
+<h4>Especificación incorrecta de la forma funcional de la función de regresión</h4>
+<p>Si la función de regresión de la población no es lineal pero la función de regresión es lineal, la forma funcional del modelo de regresión está mal especificada. Esto conduce a un sesgo del estimador MCO.</p>
+<div id="KC9.3" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.3
+</h3>
+<h3 class="left">
+Especificación incorrecta de la forma funcional
+</h3>
+<p>Se dice que una regresión adolece de una especificación incorrecta de la forma funcional cuando la forma funcional del modelo de regresión estimado difiere de la forma funcional de la función de regresión poblacional. La especificación incorrecta de la forma funcional conduce a estimadores de coeficientes sesgados e inconsistentes. Una forma de detectar la especificación incorrecta de la forma funcional es trazar la función de regresión estimada y los datos. Esto también puede resultar útil para elegir la forma funcional correcta.</p>
+</div>
+<p>Es fácil encontrar ejemplos de especificación incorrecta de la forma funcional: Considere el caso en el que la función de regresión de la población es <span class="math display">\[Y_i = X_i^2\]</span>, pero el modelo utilizado es <span class="math display">\[Y_i = \beta_0 + \beta_1 X_i + u_i.\]</span> Claramente, la función de regresión está mal especificada aquí. Ahora, simulando y visualizándo los datos.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="10-2-AVIARM.html#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar la semilla para la reproducibilidad</span></span>
+<span id="cb2-2"><a href="10-2-AVIARM.html#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3</span>)</span>
+<span id="cb2-3"><a href="10-2-AVIARM.html#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="10-2-AVIARM.html#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simular conjunto de datos</span></span>
+<span id="cb2-5"><a href="10-2-AVIARM.html#cb2-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">100</span>, <span class="sc">-</span><span class="dv">5</span>, <span class="dv">5</span>)</span>
+<span id="cb2-6"><a href="10-2-AVIARM.html#cb2-6" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> X<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">100</span>)</span>
+<span id="cb2-7"><a href="10-2-AVIARM.html#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="10-2-AVIARM.html#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar la función de regresión</span></span>
+<span id="cb2-9"><a href="10-2-AVIARM.html#cb2-9" aria-hidden="true" tabindex="-1"></a>ms_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X)</span>
+<span id="cb2-10"><a href="10-2-AVIARM.html#cb2-10" aria-hidden="true" tabindex="-1"></a>ms_mod</span>
+<span id="cb2-11"><a href="10-2-AVIARM.html#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-12"><a href="10-2-AVIARM.html#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb2-13"><a href="10-2-AVIARM.html#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lm(formula = Y ~ X)</span></span>
+<span id="cb2-14"><a href="10-2-AVIARM.html#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-15"><a href="10-2-AVIARM.html#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb2-16"><a href="10-2-AVIARM.html#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)            X  </span></span>
+<span id="cb2-17"><a href="10-2-AVIARM.html#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     8.11363     -0.04684</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="10-2-AVIARM.html#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar los datos</span></span>
+<span id="cb3-2"><a href="10-2-AVIARM.html#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X, Y, </span>
+<span id="cb3-3"><a href="10-2-AVIARM.html#cb3-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Especificación incorrecta de la forma funcional&quot;</span>,</span>
+<span id="cb3-4"><a href="10-2-AVIARM.html#cb3-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb3-5"><a href="10-2-AVIARM.html#cb3-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>)</span>
+<span id="cb3-6"><a href="10-2-AVIARM.html#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="10-2-AVIARM.html#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar la línea de regresión lineal</span></span>
+<span id="cb3-8"><a href="10-2-AVIARM.html#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(ms_mod, </span>
+<span id="cb3-9"><a href="10-2-AVIARM.html#cb3-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>,</span>
+<span id="cb3-10"><a href="10-2-AVIARM.html#cb3-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/535-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Es evidente que los errores de regresión son relativamente pequeños para observaciones cercanas a <span class="math inline">\(X = -3\)</span> y <span class="math inline">\(X = 3\)</span>, pero que los errores aumentan para valores de <span class="math inline">\(X\)</span> más cercanos a cero e incluso más para valores superiores a <span class="math inline">\(-4\)</span> y <span class="math inline">\(4\)</span>. Las consecuencias son drásticas: La intersección se estima en <span class="math inline">\(8.1\)</span> y para el parámetro de pendiente se obtiene una estimación obviamente muy cercana a cero. Este problema no desaparece a medida que aumenta el número de observaciones porque la MCO está <em>sesgada</em> y es <em>inconsistente</em> debido a la especificación incorrecta de la función de regresión.</p>
+</div>
+<div id="error-de-medición-y-sesgo-de-errores-en-variables" class="section level4 unnumbered">
+<h4>Error de medición y sesgo de errores en variables</h4>
+<div id="KC9.4" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.4
+</h3>
+<h3 class="left">
+Errores en sesgo variable
+</h3>
+<p>Cuando las variables independientes se miden de manera imprecisa, se habla de sesgo de errores en las variables. Este sesgo no desaparece si el tamaño de la muestra es grande. Si el error de medición tiene media cero y es independiente de la variable afectada, el estimador MCO del coeficiente respectivo está sesgado hacia cero.</p>
+</div>
+<p>Suponga que está midiendo incorrectamente el regresor único <span class="math inline">\(X_i\)</span>, de modo que existe un error de medición y observa <span class="math inline">\(\overset{\sim}{X}_i\)</span>, en lugar de <span class="math inline">\(X_i\)</span>. Entonces, en lugar de estimar la población, el modelo de regresión <span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + u_i \]</span> terminas estimando</p>
+<p><span class="math display">\[\begin{align*}
+  Y_i =&amp; \, \beta_0 + \beta_1 \overset{\sim}{X}_i + \underbrace{\beta_1 (X_i - \overset{\sim}{X}_i) + u_i}_{=v_i} \\
+  Y_i =&amp; \, \beta_0 + \beta_1 \overset{\sim}{X}_i + v_i
+\end{align*}\]</span></p>
+<p>donde <span class="math inline">\(\overset{\sim}{X}_i\)</span> y el término de error <span class="math inline">\(v_i\)</span> están correlacionados. Por lo tanto, MCO estaría sesgado e inconsistente para el verdadero <span class="math inline">\(\beta_1\)</span> en este ejemplo. Se puede demostrar que la dirección y la fuerza del sesgo dependen de la correlación entre el regresor observado, <span class="math inline">\(\overset{\sim}{X}_i\)</span>, y el error de medición, <span class="math inline">\(w_i =X_i - \overset{\sim}{X}_i\)</span>. Esta correlación, a su vez, depende del tipo de error de medición cometido.</p>
+<p>El modelo de error de medición clásico supone que el error de medición, <span class="math inline">\(w_i\)</span>, tiene media cero y que no está correlacionado con la variable, <span class="math inline">\(X_i\)</span>, y el término de error del modelo de regresión poblacional, <span class="math inline">\(u_i\)</span>:</p>
+<p><span class="math display">\[\begin{equation}
+  \overset{\sim}{X}_i = X_i + w_i, \ \ \rho_{w_i,u_i}=0, \ \ \rho_{w_i,X_i}=0 
+\end{equation}\]</span></p>
+<p>Entonces sostiene que:</p>
+<p><span class="math display" id="eq:cmembias">\[\begin{equation}
+  \widehat{\beta}_1 \xrightarrow{p}{\frac{\sigma_{X}^2}{\sigma_{X}^2 + \sigma_{w}^2}} \beta_1 \tag{10.1}
+\end{equation}\]</span></p>
+<p>lo que implica una inconsistencia como <span class="math inline">\(\sigma_{X}^2, \sigma_{w}^2 &gt; 0\)</span>, tal que la fracción en <a href="10-2-AVIARM.html#eq:cmembias">(10.1)</a> es menor que <span class="math inline">\(1\)</span>. Se debe tener en cuenta que se deben reconocer dos casos extremos:</p>
+<ol style="list-style-type: decimal">
+<li><p>Si no existe ningún error de medición, <span class="math inline">\(\sigma_{w}^2=0\)</span> tal que <span class="math inline">\(\widehat{\beta}_1 \xrightarrow{p}{\beta_1}\)</span>.</p></li>
+<li><p>Si <span class="math inline">\(\sigma_{w}^2 \gg \sigma_{X}^2\)</span>, se tiene <span class="math inline">\(\widehat{\beta}_1 \xrightarrow{p}{0}\)</span>. Este es el caso si el error de medición es tan grande que esencialmente no hay información sobre <span class="math inline">\(X\)</span> en los datos que pueda usarse para estimar <span class="math inline">\(\beta_1\)</span>.</p></li>
+</ol>
+<p>La forma más obvia de lidiar con el sesgo de errores en las variables es usar un <span class="math inline">\(X\)</span> medido con precisión. Si esto no es posible, la regresión de variables instrumentales es una opción. También se podría abordar el problema mediante el uso de un modelo matemático del error de medición y ajustar las estimaciones de manera apropiada: Si es plausible que se aplique el modelo clásico de error de medición y si existe información que se pueda utilizar para estimar la razón en la ecuación <a href="10-2-AVIARM.html#eq:cmembias">(10.1)</a>, se podría calcular una estimación que corrija el sesgo a la baja.</p>
+<p>Por ejemplo, considere dos variables aleatorias bivariadas distribuidas normalmente <span class="math inline">\(X, Y\)</span>. Es un <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case">resultado bien conocido</a> que la función de expectativa condicional de <span class="math inline">\(Y\)</span> dado <span class="math inline">\(X\)</span> tiene la forma:</p>
+<p><span class="math display" id="eq:bnormexpfn">\[\begin{align}
+  E(Y\vert X) = E(Y) + \rho_{X,Y} \frac{\sigma_{Y}}{\sigma_{X}}\left[X-E(X)\right]. \tag{10.2} 
+\end{align}\]</span> Thus for
+<span class="math display" id="eq:bvnormd">\[\begin{align}
+  (X, Y) \sim \mathcal{N}\left[\begin{pmatrix}50\\ 100\end{pmatrix},\begin{pmatrix}10 &amp; 5 \\ 5 &amp; 10 \end{pmatrix}\right] \tag{10.3}
+\end{align}\]</span> de acuerdo con <a href="10-2-AVIARM.html#eq:bnormexpfn">(10.2)</a>, la función de regresión poblacional es
+<span class="math display" id="eq:bnormregfun">\[\begin{align*}
+  Y_i =&amp; \, 100 + 0.5 (X_i - 50) \\
+      =&amp; \, 75 + 0.5 X_i. \tag{10.4}
+\end{align*}\]</span></p>
+<p>Ahora suponga que recopila datos sobre <span class="math inline">\(X\)</span> y <span class="math inline">\(Y\)</span>, pero que solo puede medir <span class="math inline">\(\overset{\sim}{X_i} = X_i + w_i\)</span> con <span class="math inline">\(w_i \overset{i.i.d.}{\sim} \mathcal{N}(0,10)\)</span>. Dado que <span class="math inline">\(w_i\)</span> son independientes de <span class="math inline">\(X_i\)</span>, no hay correlación entre <span class="math inline">\(X_i\)</span> y <span class="math inline">\(w_i\)</span>, por lo que se tiene un caso del modelo clásico de error de medición. Ahora se ilustra este ejemplo en <strong>R</strong> usando el paquete <strong>mvtnorm</strong> <span class="citation">(<a href="#ref-R-mvtnorm" role="doc-biblioref">Genz et al. 2020</a>)</span>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="10-2-AVIARM.html#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar semilla</span></span>
+<span id="cb4-2"><a href="10-2-AVIARM.html#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb4-3"><a href="10-2-AVIARM.html#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="10-2-AVIARM.html#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># cargar el paquete &#39;mvtnorm&#39; y simular datos normales bivariados</span></span>
+<span id="cb4-5"><a href="10-2-AVIARM.html#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mvtnorm)</span>
+<span id="cb4-6"><a href="10-2-AVIARM.html#cb4-6" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-7"><a href="10-2-AVIARM.html#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmvnorm</span>(<span class="dv">1000</span>, <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">100</span>), </span>
+<span id="cb4-8"><a href="10-2-AVIARM.html#cb4-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">sigma =</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>))))</span>
+<span id="cb4-9"><a href="10-2-AVIARM.html#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="10-2-AVIARM.html#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer nombres de columnas</span></span>
+<span id="cb4-11"><a href="10-2-AVIARM.html#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dat) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X&quot;</span>, <span class="st">&quot;Y&quot;</span>)</span></code></pre></div>
+<p>Ahora se estima una regresión lineal simple de <span class="math inline">\(Y\)</span> en <span class="math inline">\(X\)</span> usando estos datos de muestra y se vuelve a ejecutar la misma regresión, pero esta vez se agregan i.i.d. <span class="math inline">\(\mathcal{N}(0,10)\)</span> errores agregados a <span class="math inline">\(X\)</span>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="10-2-AVIARM.html#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo (sin error de medición)</span></span>
+<span id="cb5-2"><a href="10-2-AVIARM.html#cb5-2" aria-hidden="true" tabindex="-1"></a>noerror_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> dat)</span>
+<span id="cb5-3"><a href="10-2-AVIARM.html#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="10-2-AVIARM.html#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo (con error de medición en X)</span></span>
+<span id="cb5-5"><a href="10-2-AVIARM.html#cb5-5" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>X <span class="ot">&lt;-</span> dat<span class="sc">$</span>X <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="at">n =</span> <span class="dv">1000</span>, <span class="at">sd =</span> <span class="fu">sqrt</span>(<span class="dv">10</span>))</span>
+<span id="cb5-6"><a href="10-2-AVIARM.html#cb5-6" aria-hidden="true" tabindex="-1"></a>error_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> X, <span class="at">data =</span> dat)</span>
+<span id="cb5-7"><a href="10-2-AVIARM.html#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="10-2-AVIARM.html#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir los coeficientes estimados en la consola</span></span>
+<span id="cb5-9"><a href="10-2-AVIARM.html#cb5-9" aria-hidden="true" tabindex="-1"></a>noerror_mod<span class="sc">$</span>coefficients</span>
+<span id="cb5-10"><a href="10-2-AVIARM.html#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)           X </span></span>
+<span id="cb5-11"><a href="10-2-AVIARM.html#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  76.3002047   0.4755264</span></span>
+<span id="cb5-12"><a href="10-2-AVIARM.html#cb5-12" aria-hidden="true" tabindex="-1"></a>error_mod<span class="sc">$</span>coefficients</span>
+<span id="cb5-13"><a href="10-2-AVIARM.html#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)           X </span></span>
+<span id="cb5-14"><a href="10-2-AVIARM.html#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   87.276004    0.255212</span></span></code></pre></div>
+<p>A continuación, se visualizan los resultados y se comparan con la función de regresión poblacional.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="10-2-AVIARM.html#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar datos de muestra</span></span>
+<span id="cb6-2"><a href="10-2-AVIARM.html#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dat<span class="sc">$</span>X, dat<span class="sc">$</span>Y, </span>
+<span id="cb6-3"><a href="10-2-AVIARM.html#cb6-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>, </span>
+<span id="cb6-4"><a href="10-2-AVIARM.html#cb6-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb6-5"><a href="10-2-AVIARM.html#cb6-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>,</span>
+<span id="cb6-6"><a href="10-2-AVIARM.html#cb6-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb6-7"><a href="10-2-AVIARM.html#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="10-2-AVIARM.html#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar función de regresión poblacional</span></span>
+<span id="cb6-9"><a href="10-2-AVIARM.html#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(<span class="dv">75</span>, <span class="fl">0.5</span>), </span>
+<span id="cb6-10"><a href="10-2-AVIARM.html#cb6-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>,</span>
+<span id="cb6-11"><a href="10-2-AVIARM.html#cb6-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb6-12"><a href="10-2-AVIARM.html#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="10-2-AVIARM.html#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar funciones de regresión estimadas</span></span>
+<span id="cb6-14"><a href="10-2-AVIARM.html#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(noerror_mod, </span>
+<span id="cb6-15"><a href="10-2-AVIARM.html#cb6-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;purple&quot;</span>,</span>
+<span id="cb6-16"><a href="10-2-AVIARM.html#cb6-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb6-17"><a href="10-2-AVIARM.html#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="10-2-AVIARM.html#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(error_mod, </span>
+<span id="cb6-19"><a href="10-2-AVIARM.html#cb6-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>,</span>
+<span id="cb6-20"><a href="10-2-AVIARM.html#cb6-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb6-21"><a href="10-2-AVIARM.html#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="10-2-AVIARM.html#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar leyenda</span></span>
+<span id="cb6-23"><a href="10-2-AVIARM.html#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb6-24"><a href="10-2-AVIARM.html#cb6-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">bg =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb6-25"><a href="10-2-AVIARM.html#cb6-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb6-26"><a href="10-2-AVIARM.html#cb6-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>,</span>
+<span id="cb6-27"><a href="10-2-AVIARM.html#cb6-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;purple&quot;</span>, <span class="st">&quot;darkred&quot;</span>), </span>
+<span id="cb6-28"><a href="10-2-AVIARM.html#cb6-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Población&quot;</span>,<span class="st">&quot;Sin errores&quot;</span>,<span class="st">&quot;Errores&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/540-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>En la situación sin error de medición, la función de regresión estimada está cerca de la función de regresión de la población. Las cosas son diferentes cuando se usa el regresor mal medido <span class="math inline">\(X\)</span>: Tanto la estimación de la intersección como la estimación del coeficiente en <span class="math inline">\(X\)</span> difieren considerablemente de los resultados obtenidos usando los datos “limpios” en <span class="math inline">\(X\)</span>. En particular <span class="math inline">\(\widehat{\beta}_1 = 0.255\)</span>, por lo que existe un sesgo a la baja. Se está en una situación cómoda para conocer <span class="math inline">\(\sigma_X^2\)</span> y <span class="math inline">\(\sigma^2_w\)</span>. Lo anterior permite corregir el sesgo usando <a href="10-2-AVIARM.html#eq:cmembias">(10.1)</a>. Con esta información se obtiene la estimación con corrección sesgada <span class="math display">\[\frac{\sigma_X^2 + \sigma_w^2}{\sigma_X^2} \cdot \widehat{\beta}_1 = \frac{10+10}{10} \cdot 0.255 = 0.51\]</span> que está bastante cerca de <span class="math inline">\(\beta_1=0.5\)</span>, el verdadero coeficiente de la función de regresión poblacional.</p>
+<p>Se debe tener en cuenta que el análisis anterior utiliza una sola muestra. Por tanto, se puede argumentar que los resultados son solo una coincidencia. ¿Se puede demostrar lo contrario utilizando un estudio de simulación?</p>
+</div>
+<div id="selección-de-muestra-y-datos-faltantes" class="section level4 unnumbered">
+<h4>Selección de muestra y datos faltantes</h4>
+<div id="KC9.5" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.5
+</h3>
+<h3 class="left">
+Sesgo de selección de muestra
+</h3>
+<p>Cuando el proceso de muestreo influye en la disponibilidad de datos y cuando existe una relación de este proceso de muestreo con la variable dependiente que va más allá de la dependencia de los regresores, se dice que existe un sesgo de selección de la muestra. Este sesgo se debe a la correlación entre uno o más regresores y el término de error. La selección de la muestra implica tanto sesgo como inconsistencia del estimador MCO.</p>
+</div>
+<p>Existen tres casos de selección de muestras. Solo uno de ellos representa una amenaza para la validez interna de un estudio de regresión. Los tres casos son:</p>
+<ol style="list-style-type: decimal">
+<li><p>Faltan datos al azar.</p></li>
+<li><p>Faltan datos basados en el valor de un regresor.</p></li>
+<li><p>Faltan datos debido a un proceso de selección relacionado con la variable dependiente.</p></li>
+</ol>
+<p>Volviendo al ejemplo de las variables <span class="math inline">\(X\)</span> y <span class="math inline">\(Y\)</span> distribuidas como se indica en la ecuación <a href="10-2-AVIARM.html#eq:bvnormd">(10.3)</a> y se ilustran los tres casos usando <strong>R</strong>.</p>
+<p>Si faltan datos al azar, esto no es más que perder observaciones. Por ejemplo, perder <span class="math inline">\(50\%\)</span> de la muestra sería lo mismo que no haber visto nunca la mitad (elegida al azar) de la muestra observada. Por lo tanto, los datos faltantes no introducen un sesgo de estimación y “solo” conducen a estimadores menos eficientes.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="10-2-AVIARM.html#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar semilla</span></span>
+<span id="cb7-2"><a href="10-2-AVIARM.html#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb7-3"><a href="10-2-AVIARM.html#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="10-2-AVIARM.html#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simular datos</span></span>
+<span id="cb7-5"><a href="10-2-AVIARM.html#cb7-5" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-6"><a href="10-2-AVIARM.html#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmvnorm</span>(<span class="dv">1000</span>, <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">100</span>), </span>
+<span id="cb7-7"><a href="10-2-AVIARM.html#cb7-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">sigma =</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>))))</span>
+<span id="cb7-8"><a href="10-2-AVIARM.html#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="10-2-AVIARM.html#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dat) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X&quot;</span>, <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb7-10"><a href="10-2-AVIARM.html#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="10-2-AVIARM.html#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># marcar 500 observaciones seleccionadas al azar</span></span>
+<span id="cb7-12"><a href="10-2-AVIARM.html#cb7-12" aria-hidden="true" tabindex="-1"></a>id <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>, <span class="at">size =</span> <span class="dv">500</span>)</span>
+<span id="cb7-13"><a href="10-2-AVIARM.html#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="10-2-AVIARM.html#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dat<span class="sc">$</span>X[<span class="sc">-</span>id], </span>
+<span id="cb7-15"><a href="10-2-AVIARM.html#cb7-15" aria-hidden="true" tabindex="-1"></a>     dat<span class="sc">$</span>Y[<span class="sc">-</span>id], </span>
+<span id="cb7-16"><a href="10-2-AVIARM.html#cb7-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>, </span>
+<span id="cb7-17"><a href="10-2-AVIARM.html#cb7-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb7-18"><a href="10-2-AVIARM.html#cb7-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb7-19"><a href="10-2-AVIARM.html#cb7-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>,</span>
+<span id="cb7-20"><a href="10-2-AVIARM.html#cb7-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb7-21"><a href="10-2-AVIARM.html#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="10-2-AVIARM.html#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(dat<span class="sc">$</span>X[id], </span>
+<span id="cb7-23"><a href="10-2-AVIARM.html#cb7-23" aria-hidden="true" tabindex="-1"></a>       dat<span class="sc">$</span>Y[id],</span>
+<span id="cb7-24"><a href="10-2-AVIARM.html#cb7-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb7-25"><a href="10-2-AVIARM.html#cb7-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;gray&quot;</span>, </span>
+<span id="cb7-26"><a href="10-2-AVIARM.html#cb7-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">20</span>)</span>
+<span id="cb7-27"><a href="10-2-AVIARM.html#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="10-2-AVIARM.html#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar la función de regresión poblacional</span></span>
+<span id="cb7-29"><a href="10-2-AVIARM.html#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(<span class="dv">75</span>, <span class="fl">0.5</span>), </span>
+<span id="cb7-30"><a href="10-2-AVIARM.html#cb7-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>,</span>
+<span id="cb7-31"><a href="10-2-AVIARM.html#cb7-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb7-32"><a href="10-2-AVIARM.html#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="10-2-AVIARM.html#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar la función de regresión estimada para la muestra completa</span></span>
+<span id="cb7-34"><a href="10-2-AVIARM.html#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(noerror_mod)</span>
+<span id="cb7-35"><a href="10-2-AVIARM.html#cb7-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-36"><a href="10-2-AVIARM.html#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el caso del modelo 1 y agregar la línea de regresión</span></span>
+<span id="cb7-37"><a href="10-2-AVIARM.html#cb7-37" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat[<span class="sc">-</span>id, ]</span>
+<span id="cb7-38"><a href="10-2-AVIARM.html#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="10-2-AVIARM.html#cb7-39" aria-hidden="true" tabindex="-1"></a>c1_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(dat<span class="sc">$</span>Y <span class="sc">~</span> dat<span class="sc">$</span>X, <span class="at">data =</span> dat)</span>
+<span id="cb7-40"><a href="10-2-AVIARM.html#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(c1_mod, <span class="at">col =</span> <span class="st">&quot;purple&quot;</span>)</span>
+<span id="cb7-41"><a href="10-2-AVIARM.html#cb7-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="10-2-AVIARM.html#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co"># agrega una leyenda</span></span>
+<span id="cb7-43"><a href="10-2-AVIARM.html#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb7-44"><a href="10-2-AVIARM.html#cb7-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>,</span>
+<span id="cb7-45"><a href="10-2-AVIARM.html#cb7-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">bg =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb7-46"><a href="10-2-AVIARM.html#cb7-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb7-47"><a href="10-2-AVIARM.html#cb7-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;purple&quot;</span>), </span>
+<span id="cb7-48"><a href="10-2-AVIARM.html#cb7-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Población&quot;</span>,<span class="st">&quot;Muestra completa&quot;</span>,<span class="st">&quot;500 observaciones seleccionado aleatoriamente&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/543-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Los puntos grises representan las observaciones descartadas de <span class="math inline">\(500\)</span>. Cuando se utilizan las observaciones restantes, los resultados de la estimación se desvían solo marginalmente de los resultados obtenidos con la muestra completa.</p>
+<p>La selección de datos aleatoriamente basada en el valor de un regresor también tiene el efecto de reducir el tamaño de la muestra y no introduce sesgo de estimación. Ahora se descartan todas las observaciones con <span class="math inline">\(X &gt; 45\)</span>, se estimará el modelo nuevamente y se comparará.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="10-2-AVIARM.html#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer semilla aleatoria</span></span>
+<span id="cb8-2"><a href="10-2-AVIARM.html#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb8-3"><a href="10-2-AVIARM.html#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="10-2-AVIARM.html#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simular datos</span></span>
+<span id="cb8-5"><a href="10-2-AVIARM.html#cb8-5" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-6"><a href="10-2-AVIARM.html#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmvnorm</span>(<span class="dv">1000</span>, <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">100</span>), </span>
+<span id="cb8-7"><a href="10-2-AVIARM.html#cb8-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">sigma =</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>))))</span>
+<span id="cb8-8"><a href="10-2-AVIARM.html#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="10-2-AVIARM.html#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dat) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X&quot;</span>, <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb8-10"><a href="10-2-AVIARM.html#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="10-2-AVIARM.html#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># marcar observaciones</span></span>
+<span id="cb8-12"><a href="10-2-AVIARM.html#cb8-12" aria-hidden="true" tabindex="-1"></a>id <span class="ot">&lt;-</span> dat<span class="sc">$</span>X <span class="sc">&gt;=</span> <span class="dv">45</span></span>
+<span id="cb8-13"><a href="10-2-AVIARM.html#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="10-2-AVIARM.html#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dat<span class="sc">$</span>X[<span class="sc">-</span>id], </span>
+<span id="cb8-15"><a href="10-2-AVIARM.html#cb8-15" aria-hidden="true" tabindex="-1"></a>     dat<span class="sc">$</span>Y[<span class="sc">-</span>id], </span>
+<span id="cb8-16"><a href="10-2-AVIARM.html#cb8-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb8-17"><a href="10-2-AVIARM.html#cb8-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb8-18"><a href="10-2-AVIARM.html#cb8-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb8-19"><a href="10-2-AVIARM.html#cb8-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>,</span>
+<span id="cb8-20"><a href="10-2-AVIARM.html#cb8-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb8-21"><a href="10-2-AVIARM.html#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="10-2-AVIARM.html#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(dat<span class="sc">$</span>X[id], </span>
+<span id="cb8-23"><a href="10-2-AVIARM.html#cb8-23" aria-hidden="true" tabindex="-1"></a>       dat<span class="sc">$</span>Y[id], </span>
+<span id="cb8-24"><a href="10-2-AVIARM.html#cb8-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;gray&quot;</span>,</span>
+<span id="cb8-25"><a href="10-2-AVIARM.html#cb8-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb8-26"><a href="10-2-AVIARM.html#cb8-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">20</span>)</span>
+<span id="cb8-27"><a href="10-2-AVIARM.html#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="10-2-AVIARM.html#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar función de regresión poblacional</span></span>
+<span id="cb8-29"><a href="10-2-AVIARM.html#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(<span class="dv">75</span>, <span class="fl">0.5</span>), </span>
+<span id="cb8-30"><a href="10-2-AVIARM.html#cb8-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>,</span>
+<span id="cb8-31"><a href="10-2-AVIARM.html#cb8-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb8-32"><a href="10-2-AVIARM.html#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="10-2-AVIARM.html#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar la función de regresión estimada para la muestra completa</span></span>
+<span id="cb8-34"><a href="10-2-AVIARM.html#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(noerror_mod)</span>
+<span id="cb8-35"><a href="10-2-AVIARM.html#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="10-2-AVIARM.html#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el caso del modelo 1, agregar la línea de regresión</span></span>
+<span id="cb8-37"><a href="10-2-AVIARM.html#cb8-37" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat[<span class="sc">-</span>id, ]</span>
+<span id="cb8-38"><a href="10-2-AVIARM.html#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-39"><a href="10-2-AVIARM.html#cb8-39" aria-hidden="true" tabindex="-1"></a>c2_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(dat<span class="sc">$</span>Y <span class="sc">~</span> dat<span class="sc">$</span>X, <span class="at">data =</span> dat)</span>
+<span id="cb8-40"><a href="10-2-AVIARM.html#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(c2_mod, <span class="at">col =</span> <span class="st">&quot;purple&quot;</span>)</span>
+<span id="cb8-41"><a href="10-2-AVIARM.html#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-42"><a href="10-2-AVIARM.html#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar leyenda</span></span>
+<span id="cb8-43"><a href="10-2-AVIARM.html#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb8-44"><a href="10-2-AVIARM.html#cb8-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>,</span>
+<span id="cb8-45"><a href="10-2-AVIARM.html#cb8-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">bg =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb8-46"><a href="10-2-AVIARM.html#cb8-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb8-47"><a href="10-2-AVIARM.html#cb8-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;purple&quot;</span>), </span>
+<span id="cb8-48"><a href="10-2-AVIARM.html#cb8-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Población&quot;</span>,<span class="st">&quot;Muestra completa&quot;</span>,<span class="st">&quot;Observaciones con X &lt;= 45&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/544-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Tenga en cuenta que, aunque se redujeron todas las observaciones en más del <span class="math inline">\(90\%\)</span>, la función de regresión estimada está muy cerca de la línea estimada basada en la muestra completa.</p>
+<p>En el tercer caso, se enfrenta a un sesgo de selección de la muestra. Se puede ilustrar esto usando solo observaciones con <span class="math inline">\(X_i &lt; 55\)</span> y <span class="math inline">\(Y_i &gt; 100\)</span>. Estas observaciones se identifican fácilmente usando la función <strong>which()</strong> y los operadores lógicos: <code>which (dat $ X &lt;55 &amp; dat $ Y&gt; 100)</code></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="10-2-AVIARM.html#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer semilla aleatoria</span></span>
+<span id="cb9-2"><a href="10-2-AVIARM.html#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb9-3"><a href="10-2-AVIARM.html#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="10-2-AVIARM.html#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simular datos</span></span>
+<span id="cb9-5"><a href="10-2-AVIARM.html#cb9-5" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-6"><a href="10-2-AVIARM.html#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmvnorm</span>(<span class="dv">1000</span>, <span class="fu">c</span>(<span class="dv">50</span>,<span class="dv">100</span>), </span>
+<span id="cb9-7"><a href="10-2-AVIARM.html#cb9-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">sigma =</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">10</span>,<span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">10</span>))))</span>
+<span id="cb9-8"><a href="10-2-AVIARM.html#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="10-2-AVIARM.html#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(dat) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;X&quot;</span>,<span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb9-10"><a href="10-2-AVIARM.html#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="10-2-AVIARM.html#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># marcar observaciones</span></span>
+<span id="cb9-12"><a href="10-2-AVIARM.html#cb9-12" aria-hidden="true" tabindex="-1"></a>id <span class="ot">&lt;-</span> <span class="fu">which</span>(dat<span class="sc">$</span>X <span class="sc">&lt;=</span> <span class="dv">55</span> <span class="sc">&amp;</span> dat<span class="sc">$</span>Y <span class="sc">&gt;=</span> <span class="dv">100</span>)</span>
+<span id="cb9-13"><a href="10-2-AVIARM.html#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="10-2-AVIARM.html#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dat<span class="sc">$</span>X[<span class="sc">-</span>id], </span>
+<span id="cb9-15"><a href="10-2-AVIARM.html#cb9-15" aria-hidden="true" tabindex="-1"></a>       dat<span class="sc">$</span>Y[<span class="sc">-</span>id], </span>
+<span id="cb9-16"><a href="10-2-AVIARM.html#cb9-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;gray&quot;</span>,</span>
+<span id="cb9-17"><a href="10-2-AVIARM.html#cb9-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb9-18"><a href="10-2-AVIARM.html#cb9-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb9-19"><a href="10-2-AVIARM.html#cb9-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">&quot;X&quot;</span>,</span>
+<span id="cb9-20"><a href="10-2-AVIARM.html#cb9-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb9-21"><a href="10-2-AVIARM.html#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="10-2-AVIARM.html#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(dat<span class="sc">$</span>X[id], </span>
+<span id="cb9-23"><a href="10-2-AVIARM.html#cb9-23" aria-hidden="true" tabindex="-1"></a>     dat<span class="sc">$</span>Y[id], </span>
+<span id="cb9-24"><a href="10-2-AVIARM.html#cb9-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb9-25"><a href="10-2-AVIARM.html#cb9-25" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb9-26"><a href="10-2-AVIARM.html#cb9-26" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>)</span>
+<span id="cb9-27"><a href="10-2-AVIARM.html#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="10-2-AVIARM.html#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar función de regresión poblacional</span></span>
+<span id="cb9-29"><a href="10-2-AVIARM.html#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(<span class="dv">75</span>, <span class="fl">0.5</span>), </span>
+<span id="cb9-30"><a href="10-2-AVIARM.html#cb9-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>,</span>
+<span id="cb9-31"><a href="10-2-AVIARM.html#cb9-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd  =</span> <span class="fl">1.5</span>)</span>
+<span id="cb9-32"><a href="10-2-AVIARM.html#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="10-2-AVIARM.html#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar la función de regresión estimada para la muestra completa</span></span>
+<span id="cb9-34"><a href="10-2-AVIARM.html#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(noerror_mod)</span>
+<span id="cb9-35"><a href="10-2-AVIARM.html#cb9-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-36"><a href="10-2-AVIARM.html#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el caso del modelo 1, agregar la línea de regresión</span></span>
+<span id="cb9-37"><a href="10-2-AVIARM.html#cb9-37" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat[id, ]</span>
+<span id="cb9-38"><a href="10-2-AVIARM.html#cb9-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-39"><a href="10-2-AVIARM.html#cb9-39" aria-hidden="true" tabindex="-1"></a>c3_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(dat<span class="sc">$</span>Y <span class="sc">~</span> dat<span class="sc">$</span>X, <span class="at">data =</span> dat)</span>
+<span id="cb9-40"><a href="10-2-AVIARM.html#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(c3_mod, <span class="at">col =</span> <span class="st">&quot;purple&quot;</span>)</span>
+<span id="cb9-41"><a href="10-2-AVIARM.html#cb9-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-42"><a href="10-2-AVIARM.html#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar leyenda</span></span>
+<span id="cb9-43"><a href="10-2-AVIARM.html#cb9-43" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb9-44"><a href="10-2-AVIARM.html#cb9-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="dv">1</span>,</span>
+<span id="cb9-45"><a href="10-2-AVIARM.html#cb9-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">bg =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb9-46"><a href="10-2-AVIARM.html#cb9-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb9-47"><a href="10-2-AVIARM.html#cb9-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;purple&quot;</span>), </span>
+<span id="cb9-48"><a href="10-2-AVIARM.html#cb9-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;Población&quot;</span>, <span class="st">&quot;Muestra completa&quot;</span>, <span class="st">&quot;X &lt;= 55 &amp; Y &gt;= 100&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/545-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Se puede ver que el proceso de selección conduce a resultados de estimación sesgados.</p>
+<p>Existen métodos que permiten corregir el sesgo de selección de la muestra. Sin embargo, estos métodos están más allá del alcance del presente curso y, por lo tanto, no se consideran aquí. El concepto de sesgo de selección de la muestra se resume en el Concepto clave 9.5.</p>
+</div>
+<div id="causalidad-simultánea" class="section level4 unnumbered">
+<h4>Causalidad simultánea</h4>
+<div id="KC9.6" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.6
+</h3>
+<h3 class="left">
+Sesgo de causalidad simultáneo
+</h3>
+<p>Hasta ahora se ha asumido que los cambios en la variable independiente <span class="math inline">\(X\)</span> son responsables de los cambios en la variable dependiente <span class="math inline">\(Y\)</span>. Cuando lo contrario también es cierto, se dice que existe <em>causalidad simultánea</em> entre <span class="math inline">\(X\)</span> y <span class="math inline">\(Y\)</span>. Esta causalidad inversa conduce a una correlación entre <span class="math inline">\(X\)</span> y el error en la regresión poblacional de interés, de modo que el coeficiente de <span class="math inline">\(X\)</span> se estima con sesgo.</p>
+</div>
+<p>Suponga que se está interesado en estimar el efecto de un aumento de <span class="math inline">\(20\%\)</span> en los precios de los cigarrillos sobre el consumo de cigarrillos en los Estados Unidos utilizando un modelo de regresión múltiple. Esto se puede investigar utilizando el conjunto de datos <strong>CigarettesSW</strong> que es parte del paquete <strong>AER</strong>. <strong>CigarettesSW</strong> es un conjunto de datos de panel sobre el consumo de cigarrillos para los 48 estados federales continentales de EE. UU. desde 1985-1995 y proporciona datos sobre indicadores económicos y precios locales promedio, impuestos y consumo de paquetes per cápita.</p>
+<p>Después de cargar el conjunto de datos, se seleccionan observaciones para el año 1995 y se trazan los logaritmos del precio por paquete, <strong>price</strong>, contra el consumo del paquete, <strong>packs</strong>, y se estima un modelo de regresión lineal simple.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="10-2-AVIARM.html#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cargar el conjunto de datos</span></span>
+<span id="cb10-2"><a href="10-2-AVIARM.html#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AER)</span>
+<span id="cb10-3"><a href="10-2-AVIARM.html#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;CigarettesSW&quot;</span>)</span>
+<span id="cb10-4"><a href="10-2-AVIARM.html#cb10-4" aria-hidden="true" tabindex="-1"></a>c1995 <span class="ot">&lt;-</span> <span class="fu">subset</span>(CigarettesSW, year <span class="sc">==</span> <span class="st">&quot;1995&quot;</span>)</span>
+<span id="cb10-5"><a href="10-2-AVIARM.html#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="10-2-AVIARM.html#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo</span></span>
+<span id="cb10-7"><a href="10-2-AVIARM.html#cb10-7" aria-hidden="true" tabindex="-1"></a>cigcon_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(packs) <span class="sc">~</span> <span class="fu">log</span>(price), <span class="at">data =</span> c1995)</span>
+<span id="cb10-8"><a href="10-2-AVIARM.html#cb10-8" aria-hidden="true" tabindex="-1"></a>cigcon_mod</span>
+<span id="cb10-9"><a href="10-2-AVIARM.html#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-10"><a href="10-2-AVIARM.html#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb10-11"><a href="10-2-AVIARM.html#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lm(formula = log(packs) ~ log(price), data = c1995)</span></span>
+<span id="cb10-12"><a href="10-2-AVIARM.html#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-13"><a href="10-2-AVIARM.html#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb10-14"><a href="10-2-AVIARM.html#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)   log(price)  </span></span>
+<span id="cb10-15"><a href="10-2-AVIARM.html#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      10.850       -1.213</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="10-2-AVIARM.html#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># trazar la línea de regresión estimada y los datos</span></span>
+<span id="cb11-2"><a href="10-2-AVIARM.html#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">log</span>(c1995<span class="sc">$</span>price), <span class="fu">log</span>(c1995<span class="sc">$</span>packs),</span>
+<span id="cb11-3"><a href="10-2-AVIARM.html#cb11-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;ln(Precio)&quot;</span>,</span>
+<span id="cb11-4"><a href="10-2-AVIARM.html#cb11-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;ln(Consumo)&quot;</span>,</span>
+<span id="cb11-5"><a href="10-2-AVIARM.html#cb11-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Demanda de cigarrillos&quot;</span>,</span>
+<span id="cb11-6"><a href="10-2-AVIARM.html#cb11-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb11-7"><a href="10-2-AVIARM.html#cb11-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>)</span>
+<span id="cb11-8"><a href="10-2-AVIARM.html#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="10-2-AVIARM.html#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(cigcon_mod, </span>
+<span id="cb11-10"><a href="10-2-AVIARM.html#cb11-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>, </span>
+<span id="cb11-11"><a href="10-2-AVIARM.html#cb11-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/549-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Recuerde del Capítulo <a href="9-FRNL.html#FRNL">9</a> que, debido a la especificación log-log, en la regresión poblacional el coeficiente del logaritmo del precio se interpreta como la elasticidad precio del consumo. El coeficiente estimado sugiere que un aumento de <span class="math inline">\(1\%\)</span> en los precios de los cigarrillos reduce el consumo de cigarrillos en aproximadamente <span class="math inline">\(1.2\%\)</span>, en promedio. ¿Se ha estimado una curva de demanda? La respuesta es no: Este es un ejemplo clásico de causalidad simultánea, ver Concepto clave 9.6. Las observaciones son equilibrios de mercado que están determinados tanto por cambios en la oferta como por cambios en la demanda. Por lo tanto, el precio está correlacionado con el término de error y el estimador de MCO está sesgado. No se puede estimar una curva de oferta ni de demanda de manera consistente utilizando este enfoque.</p>
+<p>Se volverá a este tema en el Capítulo <a href="13-RVI.html#RVI">13</a> que trata la regresión de variables instrumentales, un enfoque que permite una estimación consistente cuando hay causalidad simultánea.</p>
+</div>
+<div id="fuentes-de-inconsistencia-de-errores-estándar-de-mco" class="section level4 unnumbered">
+<h4>Fuentes de inconsistencia de errores estándar de MCO</h4>
+<p>Existen dos amenazas centrales para el cálculo de errores estándar consistentes de MCO:</p>
+<ol style="list-style-type: decimal">
+<li><p>Heteroscedasticidad: Las implicaciones de la heterocedasticidad se han discutido en el Capítulo <a href="6-PHICMRLS.html#PHICMRLS">6</a>. Los errores estándar robustos a la heterocedasticidad calculados por la función <strong>vcovHC()</strong> del paquete <strong>sandwich</strong> producen errores estándar válidos bajo heterocedasticidad.</p></li>
+<li><p>Correlación en serie: Si el error de regresión de la población está correlacionado entre las observaciones, se tiene una correlación en serie. Esto sucede a menudo en aplicaciones en las que se utilizan observaciones repetidas; por ejemplo, en estudios de datos de panel. En cuanto a la heterocedasticidad, <strong>vcovHC()</strong> se puede utilizar para obtener errores estándar válidos cuando existe correlación serial.</p></li>
+</ol>
+<p>Los errores estándar inconsistentes producirán pruebas de hipótesis no válidas e intervalos de confianza incorrectos. Por ejemplo, cuando se prueba el valor nulo de que algún coeficiente del modelo es cero, ya no se puede confiar en el resultado porque la prueba puede no tener un tamaño de <span class="math inline">\(5\%\)</span> debido al error estándar calculado incorrectamente.</p>
+<p>El Concepto clave 9.7 resume todas las amenazas a la validez interna discutidas anteriormente.</p>
+<div id="KC9.7" class="keyconcept">
+<h3 class="right">
+Concepto clave 9.7
+</h3>
+<h3 class="left">
+Amenazas a la validez interna de un estudio de regresión
+</h3>
+<p>Las cinco amenazas principales a la validez interna de un estudio de regresión múltiple son:</p>
+<ol style="list-style-type: decimal">
+<li>Variables omitidas.</li>
+<li>Especificación incorrecta de la forma funcional.</li>
+<li>Errores en las variables (errores de medición en los regresores).</li>
+<li>Selección de muestras.</li>
+<li>Causalidad simultánea.</li>
+</ol>
+<p>Todas estas amenazas conducen al fracaso del primer supuesto de mínimos cuadrados <span class="math display">\[E(u_i\vert X_{1i},\dots ,X_{ki}) \neq 0\]</span> de modo que el estimador de MCO está <em>sesgado</em> y es <em>inconsistente</em>.<br></p>
+<p>Además, si uno no ajusta por heterocedasticidad <em>y</em>/<em>o</em> correlación serial, los errores estándar incorrectos pueden ser una amenaza para la validez interna del estudio.</p>
+</div>
+</div>
+</div>
+<h3>Referencias bibliográficas</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-R-mvtnorm" class="csl-entry">
+Genz, Alan, Frank Bretz, Tetsuhisa Miwa, Xuefei Mi, and Torsten Hothorn. 2020. <em><span class="nocase">mvtnorm: Multivariate Normal and t Distributions</span></em> (version 1.1-1). <a href="http://mvtnorm.R-forge.R-project.org">http://mvtnorm.R-forge.R-project.org</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="10-1-validez-interna-y-externa.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_10.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

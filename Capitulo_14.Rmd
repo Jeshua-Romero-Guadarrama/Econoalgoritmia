@@ -1,0 +1,1103 @@
+# Experimentos y cuasiexperimentos {#EC}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 693, child="_setup.Rmd"}
+```
+
+```{r, 694, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Este capítulo analiza las herramientas estadísticas que se aplican comúnmente en la evaluación de programas, donde el interés radica en medir los efectos causales de programas, políticas u otras intervenciones. Un diseño de investigación óptimo para este propósito es lo que los estadísticos llaman un experimento controlado aleatorio ideal. La idea básica es asignar sujetos aleatoriamente a dos grupos diferentes, uno que recibe el tratamiento (el grupo de tratamiento) y otro que no (el grupo de control) y comparar los resultados de ambos grupos para obtener una estimación del efecto promedio del tratamiento.
+
+Estos datos *experimentales* son fundamentalmente diferentes de los datos *observacionales*. Por ejemplo, se podría usar un experimento controlado aleatorio para medir cuánto difiere el desempeño de los estudiantes en una prueba estandarizada entre dos clases en las que una tiene una proporción de estudiantes por maestro "regular" y la otra tiene menos estudiantes. Los datos producidos por tal experimento sería diferente de, por ejemplo, los datos de sección transversal observados sobre el desempeño de los estudiantes utilizados en los Capítulos \@ref(RLR) a \@ref(FRNL) donde los tamaños de las clases no se asignan al azar a los estudiantes, sino que son los resultados de una decisión económica donde se equilibraron los objetivos educativos y los aspectos presupuestarios.
+
+Para los economistas, los experimentos controlados aleatorios a menudo son difíciles o incluso irrealizables de implementar. Por ejemplo, debido a razones éticas, morales y legales, es prácticamente imposible para el propietario de una empresa estimar el efecto causal sobre la productividad de los trabajadores de ponerlos bajo estrés psicológico mediante un experimento en el que los trabajadores se asignan aleatoriamente al grupo de tratamiento que se encuentra bajo presión de tiempo o al grupo de control donde el trabajo se realiza en condiciones regulares, en el mejor de los casos sin el conocimiento de estar en un experimento (ver el *El efecto Hawthorne*).
+
+Sin embargo, a veces las circunstancias externas producen lo que se llama un *cuasi-experimento* o *experimento natural*. Esta aleatoriedad "si permite estimar los efectos causales" que son de interés para los economistas que utilizan herramientas muy similares a las válidas para experimentos controlados aleatorios ideales. Estas herramientas se basan en gran medida en la teoría de la regresión múltiple y también en la regresión IV (consulte el Capítulo \@ref(RVI)). Se revisarán los aspectos centrales de estos métodos y se demostrará cómo aplicarlos en **R** utilizando el conjunto de datos **STAR** (consulte la [descripción](https://dataverse.harvard.edu/dataset.xhtml?persistentId=hdl:1902.1/10766) del conjunto de datos).
+
+Los siguientes paquetes y sus dependencias son necesarias para la reproducción de los fragmentos de código presentados a lo largo de este capítulo:
+
++ **AER** [@R-AER]
++ **dplyr** [@R-dplyr]
++ **MASS** [@R-MASS]
++ **mvtnorm** [@R-mvtnorm]
++ **rddtools** [@R-rddtools]
++ **scales** [@R-scales]
++ **stargazer** [@R-stargazer]
++ **tidyr** [@R-tidyr]
+
+Asegúrese de que el siguiente fragmento de código se ejecute sin errores.
+
+```{r, 695, warning=FALSE, message=FALSE, eval=FALSE}
+if (!require('remotes')) install.packages('remotes')
+remotes::install_github( "bquast/rddtools" )
+```
+
+```{r, 696, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(dplyr)
+library(MASS)
+library(mvtnorm)
+library(rddtools)
+library(scales)
+library(stargazer)
+library(tidyr)
+```
+
+## Resultados potenciales, efectos causales y experimentos idealizados {#RPECEI}
+
+Ahora se recapitula brevemente la idea del efecto causal promedio y cómo se puede estimar usando el *estimador de diferencias*.
+
+#### Resultados potenciales y efecto causal promedio {-}
+
+Un *resultado potencial* es el resultado de un individuo bajo un tratamiento potencial. Para este individuo, el efecto causal del tratamiento es la diferencia entre el resultado potencial si el individuo recibe el tratamiento y el resultado potencial si no lo recibe. Dado que este efecto causal puede ser diferente para diferentes individuos y no es posible medir el efecto causal para un solo individuo, uno está interesado en estudiar el *efecto causal promedio* del tratamiento, por lo que también se denomina *efecto promedio del tratamiento*.
+
+En un experimento controlado aleatorio ideal se cumplen las siguientes condiciones:
+
+1. Los sujetos se seleccionan al azar de la población.
+2. Los sujetos se asignan aleatoriamente al grupo de tratamiento y control.
+
+La condición 1. garantiza que los resultados potenciales de los sujetos se extraigan aleatoriamente de la misma distribución de modo que el valor esperado del efecto causal en la muestra sea igual al efecto causal promedio en la distribución. La condición 2. asegura que la recepción del tratamiento sea independiente de los posibles resultados de los sujetos. Si se cumplen ambas condiciones, el efecto causal esperado es el resultado esperado en el grupo de tratamiento menos el resultado esperado en el grupo de control. Usando expectativas condicionales se tiene $$\text{Efecto causal promedio} = E(Y_i\vert X_i=1) -  E(Y_i\vert X_i=0),$$ donde $X_i$ es un indicador de tratamiento binario.
+
+El efecto causal promedio se puede estimar usando el *estimador de diferencias*, que no es más que el estimador MCO en el modelo de regresión simple:
+ 
+\begin{align}
+  Y_i = \beta_0 + \beta_1 X_i + u_i \ \ , \ \ i=1,\dots,n, (\#eq:diffest)
+\end{align}
+
+donde la asignación aleatoria asegura que $E(u_i\vert X_i) = 0$.
+
+El estimador MCO en el modelo de regresión: 
+
+\begin{align}
+  Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_{1i} + \dots + \beta_{1+r} W_{ri} + u_i \ \ , \ \ i=1,\dots,n (\#eq:diffestwar)
+\end{align}
+
+con regresores adicionales $W_1,\dots,W_r$ se denomina *estimador de diferencias con regresores adicionales*. Se supone que el tratamiento $X_i$ se asigna aleatoriamente para que sea independiente de la característica previa al tratamiento $W_i$. Esta suposición se llama *independencia media condicional* e implica $$E(u_i\vert X_i , W_i) = E(u_i\vert W_i) = 0,$$ por lo que la expectativa condicional del error $u_i$ dado el indicador de tratamiento $X_i$ y la característica de pretratamiento $W_i$ no depende de $X_i$. La independencia media condicional reemplaza el primer supuesto de mínimos cuadrados en el Concepto clave 6.4 y, por lo tanto, asegura que el estimador de diferencias de $\beta_1$ sea insesgado. El *estimador de diferencias con regresores adicionales* es más eficiente que el *estimador de diferencias* si los regresores adicionales explican parte de la variación en $Y_i$.
+
+## Amenazas a la validez de los experimentos
+
+Los conceptos de validez interna y externa discutidos en el Concepto clave 9.1 también son aplicables para estudios basados en datos experimentales y cuasi-experimentales. Se proporciona una explicación detallada de las amenazas particulares a la validez interna y externa de los experimentos, incluidos ejemplos. En consecuencia, el capítulo aborda una breve repetición de las amenazas.
+
+#### Amenazas a la validez interna {-}
+
+1. **Falta de aleatorización**
+
+    Si los sujetos no se asignan al azar al grupo de tratamiento, los resultados se contaminarán con el efecto de las características o preferencias individuales de los sujetos y no es posible obtener una estimación no sesgada del efecto del tratamiento. Se puede probar la asignación no aleatoria usando una prueba de significancia (prueba $F$) en los coeficientes en el modelo de regresión $$X_i = \beta_0 + \beta_1 W_{1i} + \dots +\beta_2 W_{ri} + u_i \ \ , \ \ i=1,\dots,n.$$
+    
+2. **Incumplimiento del protocolo de tratamiento**
+
+    Si los sujetos no siguen el protocolo de tratamiento; es decir, algunos sujetos del grupo de tratamiento logran evitar recibir el tratamiento y/o algunos sujetos del grupo de control logran recibir el tratamiento (*cumplimiento parcial*), existe correlación entre $X_i$ y $u_i$ de manera que el estimador MCO del efecto promedio del tratamiento está sesgado. Si existen datos sobre *ambos*, el tratamiento realmente recibido ($X_i$) y la asignación aleatoria inicial ($Z_i$), la regresión IV de los modelos \@ref(eq:diffest) y \@ref(eq:diffestwar) es un remedio.
+
+3. **Desgaste**
+
+    El desgaste puede resultar en una muestra no seleccionada al azar. Si los sujetos abandonan sistemáticamente el estudio después de haber sido asignados al grupo de control o al grupo de tratamiento (sistemático significa que el motivo del abandono está relacionado con el tratamiento), habrá correlación entre $X_i$ y $u_i$. Por lo tanto, existe sesgo en el estimador de MCO sobre el efecto del tratamiento.
+
+4. **Efectos experimentales**
+  
+    Si los sujetos humanos en el grupo de tratamiento y/o el grupo de control saben que están en un experimento, podrían adaptar su comportamiento de una manera que evite la estimación no sesgada del efecto del tratamiento.
+
+5. **Tamaños de muestra pequeños**
+
+    Como se sabe por la teoría de la regresión lineal, los tamaños de muestra pequeños conducen a una estimación imprecisa de los coeficientes y, por lo tanto, implican una estimación imprecisa del efecto causal. Además, los intervalos de confianza y la prueba de hipótesis pueden producir inferencias erróneas cuando el tamaño de la muestra es pequeño.
+
+#### Amenazas a la validez externa {-}
+
+1. **Muestra no representativa**
+
+    Si la población estudiada y la población de interés no son suficientemente similares, no existe justificación para generalizar los resultados.
+
+2. **Programa o política no representativa**
+
+    Si el programa o política para la población estudiada difiere considerablemente del programa (que se) aplicará a la(s) población(es) de interés, los resultados no se pueden generalizar. Por ejemplo, un programa a pequeña escala con poca financiación puede tener efectos diferentes a los de un programa ampliado ampliamente disponible que se implementa realmente. Existen otros factores como la duración y el alcance del seguimiento que deben considerarse aquí.
+    
+3. **Efectos de equilibrio general**
+
+    Si las condiciones de mercado y/o ambientales no pueden mantenerse constantes cuando un programa válido internamente se implementa de manera amplia, la validez externa puede ser dudosa.
+
+## Estimaciones experimentales del efecto de las reducciones del tamaño de las clases
+
+### Diseño experimental y conjunto de datos {-}
+
+El Proyecto *Student-Teacher Achievement Ratio* (STAR) fue un gran experimento controlado aleatorio con el objetivo de afirmar si una reducción del tamaño de la clase es efectiva para mejorar los resultados educativos. Se llevó a cabo en 80 escuelas primarias de Tennessee durante un período de cuatro años durante la década de 1980 por el Departamento de Educación del Estado en EE. UU.
+
+En el primer año, alrededor de 6400 estudiantes fueron asignados aleatoriamente a una de tres intervenciones: Clase pequeña (13 a 17 estudiantes por maestro), clase regular (22 a 25 estudiantes por maestro) y clase regular con ayudante (22 a 25 estudiantes por maestro y estudiantes con un asistente de maestro de tiempo completo). Los maestros también fueron asignados al azar a las clases que impartían. Las intervenciones se iniciaron cuando los estudiantes ingresaron a la escuela en el jardín de infantes y continuaron hasta el tercer grado. Los grupos de control y tratamiento en todos los grados se resumen en la Tabla \@ref(tab:starstructure).
+
+|                | K                        | 1                        | 2                        | 3                        |
+|:---------------|:------------------------:|:------------------------:|:------------------------:|:------------------------:|
+| Tratamiento 1  | Clase pequeña            | Clase pequeña            | Clase pequeña            | Clase pequeña            |
+| Tratamiento 2  | Clase regular + Ayudante | Clase regular + Ayudante | Clase regular + Ayudante | Clase regular + Ayudante |
+| Control        | Clase regular            | Clase regular            | Clase regular            | Clase regular            |
+
+Table: (\#tab:starstructure) Grupos de control y tratamiento en el experimento STAR
+
+Cada año, el progreso de aprendizaje de los estudiantes se evaluó mediante la suma de los puntos obtenidos en las partes de matemáticas y lectura de una prueba estandarizada (la [Prueba de rendimiento de Stanford](https://en.wikipedia.org/wiki/Stanford_Achievement_Test_Series)).
+
+El conjunto de datos **STAR** es parte del paquete **AER**.
+
+```{r, 697, message=FALSE}
+# cargar el paquete AER y el conjunto de datos STAR
+library(AER)
+data(STAR)
+```
+
+**head(STAR)** muestra que existe una variedad de variables de factores que describen las características de los estudiantes y maestros, así como varios indicadores de la escuela, todos los cuales se registran por separado para los cuatro grados diferentes. Los datos están en *formato ancho*; es decir, cada variable tiene su propia columna y, para cada alumno, las filas contienen observaciones sobre estas variables. Usando **dim(STAR)** se encontró que existe un total de 11598 observaciones en 47 variables.
+
+```{r, 698}
+# obtener una descripción general
+head(STAR, 2)
+dim(STAR)
+```
+
+```{r, 699}
+# obtener los nombres de las variables
+names(STAR)
+```
+
+La mayoría de los nombres de las variables contienen un sufijo (**k**, **1**, **2** o **3**) que indica el grado al que se refiere la variable respectiva. Esto facilita el análisis de regresión porque permite ajustar el argumento **formula** en **lm()** para cada grado simplemente cambiando los sufijos de las variables de acuerdo con el objetivo.
+
+El resultado producido por **head()** muestra que algunos valores registrados son **NA** y **<NA>**; es decir, no existen datos sobre esta variable para el alumno en consideración. Esto radica en la naturaleza de los datos; por ejemplo, al tomar la primera observación **"STAR[1,]"**.
+
+En la salida de `head(STAR, 2)` se encontró que el estudiante ingresó al experimento en tercer grado en una clase regular, por lo que el tamaño de la clase se registra en **star3** y las otras variables indicadoras del tipo de clase son **<NA>**. Por la misma razón, no existen registros de su puntaje en matemáticas y lectura, excepto para el tercer grado. Es sencillo obtener un conjunto de datos que no contenga todos los *NA* / *<NA>*: Simplemente se necesitan pedir los **NA** usando **!is.na()**.
+
+```{r, 700}
+# pedir los datos de NA para la primera observación e imprimir los resultados en la consola
+STAR[1, !is.na(STAR[1, ])]
+```
+
+`is.na(STAR[1, ])` devuelve un vector lógico con **TRUE** en posiciones que corresponden a entradas **<NA>** para la primera observación. El operador **!** se usa para invertir el resultado de modo que se obtengan solo entradas que no sean **<NA>** para las primeras observaciones.
+
+En general, no es necesario eliminar filas con datos faltantes porque **lm()** lo hace de forma predeterminada. La falta de datos puede implicar un tamaño de muestra pequeño y, por lo tanto, puede conducir a una estimación imprecisa y a una inferencia incorrecta. Sin embargo, esto no es un problema para el estudio en cuestión ya que, como se vera a continuación, los tamaños de muestra superan las 5000 observaciones para cada regresión realizada.
+
+### Análisis de los datos STAR {-}
+
+Como se puede ver en la Tabla \@ref(tab:starstructure), existen dos grupos de tratamiento en cada grado, clases pequeñas con solo 13 a 17 estudiantes y clases regulares con 22 a 25 estudiantes y un ayudante de enseñanza. Por lo tanto, se introducen dos variables binarias, cada una de las cuales es un indicador para el grupo de tratamiento respectivo, con el objetivo de que el estimador de diferencias capture el efecto del tratamiento para cada grupo de tratamiento por separado. Esto produce el modelo de regresión poblacional:
+
+\begin{align}
+  Y_i = \beta_0 + \beta_1 SmallClass_i + \beta_2 RegAide_i + u_i, (\#eq:starpopreg)
+\end{align}
+
+con puntaje de prueba $Y_i$, el indicador de clase pequeña $SmallClass_i$ y $RegAide_i$, el indicador de una clase regular con ayudante.
+
+Se reproducen los resultados presentados en la Tabla 13.1 realizando la regresión \@ref(eq:starpopreg) para cada grado por separado. En el caso de cada estudiante, la variable dependiente es simplemente la suma de los puntos obtenidos en las partes de matemáticas y lectura, construida usando **I()**.
+
+```{r, 701}
+# calcular estimaciones de diferencias para cada grado
+fmk <- lm(I(readk + mathk) ~ stark, data = STAR)
+fm1 <- lm(I(read1 + math1) ~ star1, data = STAR)
+fm2 <- lm(I(read2 + math2) ~ star2, data = STAR)
+fm3 <- lm(I(read3 + math3) ~ star3, data = STAR)
+```
+
+```{r, 702}
+# obtener una matriz de coeficientes utilizando errores estándar robustos
+coeftest(fmk, vcov = vcovHC, type= "HC1")
+coeftest(fm1, vcov = vcovHC, type= "HC1")
+coeftest(fm2, vcov = vcovHC, type= "HC1")
+coeftest(fm3, vcov = vcovHC, type= "HC1")
+```
+
+Se recopilan los resultados y se presentan en una tabla usando **stargazer()**.
+
+```{r, 703}
+# calcular errores estándar robustos para cada modelo y reunirlos en una lista
+rob_se_1 <- list(sqrt(diag(vcovHC(fmk, type = "HC1"))),
+                 sqrt(diag(vcovHC(fm1, type = "HC1"))),
+                 sqrt(diag(vcovHC(fm2, type = "HC1"))),
+                 sqrt(diag(vcovHC(fm2, type = "HC1"))))
+```
+
+```{r, 704, message=F, warning=F, results='asis', eval=FALSE}
+library(stargazer)
+
+stargazer(fmk,fm1,fm2,fm3,
+  title = "Proyecto STAR: Estimaciones de diferencias",
+  header = FALSE, 
+  type = "latex",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("K", "1", "2", "3"),
+  dep.var.caption  = "Variable dependiente: Grado",
+  dep.var.labels.include = FALSE,
+  se = rob_se_1)
+```
+
+<!--html_preserve-->
+
+```{r, 705, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="html"}
+library(stargazer)
+
+stargazer(fmk,fm1,fm2,fm3,
+  header = FALSE, 
+  type = "html",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 2, 
+  column.labels = c("K", "1", "2", "3"),
+  dep.var.caption  = "Variable dependiente: Grado",
+  dep.var.labels.include = FALSE,
+  se = rob_se_1)
+
+stargazer_html_title("Proyecto STAR - Estimaciones de diferencias", "psde")
+```
+
+<!--/html_preserve-->
+
+```{r, 706, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="latex"}
+library(stargazer)
+
+stargazer(fmk,fm1,fm2,fm3,
+  title = "\\label{tab:psde} Proyecto STAR - Estimaciones de diferencias",
+  header = FALSE, 
+  digits = 3,
+  type = "latex",
+  float.env = "sidewaystable",
+  column.sep.width = "-3pt",
+  model.numbers = F,
+  omit.table.layout = "n",
+  column.labels = c("K", "1", "2", "3"),
+  dep.var.caption  = "Variable dependiente: Grado",
+  dep.var.labels.include = FALSE,
+  se = rob_se_1) 
+```
+
+Las estimaciones presentadas en la Tabla \@ref(tab:psde) sugieren que la reducción del tamaño de la clase mejora el rendimiento de los estudiantes. A excepción del grado 1, las estimaciones del coeficiente en $SmallClass$ son aproximadamente de la misma magnitud (las estimaciones se encuentran entre 13.90 y 19.39 puntos) y son estadísticamente significativas a $1\%$. Además, un ayudante de enseñanza tiene poco efecto, posiblemente nulo, en el desempeño de los estudiantes.
+
+Se aumenta el modelo de regresión \@ref(eq:starpopreg) a partir de diferentes conjuntos de regresores por dos razones:
+
+1. Si los regresores adicionales explican parte de la variación observada en la variable dependiente, se obtienen estimaciones más eficientes de los coeficientes de interés.
+2. Si el tratamiento no se recibe al azar debido a fallas en el seguimiento del protocolo de tratamiento, las estimaciones obtenidas usando \@ref(eq:starpopreg) pueden estar sesgadas. Agregar regresores adicionales puede resolver o mitigar este problema.
+
+En particular, se consideran las siguientes características de estudiantes y profesores:
+
+- $experience$ --- Años de experiencia del maestro.
+- $boy$ --- El estudiante es un niño (ficticia).
+- $lunch$ --- Elegibilidad para almuerzo gratis (ficticia).
+- $black$ --- El estudiante es afroamericano (ficticia).
+- $race$ --- La raza del estudiante no es blanca ni negra (ficticia).
+- $\text{schoolid}$ --- Variables indicadoras de la escuela.
+
+en las cuatro especificaciones de regresión poblacional
+
+\begin{align}
+Y_i =& \beta_0 + \beta_1 SmallClass_i + \beta_2 RegAide_i + u_i, (\#eq:augstarpopreg1) \\
+Y_i =& \beta_0 + \beta_1 SmallClass_i + \beta_2 RegAide_i + \beta_3 experience_i + u_i, (\#eq:augstarpopreg2) \\
+Y_i =& \beta_0 + \beta_1 SmallClass_i + \beta_2 RegAide_i + \beta_3 experience_i + schoolid + u_i, (\#eq:augstarpopreg3)
+\end{align}
+
+y
+
+\begin{align}
+Y_i =& \beta_0 + \beta_1 SmallClass_i + \beta_2 RegAide_i + \beta_3 experience_i + \beta_4 boy + \beta_5 lunch \\ 
+& + \beta_6 black + \beta_7 race + schoolid + u_i. (\#eq:augstarpopreg4)
+\end{align}
+
+Antes de la estimación, se crean algunos subconjuntos y ordenan los datos utilizando funciones de los paquetes **dplyr** y **tidyr**. Ambos son parte de **tidyverse**, una colección de paquetes **R** diseñados para la ciencia de datos y el manejo de grandes conjuntos de datos (consulte el [sitio oficial](https://www.tidyverse.org/) para obtener más información sobre los **paquetes de tidyverse**). Las funciones **%>%**, **transmute()** y **mutate()** son suficientes para nosotros aquí:
+
++ **%>%** permite encadenar llamadas a funciones.
++ **transmute()** permite subdividir el conjunto de datos nombrando las variables que se van a mantener.
++ **mutate()** es conveniente para agregar nuevas variables basadas en las existentes conservando estas últimas.
+
+Los modelos de regresión \@ref(eq:augstarpopreg1) a \@ref(eq:augstarpopreg4) requieren las variables **gender**, **ethnicity**, **stark**, **readk**, **mathk**, **lunchk**, **experiencek** y **schoolidk**. Después de eliminar las variables restantes usando **transmute()**, se usa **mutate()** para agregar tres variables binarias adicionales que son derivadas de las existentes: **black**, **race** y **boy**. Se generan usando declaraciones lógicas dentro de la función **ifelse()**.
+
+```{r, 707, message=FALSE, warning=FALSE}
+# cargar los paquetes 'dplyr' y 'tidyr' para las funcionalidades de gestión de datos
+library(dplyr)
+library(tidyr)
+
+# generar subconjunto con datos de jardín de infantes
+STARK <- STAR %>% 
+      transmute(gender,
+                ethnicity,
+                stark,
+                readk,
+                mathk,
+                lunchk,
+                experiencek,
+                schoolidk) %>% 
+      mutate(black = ifelse(ethnicity == "afam", 1, 0),
+             race = ifelse(ethnicity == "afam" | ethnicity == "cauc", 1, 0),
+             boy = ifelse(gender == "male", 1, 0))
+```
+
+```{r, 708, message=FALSE, warning=FALSE}
+# estimar los modelos
+gradeK1 <- lm(I(mathk + readk) ~ stark + experiencek, 
+              data = STARK)
+
+gradeK2 <- lm(I(mathk + readk) ~ stark + experiencek + schoolidk, 
+              data = STARK)
+
+gradeK3 <- lm(I(mathk + readk) ~ stark + experiencek + boy + lunchk 
+              + black + race + schoolidk, 
+              data = STARK)
+```
+
+En aras de la brevedad, se excluyen los coeficientes de las variables ficticias del indicador en la salida de **coeftest()** subconjuntando las matrices.
+
+```{r, 709, message=FALSE, warning=FALSE}
+# obtener una inferencia robusta sobre la significancia de los coeficientes
+coeftest(gradeK1, vcov. = vcovHC, type = "HC1")
+coeftest(gradeK2, vcov. = vcovHC, type = "HC1")[1:4, ]
+coeftest(gradeK3, vcov. = vcovHC, type = "HC1")[1:7, ]
+```
+
+Ahora se usa **stargazer()** para recopilar toda la información relevante en una tabla estructurada.
+
+```{r, 710}
+# calcular errores estándar robustos para cada modelo y reunirlos en una lista
+rob_se_2 <- list(sqrt(diag(vcovHC(fmk, type = "HC1"))),
+                 sqrt(diag(vcovHC(gradeK1, type = "HC1"))),
+                 sqrt(diag(vcovHC(gradeK2, type = "HC1"))),
+                 sqrt(diag(vcovHC(gradeK3, type = "HC1"))))
+```
+
+```{r, 711, message=F, warning=F, results='asis', eval=FALSE}
+stargazer(fmk, fm1, fm2, fm3,
+  title = "Proyecto STAR - Estimación de diferencias con regresores adicionales para jardín de infantes",
+  header = FALSE, 
+  type = "latex",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("(1)", "(2)", "(3)", "(4)"),
+  dep.var.caption  = "Variable dependiente: Puntaje de la prueba en el jardín de infantes",
+  dep.var.labels.include = FALSE,
+  se = rob_se_2) 
+```
+
+<!--html_preserve-->
+
+```{r, 712, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="html"}
+stargazer(fmk,gradeK1,gradeK2,gradeK3,
+  header = FALSE, 
+  type = "html",
+  model.numbers = F,
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("(1)", "(2)", "(3)", "(4)"),
+  dep.var.caption  = "Variable dependiente: Puntaje de la prueba en el jardín de infantes",
+  dep.var.labels.include = FALSE,
+  se = rob_se_2,
+  omit = "schoolid",
+  nobs = TRUE,
+  add.lines = list(
+                   c("School indicators?", "no", "no", "yes", "yes")
+                   )
+  ) 
+
+stargazer_html_title("Proyecto STAR - Estimación de diferencias con regresores adicionales para jardín de infantes", "psdewarfk")
+```
+
+<!--/html_preserve-->
+
+```{r, 713, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="latex"}
+stargazer(fmk,gradeK1,gradeK2,gradeK3,
+  title = "\\label{tab:psdewarfk} Proyecto STAR - Estimación de diferencias con regresores adicionales para jardín de infantes",
+  header = FALSE, 
+  digits = 3,
+  type = "latex",
+  float.env = "sidewaystable",
+  column.sep.width = "-5pt",
+  model.numbers = F,
+  omit.table.layout = "n",
+  column.labels = c("(1)", "(2)", "(3)", "(4)"),
+  dep.var.caption  = "Variable dependiente: Puntaje de la prueba en el jardín de infantes",
+  dep.var.labels.include = FALSE,
+  se = rob_se_2,
+  omit = "schoolid",
+  nobs = TRUE,
+  add.lines = list(
+                   c("School indicators?", "no", "no", "yes", "yes")
+                   )
+  ) 
+```
+
+Los resultados en la columna (1) de la Tabla \@ref(tab:psdewarfk) simplemente repiten los resultados obtenidos para \@ref(eq:starpopreg). Las columnas (2) a (4) revelan que la suma de las características de los estudiantes y los efectos fijos de la escuela no conducen a estimaciones sustancialmente diferentes de los efectos del tratamiento. Este resultado hace que sea más plausible que las estimaciones de los efectos obtenidos utilizando el modelo \@ref(eq:starpopreg) no adolezcan de fallas en la asignación aleatoria. Existe una disminución en los errores estándar y un aumento en $\bar{R}^2$, lo que implica que las estimaciones son más precisas.
+
+Debido a que los maestros fueron asignados aleatoriamente en las clases, la inclusión del efecto fijo de la escuela nos permite estimar el efecto causal de la experiencia de un maestro en los puntajes de las pruebas de los estudiantes de jardín de infantes. La regresión (3) predice que el efecto promedio de 10 años de experiencia en los puntajes de las pruebas será de $10\cdot 0.74=7.4$ puntos. Se debe tener en cuenta que las otras estimaciones sobre las características de los estudiantes en la regresión (4) *no tienen una interpretación causal* debido a una asignación no aleatoria.
+
+¿Los efectos estimados presentados en la Tabla \@ref(tab:psdewarfk) son grandes o pequeños en un sentido práctico? Traduciendo los cambios predichos en los puntajes de las pruebas a unidades de desviación estándar para permitir una comparación (consulte la Sección \@ref(EPETC) para obtener un argumento similar).
+
+```{r, 714}
+# calcular las desviaciones estándar de la muestra de los puntajes de las pruebas
+SSD <- c("K" = sd(na.omit(STAR$readk + STAR$mathk)),
+         "1" = sd(na.omit(STAR$read1 + STAR$math1)),
+         "2" = sd(na.omit(STAR$read2 + STAR$math2)),
+         "3" = sd(na.omit(STAR$read3 + STAR$math3)))
+
+# traducir los efectos de clases pequeñas a desviaciones estándar
+Small <- c("K" = as.numeric(coef(fmk)[2]/SSD[1]),
+           "1" = as.numeric(coef(fm1)[2]/SSD[2]),
+           "2" = as.numeric(coef(fm2)[2]/SSD[3]),
+           "3" = as.numeric(coef(fm3)[2]/SSD[4]))
+
+# ajustar los errores estándar
+SmallSE <- c("K" = as.numeric(rob_se_1[[1]][2]/SSD[1]),
+             "1" = as.numeric(rob_se_1[[2]][2]/SSD[2]),
+             "2" = as.numeric(rob_se_1[[3]][2]/SSD[3]),
+             "3" = as.numeric(rob_se_1[[4]][2]/SSD[4]))
+
+# traducir los efectos de las clases regulares con ayuda a las desviaciones estándar
+RegAide<- c("K" = as.numeric(coef(fmk)[3]/SSD[1]),
+            "1" = as.numeric(coef(fm1)[3]/SSD[2]),
+            "2" = as.numeric(coef(fm2)[3]/SSD[3]),
+            "3" = as.numeric(coef(fm3)[3]/SSD[4]))
+
+# ajustar los errores estándar
+RegAideSE <- c("K" = as.numeric(rob_se_1[[1]][3]/SSD[1]),
+               "1" = as.numeric(rob_se_1[[2]][3]/SSD[2]),
+               "2" = as.numeric(rob_se_1[[3]][3]/SSD[3]),
+               "3" = as.numeric(rob_se_1[[4]][3]/SSD[4]))
+
+# recopilar los resultados en un data.frame y redondear
+df <- t(round(data.frame(
+                        Small, SmallSE, RegAide, RegAideSE, SSD),
+                        digits =  2))
+```
+
+Es bastante fácil convertir **data.frame** o **df** en una tabla.
+
+```{r, 715, eval=FALSE}
+# generar una tabla simple usando Stargazer
+stargazer(df,
+          title = "Efectos estimados del tamaño de la clase (en unidades de desviaciones estándar)",
+          type = "html", 
+          summary = FALSE,
+          header = FALSE
+          )
+```
+
+<!--html_preserve-->
+
+```{r, 716, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="html"}
+stargazer(df,
+          type = "html",
+          header = FALSE,
+          summary = FALSE)
+
+stargazer_html_title("Efectos estimados del tamaño de la clase (en unidades de desviaciones estándar)", "ecse")
+```
+
+<!--/html_preserve-->
+
+```{r, 717, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output=="latex"}
+stargazer(df,
+          title = "\\label{tab:ecse} Efectos estimados del tamaño de la clase (en unidades de desviaciones estándar)",
+          type = "latex",
+          header = FALSE,
+          summary = FALSE)
+```
+
+El efecto estimado de clases pequeñas es mayor para el primer grado. Lo anterior probablemente se deba a que los estudiantes del grupo de control del primer grado obtuvieron malos resultados en la prueba por alguna razón desconocida o simplemente debido a una variación aleatoria. La diferencia entre el efecto estimado de estar en una clase pequeña y estar en clases regulares con un asistente es aproximadamente 0.2 desviaciones estándar para todos los grados. Esto lleva a la conclusión de que el efecto de estar en una clase de tamaño regular con un asistente es cero y el efecto de estar en una clase pequeña es aproximadamente el mismo para todos los grados.
+
+Hasta qué punto estas estimaciones experimentales son comparables con las estimaciones observacionales obtenidas utilizando datos sobre distritos escolares en California y Massachusetts en el Capítulo \@ref(EEBRM). Resulta que, de hecho, las estimaciones son muy similares. Consulte la sección mencionada anteriormente en el libro para obtener una discusión más detallada.
+
+## Cuasi experimentos {#CE}
+
+En los cuasiexperimentos, se explota "como si" la aleatoriedad para utilizar métodos similares a los que se han analizado en el capítulo anterior. Existen dos tipos de cuasiexperimentos:
+
+1. Las variaciones aleatorias en circunstancias individuales permiten ver el tratamiento "como si" se hubiera determinado al azar.
+
+2. El tratamiento está determinado sólo parcialmente por una variación aleatoria "como si".
+
+El primero permite estimar el efecto usando cualquier modelo \@ref(eq:diffestwar); es decir, el *estimador de diferencias con regresores adicionales*, o, si hay duda de que la aleatoriedad "como si" no asegura completamente que haya sin diferencias sistemáticas entre el grupo de control y el grupo de tratamiento, utilizando el estimador *diferencias en diferencias* (DED). En el último caso, se puede aplicar un enfoque IV para la estimación de un modelo como \@ref(eq:diffestwar) que utiliza la fuente de aleatoriedad "como si" en la asignación de tratamientos como instrumento.
+
+Algunas técnicas más avanzadas que son útiles en entornos donde la asignación de tratamiento está (parcialmente) determinada por un umbral en una de las llamadas variables de ejecución son *diseño de discontinuidad de regresión aguda* (DDRA) y *diseño de discontinuidad de regresión difusa* (DDRD).
+
+Se revisa brevemente estas técnicas y se usarán datos simulados en un ejemplo mínimo para discutir cómo se pueden aplicar DED, DDRA y DDRD en **R**.
+
+### El Estimador de diferencias en diferencias {-}
+
+En los cuasiexperimentos, la fuente de aleatoriedad "como si" en la asignación de tratamientos a menudo no puede evitar por completo las diferencias sistemáticas entre los grupos de control y de tratamiento. Este problema fue encontrado por @card1994, que usa la geografía como la asignación de tratamiento aleatorio "como si" para estudiar el efecto en el empleo en restaurantes de comida rápida causado por un aumento en el salario mínimo estatal en Nueva Jersey en el año de 1992. Su idea era utilizar el hecho de que el aumento del salario mínimo se aplicaba a los empleados de Nueva Jersey (grupo de tratamiento), pero no a los que vivían en la vecina Pensilvania (grupo de control).
+
+Es bastante concebible que tal aumento salarial no esté correlacionado con otros determinantes del empleo. Sin embargo, todavía puede haber algunas diferencias específicas de cada estado y, por lo tanto, diferencias entre el grupo de control y el grupo de tratamiento. Esto haría que el *estimador de diferencias* fuese sesgado e inconsistente. @card1994 resolvió esto utilizando un estimador DED: Recopilaron datos en febrero de 1992 (antes del tratamiento) y noviembre de 1992 (después del tratamiento) para los mismos restaurantes y estimaron el efecto del aumento salarial analizando las diferencias en las diferencias en el empleo para Nueva Jersey y Pensilvania antes y después del aumento.^[Se recomuenda consultar el artículo para identificar *¿Cuál es el efecto sobre el empleo del salario mínimo?*] El estimador DED es:
+
+\begin{align}
+  \widehat{\beta}_1^{\text{diffs-in-diffs}} =& \, (\overline{Y}^{\text{treatment,after}} - \overline{Y}^{\text{treatment,before}}) - (\overline{Y}^{\text{control,after}} - \overline{Y}^{\text{control,before}}) \\
+  =& \Delta \overline{Y}^{\text{treatment}} - \Delta \overline{Y}^{\text{control}} (\#eq:DID)
+\end{align}
+
+con
+
++ $\overline{Y}^{\text{tratamiento, antes}}$ - la media muestral en el grupo de tratamiento antes del tratamiento.
+
++ $\overline{Y}^{\text{tratamiento, después}}$ - la media muestral en el grupo de tratamiento después del tratamiento.
+
++ $\overline{Y}^{\text{tratamiento, antes}}$ - la media muestral en el grupo de control antes del tratamiento.
+
++ $\overline{Y}^{\text{tratamiento, después}}$ - la media muestral en el grupo de control después del tratamiento.
+
+Ahora se usa **R** para crear una gráfica de vital importancia.
+
+```{r, 718, fig.align='center'}
+# inicializar la gráfica y agregar un grupo de control
+plot(c(0, 1), c(6, 8), 
+     type = "p",
+     ylim = c(5, 12),
+     xlim = c(-0.3, 1.3),
+     main = "El estimador de diferencias en diferencias",
+     xlab = "Período",
+     ylab = "Y",# agregar anotaciones
+     col = "steelblue",
+     pch = 20,
+     xaxt = "n",
+     yaxt = "n")
+
+axis(1, at = c(0, 1), labels = c("Antes", "Después"))
+axis(2, at = c(0, 13))
+# agregar grupo de tratamiento
+points(c(0, 1, 1), c(7
+, 9, 11), 
+       col = "darkred",
+       pch = 20)
+
+
+# agregar segmentos de línea
+lines(c(0, 1), c(7, 11), col = "darkred")
+lines(c(0, 1), c(6, 8), col = "steelblue")
+lines(c(0, 1), c(7, 9), col = "darkred", lty = 2)
+lines(c(1, 1), c(9, 11), col = "black", lty = 2, lwd = 2)
+
+
+# agregar anotaciones
+text(1, 10, expression(hat(beta)[1]^{DID}), cex = 0.8, pos = 4)
+text(0, 5.5, "media muestral de control", cex = 0.8 , pos = 4)
+text(0, 6.8, "media muestral de tratamiento", cex = 0.8 , pos = 4)
+text(1, 7.9, "media muestral control", cex = 0.8 , pos = 4)
+text(1, 11.1, "media muestral tratamiento", cex = 0.8 , pos = 4)
+```
+
+El estimador DID \@ref(eq:DID) también se puede escribir en notación de regresión: $\widehat{\beta}_1^{\text{DID}}$ es el estimador MCO de $\beta_1$ en
+
+\begin{align}
+  \Delta Y_i = \beta_0 + \beta_1 X_i + u_i, (\#eq:did)
+\end{align}
+
+donde $\Delta Y_i$ denota la diferencia en los resultados previos y posteriores al tratamiento del individuo $i$, mientras que $X_i$ es el indicador de tratamiento.
+
+Añadiendo regresores adicionales que miden las características previas al tratamiento a \@ref(eq:did) se obtiene:
+
+\begin{align}
+  \Delta Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_{1i} + \dots + \beta_{1+r} W_{ri} + u_i, (\#eq:didwar)
+\end{align}
+
+el *estimador de diferencias en diferencias* con regresores adicionales. Los regresores adicionales pueden llevar a una estimación más precisa de $\beta_1$. 
+
+Se mantienen las cosas simples y se enfoca en la estimación del efecto del tratamiento usando DID en el caso más simple; es decir, un grupo de control y un grupo de tratamiento observados durante dos períodos de tiempo, uno antes y otro después del tratamiento. En particular, se verá que existen tres formas diferentes de proceder.
+
+Primero, se simulan los datos previos y posteriores al tratamiento utilizando **R**.
+
+```{r, 719}
+# establecer tamaño de muestra
+n <- 200
+
+# definir el efecto del tratamiento
+TEffect <- 4
+
+# generar ficticias de tratamiento
+TDummy <- c(rep(0, n/2), rep(1, n/2))
+
+# simular valores previos y posteriores al tratamiento de la variable dependiente
+y_pre <- 7 + rnorm(n)
+y_pre[1:n/2] <- y_pre[1:n/2] - 1
+y_post <- 7 + 2 + TEffect * TDummy + rnorm(n)
+y_post[1:n/2] <- y_post[1:n/2] - 1 
+```
+
+A continuación, se grafican los datos. La función **jitter()** se usa para agregar algo de dispersión artificial en el componente horizontal de los puntos para que haya menos sobretrazado. La función **alpha()** del paquete **scales** permite ajustar la opacidad de los colores utilizados en los gráficos.
+
+```{r, 720, fig.align='center'}
+library(scales)
+
+pre <- rep(0, length(y_pre[TDummy==0]))
+post <- rep(1, length(y_pre[TDummy==0]))
+
+# graficar grupo de control en t = 1
+plot(jitter(pre, 0.6), 
+     y_pre[TDummy == 0], 
+     ylim = c(0, 16), 
+     col = alpha("steelblue", 0.3),
+     pch = 20, 
+     xlim = c(-0.5, 1.5),
+     ylab = "Y",
+     xlab = "Período",
+     xaxt = "n",
+     main = "Datos artificiales para la estimación DID")
+
+axis(1, at = c(0, 1), labels = c("Antes", "Después"))
+
+# agregar grupo de tratamiento en t = 1
+points(jitter(pre, 0.6), 
+       y_pre[TDummy == 1], 
+       col = alpha("darkred", 0.3), 
+       pch = 20)
+
+# agregar grupo de control en t = 2
+points(jitter(post, 0.6),
+       y_post[TDummy == 0], 
+       col = alpha("steelblue", 0.5),
+       pch = 20)
+
+# agregar grupo de tratamiento en t = 2
+points(jitter(post, 0.6), 
+       y_post[TDummy == 1], 
+       col = alpha("darkred", 0.5),
+       pch = 20)
+```
+
+Las observaciones del grupo de control y de tratamiento tienen una media más alta después del tratamiento, pero el aumento es más fuerte para el grupo de tratamiento. Usando DID se puede estimar qué parte de esa diferencia se debe al tratamiento.
+
+Es sencillo calcular la estimación DID en la forma de \@ref(eq:DID).
+
+```{r, 721}
+# calcular el estimador DID para el efecto del tratamiento 'a mano'
+mean(y_post[TDummy == 1]) - mean(y_pre[TDummy == 1]) - 
+(mean(y_post[TDummy == 0]) - mean(y_pre[TDummy == 0]))
+```
+
+Se debe tener en cuenta que la estimación es cercana a $4$, el valor elegido como el efecto del tratamiento **TEffect** arriba. Dado que \@ref(eq:did) es un modelo lineal simple, se puede realizar una estimación MCO de esta especificación de regresión usando **lm()**.
+
+```{r, 722}
+# calcular el estimador DID usando un modelo lineal
+lm(I(y_post - y_pre) ~ TDummy)
+```
+
+Se encontró que las estimaciones coinciden. Además, se puede demostrar que la estimación DID obtenida al estimar la especificación \@ref(eq:did) MCO es la misma que la estimación MCO de $\beta_{TE}$ en:
+
+\begin{align}
+  Y_i =& \beta_0 + \beta_1 D_i + \beta_2 Period_i + \beta_{TE} (Period_i \times D_i) + \varepsilon_i (\#eq:DIDint)
+\end{align}
+
+donde $D_i$ es el indicador de tratamiento binario, $Period_i$ es un indicador binario para el período de postratamiento y $Period_i \times D_i$  es la interacción de ambos.
+
+En cuanto a \@ref(eq:did), la estimación de \@ref(eq:DIDint) usando **R** es sencilla. Consulte el Capítulo \@ref(FRNL) para ver una discusión de los términos de interacción.
+
+```{r, 723}
+# preparar datos para la regresión DID usando el término de interacción
+d <- data.frame("Y" = c(y_pre,y_post),
+                "Treatment" = TDummy, 
+                "Period" = c(rep("1", n), rep("2", n)))
+
+# estimar el modelo
+lm(Y ~ Treatment * Period, data = d)
+```
+
+Como era de esperar, la estimación del coeficiente de interacción de la variable ficticia de tratamiento y la variable temporal coinciden con las estimaciones obtenidas utilizando \@ref(eq:DID) y la estimación MCO de \@ref(eq:did).
+
+### Estimadores de discontinuidad de regresión {-}
+
+Considerar el modelo
+
+\begin{align}
+  Y_i =& \beta_0 + \beta_1 X_i + \beta_2 W_i + u_i (\#eq:SRDDsetting)
+\end{align}
+
+y sea
+
+\begin{align*}
+X_i =& 
+  \begin{cases}
+    1, & W_i \geq c \\
+    0, & W_i < c
+  \end{cases}
+\end{align*}
+
+de modo que la recepción del tratamiento, $X_i$, está determinada por algún umbral $c$ de una variable continua $W_i$, la denominada variable de ejecución. La idea del *diseño de discontinuidad de regresión* es usar observaciones con un $W_i$ cercano a $c$ para la estimación de $\beta_1$. $\beta_1$ es el efecto del tratamiento promedio para individuos con $W_i = c$, que se supone que es una buena aproximación al efecto del tratamiento en la población. \@ref(eq:SRDDsetting) se denomina *diseño de discontinuidad de regresión aguda* porque la asignación de tratamiento es determinista y discontinua en el punto de corte: Todas las observaciones con $W_i < c$ no reciben tratamiento y todas las observaciones donde $W_i \geq c$ son tratados.
+
+Los siguientes fragmentos de código muestran cómo estimar un SRDD lineal usando **R** y cómo producir el gráfico.
+
+```{r, 724, message=FALSE}
+# generar algunos datos de muestra
+W <- runif(1000, -1, 1)
+y <- 3 + 2 * W + 10 * (W>=0) + rnorm(1000)
+```
+
+```{r, 725, fig.align='center', message=FALSE}
+# cargar el paquete 'rddtools'
+library(rddtools)
+
+# construir rdd_data
+data <- rdd_data(y, W, cutpoint = 0)
+
+# graficar los datos de la muestra
+plot(data,
+     col = "steelblue",
+     cex = 0.35, 
+     xlab = "W", 
+     ylab = "Y")
+```
+
+El argumento **nbins** establece el número de contenedores en los que se divide la variable en ejecución para la agregación. Los puntos representan los promedios del contenedor de la variable de resultado.
+
+Se puede usar la función **rdd_reg_lm()** para estimar el efecto del tratamiento usando el model \@ref(eq:SRDDsetting) para los datos artificiales generados anteriormente. Al elegir **slope = "same"**, se restringen las pendientes de la función de regresión estimada para que sean iguales en ambos lados del salto en el punto de corte $W=0$.
+
+```{r, 726, message=FALSE, warning=FALSE}
+# estimar el modelo de RDD agudo o nítido
+rdd_mod <- rdd_reg_lm(rdd_object = data, 
+                      slope = "same")
+summary(rdd_mod)
+```
+
+La estimación del coeficiente de interés se etiqueta **D**. La estimación está muy cerca del efecto del tratamiento elegido en el DGP anterior.
+
+Es fácil visualizar el resultado: Simplemente llamar a **plot()** en el objeto del modelo estimado.
+
+```{r, 727, fig.align='center'}
+# graficar el modelo RDD junto con observaciones agrupadas
+plot(rdd_mod,
+     cex = 0.35, 
+     col = "steelblue", 
+     xlab = "W", 
+     ylab = "Y")
+```
+
+Como arriba, los puntos representan promedios de observaciones agrupadas.
+
+Hasta ahora se asume que el cruce del umbral determina la recepción del tratamiento, de modo que el salto de las funciones de regresión de la población en el umbral puede considerarse como el efecto causal del tratamiento.
+
+Cuando cruzar el umbral $c$ no es la única causa para recibir el tratamiento, el tratamiento no es una función determinista de $W_i$. En cambio, es útil pensar en $c$ como un umbral donde la *probabilidad* de recibir el salto de tratamiento.
+
+Este salto puede deberse a variables inobservables que repercuten en la probabilidad de ser tratado. Por lo tanto, $X_i$ en \@ref(eq:SRDDsetting) se correlacionará con el error $u_i$ y será más difícil estimar consistentemente el efecto del tratamiento. En este escenario, usar un *diseño de discontinuidad de regresión difusa* que se base en un enfoque IV puede ser un remedio: Tomar la variable binaria $Z_i$ como un indicador para cruzar el umbral,
+
+\begin{align*}
+  Z_i = \begin{cases}
+    1, & W_i \geq c \\
+    0, & W_i < c.
+  \end{cases}
+\end{align*}
+
+y suponga que $Z_i$ se relaciona con $Y_i$ solo a través del indicador de tratamiento $X_i$. Entonces $Z_i$ y $u_i$ no están correlacionados, pero $Z_i$ influye en la recepción del tratamiento, por lo que está correlacionado con $X_i$. Por lo tanto, $Z_i$ es un instrumento válido para $X_i$ y \@ref(eq:SRDDsetting) se puede estimar usando TSLS.
+
+El siguiente fragmento de código genera datos de muestra donde las observaciones con un valor de la variable en ejecución $W_i$ por debajo del límite $c = 0$ no reciben tratamiento y las observaciones con $W_i \geq 0$ sí reciben tratamiento con una probabilidad de $80\%$ de modo que el estado del tratamiento solo esté determinado parcialmente por la variable en ejecución y el corte. El tratamiento conduce a un aumento de $Y$ en $2$ unidades. Las observaciones con $W_i \geq 0$ que no reciben tratamiento se denominan *no-shows*: Piense en una persona que fue asignada para recibir el tratamiento pero de alguna manera logra evitarlo.
+
+```{r, 728,  message=FALSE}
+library(MASS)
+
+# generar datos de muestra
+mu <- c(0, 0)
+sigma <- matrix(c(1, 0.7, 0.7, 1), ncol = 2)
+
+set.seed(1234)
+d <- as.data.frame(mvrnorm(2000, mu, sigma))
+colnames(d) <- c("W", "Y")
+
+# introducir borrosidad
+d$treatProb <- ifelse(d$W < 0, 0, 0.8)
+
+fuzz <- sapply(X = d$treatProb, FUN = function(x) rbinom(1, 1, prob = x))
+
+# efecto de tratamiento
+d$Y <- d$Y + fuzz * 2
+```
+
+**sapply()** aplica la función proporcionada a **FUN** a cada elemento del argumento **X**. Aquí, **d$treatProb** es un vector y el resultado también es un vector.
+
+Se grafican todas las observaciones, usando el color azul para marcar a los individuos que no recibieron el tratamiento y el color rojo para los que recibieron el tratamiento.
+
+```{r, 729,fig.align='center'}
+# generar una gráfica coloreada del grupo de tratamiento y control
+plot(d$W, d$Y,
+     col = c("steelblue", "darkred")[factor(fuzz)], 
+     pch= 20, 
+     cex = 0.5,
+     xlim = c(-3, 3),
+     ylim = c(-3.5, 5),
+     xlab = "W",
+     ylab = "Y")
+
+# agregar una línea vertical discontinua en el corte
+abline(v = 0, lty = 2)
+```
+
+Obviamente, la recepción de tratamiento ya no es una función determinista de la variable de ejecución $W$. Algunas observaciones con $W\geq0$ *no* recibieron el tratamiento. Se puede estimar un FRDD estableciendo adicionalmente **treatProb** como la variable de asignación **z** en **rdd_data()**. Luego, **rdd_reg_lm()** aplica el siguiente procedimiento TSLS: El tratamiento se predice usando $W_i$ y la variable ficticia de corte $Z_i$, la variable instrumental, en la regresión de la primera etapa. Los valores ajustados de la regresión de la primera etapa se utilizan para obtener una estimación coherente del efecto del tratamiento utilizando la segunda etapa en la que el resultado $Y$ se retrocede sobre los valores ajustados y la variable corriente $W$.
+
+```{r, 730}
+# estimar la Fuzzy RDD
+data <- rdd_data(d$Y, d$W, 
+                 cutpoint = 0, 
+                 z = d$treatProb)
+
+frdd_mod <- rdd_reg_lm(rdd_object = data, 
+                       slope = "same")
+frdd_mod
+```
+
+La estimación es cercana a $2$, el efecto del tratamiento poblacional. Se puede llamar **plot()** en el objeto del modelo para obtener una figura que consta de datos agrupados y la función de regresión estimada.
+
+```{r, 731, fig.align='center'}
+# graficar una función FRDD estimada
+plot(frdd_mod, 
+     cex = 0.5, 
+     lwd = 0.4,
+     xlim = c(-4, 4),
+     ylim = c(-3.5, 5),
+     xlab = "W",
+     ylab = "Y")
+```
+
+¿Qué pasa si se usa un SRDD en su lugar, ignorando así el hecho de que el tratamiento no está perfectamente determinado por el límite en $W$? Se puede tener una impresión de las consecuencias estimando un SRDD utilizando los datos simulados previamente.
+
+```{r, 732}
+# estimar SRDD
+data <- rdd_data(d$Y, 
+                 d$W, 
+                 cutpoint = 0)
+
+srdd_mod <- rdd_reg_lm(rdd_object = data, 
+                       slope = "same")
+srdd_mod
+```
+
+La estimación obtenida utilizando un SRDD sugiere un sesgo sustancial a la baja. De hecho, este procedimiento es inconsistente para el verdadero efecto causal, por lo que aumentar la muestra no aliviaría el sesgo.
+
+Existen varios problemas potenciales con los cuasiexperimentos. Como ocurre con todos los estudios empíricos, estos problemas potenciales están relacionados con la validez interna y externa. De igual, es necesario discutir las técnicas sobre la estimación del efecto del tratamiento cuando el efecto causal del tratamiento es heterogéneo en la población. 
+
+#### Resumen {-}
+
+Este capítulo ha introducido el concepto de efectos causales en experimentos controlados aleatorios y cuasiexperimentos en los que las variaciones en las circunstancias o los accidentes de la naturaleza se tratan como fuentes de asignación al tratamiento "como si". También se han analizado métodos que permiten una estimación coherente de estos efectos en ambos entornos. Estos incluyeron el *estimador de diferencias*, el *estimador de diferencias en diferencias* así como los estimadores *agudos* y el *diseño de regresión discontinua difusa*. Se mostró cómo aplicar estas técnicas de estimación en **R**.
+
+En una aplicación empírica se ha mostrado cómo replicar los resultados del análisis de los datos STAR usando **R**. Este estudio utiliza un experimento controlado aleatorio para evaluar si las clases más pequeñas mejoran el desempeño de los estudiantes en las pruebas estandarizadas. Al estar relacionados con un experimento controlado aleatorio, los datos de este estudio son fundamentalmente diferentes a los utilizados en los estudios de corte transversal en los capítulos \@ref(RLR) a \@ref(FRNL). Por lo tanto, se ha motivado el uso de un *estimador de diferencias*.
+
+El capítulo \@ref(ADC) demostró cómo se pueden obtener estimaciones de los efectos del tratamiento cuando el diseño del estudio es un cuasi-experimento que permite *diferencias en diferencias* o *estimadores de regresión discontinua*. En particular, se han introducido funciones del paquete **rddtools** que son convenientes tanto para la estimación como para el análisis gráfico al estimar un diseño de regresión discontinua.
+
+## Ejercicios {#Ejercicios-13}
+
+Los siguientes ejercicios guiarán en la reproducción de algunos de los resultados presentados en uno de los estudios DID más famosos de @card1994. Los autores utilizan la geografía como la asignación de tratamiento aleatorio "como si" para estudiar el efecto sobre el empleo en los restaurantes de comida rápida causado por un aumento en el salario mínimo estatal en Nueva Jersey en el año de 1992, ver Capítulo \@ref(CE).
+
+El estudio se basa en datos de encuestas recopilados en febrero de 1992 y en noviembre de 1992, después de que el salario mínimo de Nueva Jersey aumentara $\$0.80$ de $\$4.25$ a $\$5.05$ en abril de 1992.
+
+Estimar el efecto del aumento salarial simplemente calculando el cambio en el empleo en Nueva Jersey (como se pide que haga en el ejercicio 3) fallaría en controlar las variables omitidas. Al usar Pensilvania como control en un modelo de diferencias en diferencias (DID), se pueden controlar las variables con una influencia común en Nueva Jersey (grupo de tratamiento) y Pensilvania (grupo de control). Esto reduce enormemente el riesgo de sesgo de variables omitidas e incluso funciona cuando estas variables no se observan.
+
+Para que el enfoque DID funcione, se debe asumir que Nueva Jersey y Pensilvania tienen tendencias paralelas a lo largo del tiempo; es decir, se asume que los factores (no observados) influyen en el empleo en Pensilvania y Nueva Jersey de la misma manera. Esto permite interpretar un cambio observado en el empleo en Pensilvania como el cambio que habría experimentado Nueva Jersey si no hubiera un aumento en el salario mínimo (y viceversa).
+
+En contra de lo que sugeriría la teoría económica estándar, los autores no encontraron evidencia de que el aumento del salario mínimo indujera un aumento del desempleo en Nueva Jersey utilizando el enfoque DID: Todo lo contrario, sus resultados sugieren que el aumento del salario mínimo de $\$0.80$ en Nueva Jersey dio lugar a un aumento de $2.75$ equivalente a tiempo completo (FTE) en el empleo.
+
+```{r, 733, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Los datos de Card y Krueger (1994) {-}
+
+<tt>fastfood.dat</tt>, el conjunto de datos utilizado por Card & Krueger (1994) se puede descargar [aquí](http://www.stat.ucla.edu/projects/datasets/fastfood.dta). Consulte este [enlace](http://www.stat.ucla.edu/projects/datasets/fastfood-explanation.html) para obtener una explicación detallada de las variables.
+
+Este ejercicio pide que importe el conjunto de datos en <tt>R</tt> y que realice algunos formatos necesarios para el análisis posterior. Esto puede ser tedioso usando las funciones base <tt>R</tt>, pero se hace fácilmente usando el paquete <tt>dplyr</tt> presentado en el Capítulo \\@ref(UABGI).
+
+La URL del conjunto de datos se guarda en <tt>data_URL</tt>.
+
+**Instrucciones:**
+
+  - Adjunte los paquetes <tt>dplyr</tt> y <tt>foreign</tt>.
+
+  - Lea el conjunto de datos <tt>fastfood.dta</tt> usando <tt>data_URL</tt> y asignarlo a un <tt>data.frame</tt> llamado <tt>dat</tt>.
+
+  En su estudio, Card y Krueger (1994) miden el empleo en equivalentes de tiempo completo que definen como el número de empleados a tiempo completo (<tt>empft</tt> y <tt>empft2</tt>) más el número de gerentes (<tt>nmgrs</tt> y <tt>nmgrs2</tt>) más 0.5 veces el número de empleados a tiempo parcial (<tt>emppt</tt> / <tt>emppt2</tt>).
+
+  - Definir el empleo a tiempo completo antes (<tt>FTE</tt>) y después del aumento salarial (<tt>FTE2</tt>) y agregar ambas variables a <tt>dat</tt>.
+
+<iframe src="DCL/ex13_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  - <tt>read.dta()</tt> del paquete <tt>foreign</tt> para leer archivos <tt>.dta</tt>, un formato utilizado por el paquete de software estadístico *STATA*.
+
+  - <tt>mutate()</tt> genera nuevas columnas usando las existentes.
+
+</div>')}
+```
+
+```{r, 734, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise"> 
+
+#### 2. Estimaciones estatales específicas de empleo a tiempo completo --- I {-}
+
+Este ejercicio pide realizar un cálculo rápido de las medias muestrales específicas del estado para verificar si los datos sobre el empleo a tiempo completo están alineados con los datos utilizados por Card y Krueger (1994).
+
+**Instrucciones:**
+
+  - Generar subconjuntos de <tt>dat</tt> para separar las observaciones de Nueva Jersey y Pensilvania. Guárdarlos como <tt>dat_NJ</tt> y <tt>dat_PA</tt>.
+
+  - Calcular las medias muestrales de los equivalentes de empleo a tiempo completo para Nueva Jersey y Pensilvania, tanto antes como después del aumento del salario mínimo en Nueva Jersey. Es suficiente si el código imprime los valores correctos en la consola.
+
+<iframe src="DCL/ex13_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  - Se puede usar <tt>group_by()</tt> junto con <tt>summary()</tt> para calcular las medias grupales. Ambas funciones vienen con el paquete <tt>dplyr</tt>.
+
+</div>')}
+```
+
+
+```{r, 735, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise"> 
+
+#### 3. Estimaciones estatales específicas de empleo a tiempo completo --- II {-}
+  
+Un enfoque ingenuo para investigar el impacto del aumento del salario mínimo en el empleo es utilizar la diferencia estimada en el empleo medio antes y después del aumento salarial para los restaurantes de comida rápida de Nueva Jersey.
+
+Este ejercicio le pide que haga lo antes mencionado y además pruebe si la diferencia estimada es significativamente diferente de cero usando una prueba *robusta* $t$.
+
+Los subconjuntos <tt>dat_NJ</tt> y <tt>dat_PA</tt> del ejercicio anterior están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  - Usar <tt>dat_NJ</tt> para una prueba sólida de la hipótesis de que no existe diferencia en el empleo a tiempo completo antes y después del aumento salarial en Nueva Jersey al nivel de $5\\%$.
+
+<iframe src="DCL/ex13_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  - El problema de prueba equivale a una prueba $t$ de dos muestras que se realiza convenientemente usando <tt>t.test()</tt>.
+
+</div>')}
+```
+
+```{r, 736, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise"> 
+
+#### 4. Preparación de los datos para la regresión {-}
+
+Se puede demostrar que las estimaciones realizadas en el Ejercicio 3 y el enfoque de diferencias en diferencias con el que se está trabajando producen los mismos resultados MCO aplicados a modelos de regresión específicos, ver Capítulos \\@ref(RPECEI) y \\@ref(UABGI).
+
+Este ejercicio le pide que construya un conjunto de datos que sea más conveniente para este propósito que el conjunto de datos <tt>dat</tt>.
+
+**Instrucciones:**
+
+Generar el conjunto de datos <tt>reg_dat</tt> a partir de <tt>dat</tt> en *formato largo*; es decir, asegúrese de que para cada restaurante (identificado por <tt>sheet</tt>) una observación antes y una después del aumento del salario mínimo (identificado por <tt>D</tt>) se incluyen.
+
+Solo considere las siguientes variables:
+
+  - <tt>id</tt>: Número de sheet (id único de tienda)
+
+  - <tt>chain</tt>: Cadena 1 = Burger King; 2 = KFC; 3 = Roy Rogers; 4 = Wendys
+
+  - <tt>state</tt>: 1 si es Nueva Jersey; 0 si Pensilvania
+
+  - <tt>empl</tt>: Medida del empleo a tiempo completo (<tt>FTE</tt>/<tt>FTE2</tt>)
+
+  - <tt>D</tt>: Variable ficticia que indica si la observación se realizó antes o después del aumento del salario mínimo en Nueva Jersey.
+
+<iframe src="DCL/ex13_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  - El conjunto de datos original <tt>dat</tt> tiene 410 observaciones de 48 variables (verificar esto usando <tt>dim(dat)</tt>). El conjunto de datos <tt>reg_dat</tt> que se le pide generar debe constar de 820 observaciones de las variables enumeradas anteriormente.
+
+  - Es sencillo generar un <tt>data.frame</tt> a partir de las columnas de otro <tt>data.frame</tt> usando <tt>data.frame(...)</tt>.
+
+  - Utilizar <tt>rbind()</tt> para combinar dos objetos de tipo <tt>data.frame</tt> por fila.
+
+</div>')}
+```
+
+```{r, 737, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">   
+
+#### 5. Una estimación de la diferencia utilizando datos de Card & Krueger (1994) --- II {-}
+
+<tt>reg_dat</tt> del ejercicio 4 es un *conjunto de datos de panel*, ya que tiene dos observaciones para cada restaurante de comida rápida  $i=1,\\dots,410$, en períodos de tiempo $t=0,1$. 
+
+Por tanto, se puede escribir el modelo de regresión simple
+
+$$employment_{i,t} = \\beta_0 + \\beta_1 D_t + \\varepsilon_{i,t},$$
+
+donde $D_t$ es una variable ficticia que es igual a $0$ si la observación se realizó antes del cambio de salario mínimo ($t = 0$) y $1$ después del cambio de salario mínimo ($t = 1$); es decir,
+
+\\begin{align*}
+D_t = \\begin{cases}
+0, & \\, \\text{if $t=0$ (antes del cambio de salario),} \\\\
+1, & \\, \\text{if $t=1$ (después del cambio de salario)}
+\\end{cases}
+\\end{align*}
+
+y suponga que las observaciones de *restaurantes de Nueva Jersey solamente* se utilizan para calcular  $\\hat\\beta_1$, el estimador MCO de $\\beta_1$, que también se denomina *estimador de diferencias*.
+
+El conjunto de datos <tt>reg_dat</tt> del ejercicio 4 y el subconjunto de Nueva Jersey <tt>dat_NJ</tt> están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  - Estimar $\\beta_1$ en el modelo anterior usando MCO. Guardar el modelo estimado en <tt>emp_mod</tt>.
+
+  - Obtener un resumen sólido de los resultados e interprete los hallazgos.
+
+<iframe src="DCL/ex13_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  - Recuerde que las dependencias del paquete <tt>AER</tt> incluyen funciones para una inferencia robusta en modelos de regresión.
+
+  - El argumento <tt>subset</tt> en <tt>lm()</tt> toma un vector lógico que identifica las observaciones utilizadas para la estimación.
+
+</div>')}
+```
+
+```{r, 738, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Una estimación de la diferencia utilizando datos de Card & Krueger (1994) --- II {-}
+
+La estimación obtenida usando <tt>t.test()</tt> en el subconjunto de Nueva Jersey en el ejercicio 3 y la estimación de MCO de $\\hat\\beta_1$ en el ejercicio 5 son numéricamente iguales. Esto también es válido para las estadísticas de $t$ informadas si se utilizan las mismas fórmulas de error estándar (<tt>t.test(..., var.equal = T)</tt> y <tt>coeftest(... , vcov. = vcovHC, type = "HC1")</tt>).
+
+Este ejercicio le pide que compruebe que la afirmación anterior sea cierta.
+
+Los datos de los ejercicios anteriores, el resultado de <tt>t.test(...)</tt> del Ejercicio 3 así como el objeto del modelo de regresión <tt>emp_mod</tt> del Ejercicio 5 están disponibles en su ambiente de trabajo. Se ha adjuntado el paquete <tt>AER</tt>.
+
+*No se realizan pruebas de corrección de envío.*
+
+**Instrucciones:**
+
+  - Verificar que la estimación de $\\beta_1$ en el ejercicio 5 sea igual a la diferencia estimada en el empleo medio de los restaurantes de comida rápida de Nueva Jersey antes y después del aumento del salario mínimo del ejercicio 3.
+
+  - Convénzase de que las estadísticas $t$ reportadas por <tt>coeftest(...)</tt> en el ejercicio 5 y <tt>t.test(...)</tt> en el ejercicio 3 coinciden.
+
+<iframe src="DCL/ex13_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 739, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Una estimación de diferencias en diferencias --- II {-}
+
+Como se mencionó en el Capítulo \\@ref(UABGI), el enfoque discutido en los Ejercicios 5 y 6 es ingenuo: $\\hat\\beta_1$ es una estimación sesgada del efecto promedio del aumento del salario mínimo sobre el empleo porque no se puede controlar para otros determinantes del empleo que se correlacionan con $D_t$. Como ejemplo, piense en los desarrollos macroeconómicos que tienen un impacto positivo en el mercado laboral, de manera que el empleo es mayor en el período posterior al aumento del salario mínimo. Es probable que $D_t$ se correlacione positivamente con el término de error de manera que $\\hat\\beta_1$ *sobreestime* el efecto del aumento salarial en el empleo.
+
+Esto motiva el uso del estimador de diferencias en diferencias (DID) descrito en el Capítulo \\@ref(UABGI).
+
+Considere el modelo de regresión lineal:
+
+$$employment_{i,t} = \\beta_0 + \\beta_1 D_t + \\beta_2 state_i + \\beta_3 (D_t \\times state_i) + \\varepsilon_{i,t},$$
+
+donde se usan índices $i$ y $t$, tal como en el modelo de regresión simple del ejercicio 5.
+
+En este modelo, $\\beta_3$ es el coeficiente que interesa, ya que se interpreta como la diferencia promedio en el empleo de los restaurantes de comida rápida de Nueva Jersey antes y después del aumento salarial después de controlar los elementos inobservables que son comunes en Nueva Jersey y Pensilvania, el grupo de control. El estimador MCO de $\\beta_3$ se llama estimador DID.
+
+**Instrucciones:**
+
+- Estime el modelo anterior utilizando MCO y obtenga un resumen sólido.
+
+- Interprete los hallazgos.
+
+<iframe src="DCL/ex13_7.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```

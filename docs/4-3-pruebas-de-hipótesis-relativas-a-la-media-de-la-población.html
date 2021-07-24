@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>4.3 Pruebas de hipótesis relativas a la media de la población | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="4.3 Pruebas de hipótesis relativas a la media de la población | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="4.3 Pruebas de hipótesis relativas a la media de la población | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-21" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="4-2-PMM.html"/>
+<link rel="next" href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="pruebas-de-hipótesis-relativas-a-la-media-de-la-población" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> Pruebas de hipótesis relativas a la media de la población</h2>
+<p>En esta sección, se revisan brevemente los conceptos de la prueba de hipótesis y se discute cómo realizar pruebas de hipótesis en <strong>R</strong>. El objetivo en hacer inferencias sobre una media poblacional desconocida.</p>
+<div id="acerca-de-las-hipótesis-y-las-pruebas-de-hipótesis" class="section level4 unnumbered">
+<h4>Acerca de las hipótesis y las pruebas de hipótesis</h4>
+<p>En una prueba de significancia se quiere aprovechar la información contenida en una muestra como evidencia a favor o en contra de una hipótesis. Esencialmente, las hipótesis son preguntas simples que pueden responderse con un “sí” o un “no.” En una prueba de hipótesis, normalmente se trata con dos hipótesis diferentes:</p>
+<ul>
+<li><p>La <em>hipótesis nula</em>, denotada <span class="math inline">\(H_0\)</span>, es la hipótesis que se está interesado en probar.</p></li>
+<li><p>Debe haber una <em>hipótesis alternativa</em>, denotada <span class="math inline">\(H_1\)</span>, la hipótesis que se cree que se cumple si se rechaza la hipótesis nula.</p></li>
+</ul>
+<p>La hipótesis nula de que la media poblacional de <span class="math inline">\(Y\)</span> es igual al valor <span class="math inline">\(\mu_{Y,0}\)</span> se escribe como</p>
+<p><span class="math display">\[ H_0: E(Y) = \mu_{Y,0}. \]</span></p>
+<p>A menudo, la hipótesis alternativa elegida es la más general,</p>
+<p><span class="math display">\[ H_1: E(Y) \neq \mu_{Y,0}, \]</span></p>
+<p>lo que implica que <span class="math inline">\(E(Y)\)</span> puede ser cualquier cosa menos el valor de la hipótesis nula. Esto se llama una alternativa <em>de dos caras</em>.</p>
+<p>En aras de la brevedad, solo se consideran alternativas de dos caras en las secciones siguientes de este apartado.</p>
+</div>
+<div id="el-valor-p-p-value" class="section level3 unnumbered">
+<h3>El valor p (p-Value)</h3>
+<p>Suponga que la hipótesis nula es <em>verdadera</em>. El valor <span class="math inline">\(p\)</span> es la probabilidad de extraer datos y observar un estadístico de prueba correspondiente que sea al menos tan adverso a lo que se establece bajo la hipótesis nula, como el estadístico de prueba realmente calculado usando los datos de la muestra.</p>
+<p>En el contexto de la media poblacional y la media muestral, esta definición puede expresarse matemáticamente de la siguiente manera:</p>
+<p><span class="math display" id="eq:pvalue">\[\begin{equation}
+p \text{-value} = P_{H_0}\left[ \lvert \overline{Y} - \mu_{Y,0} \rvert &gt; \lvert \overline{Y}^{act} - \mu_{Y,0} \rvert \right] \tag{4.2}
+\end{equation}\]</span></p>
+<p>En <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvalue">(4.2)</a>, <span class="math inline">\(\overline{Y}^{act}\)</span> es la media muestral de los datos disponibles (un valor). Para calcular el valor <span class="math inline">\(p\)</span> como en <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvalue">(4.2)</a>, se requiere el conocimiento sobre la distribución muestral de <span class="math inline">\(\overline{Y}\)</span> (una variable aleatoria) cuando la hipótesis nula es verdadera (la <em>distribución nula</em>). Sin embargo, en la mayoría de los casos se desconoce la distribución muestral y, por tanto, la distribución nula de <span class="math inline">\(\overline{Y}\)</span>. Afortunadamente, el TLC (ver Concepto clave 2.7) permite la aproximación de muestra grande</p>
+<p><span class="math display">\[ \overline{Y} \approx \mathcal{N}(\mu_{Y,0}, \, \sigma^2_{\overline{Y}}) \ \ , \ \ \sigma^2_{\overline{Y}} = \frac{\sigma_Y^2}{n}, \]</span></p>
+<p>asumiendo que la hipótesis nula <span class="math inline">\(H_0: E(Y) = \mu_{Y, 0}\)</span> es cierta. Con algo de álgebra se sigue para una <span class="math inline">\(n\)</span> grande que</p>
+<p><span class="math display">\[ \frac{\overline{Y} - \mu_{Y,0}}{\sigma_Y/\sqrt{n}} \sim \mathcal{N}(0,1). \]</span></p>
+<p>Entonces, en muestras grandes, el valor <span class="math inline">\(p\)</span> se puede calcular <em>sin</em> conocimiento de la distribución muestral exacta de <span class="math inline">\(\overline{Y}\)</span> usando la aproximación normal anterior.</p>
+</div>
+<div id="cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar" class="section level3 unnumbered">
+<h3>Cálculo del valor p cuando se conoce la desviación estándar</h3>
+<p>Por ahora, se supone que se conoce <span class="math inline">\(\sigma_{\overline{Y}}\)</span>. Entonces, se puede reescribir <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvalue">(4.2)</a> como:</p>
+<p><span class="math display" id="eq:pvaluenorm1">\[\begin{align}
+p \text{-value} =&amp; \, P_{H_0}\left[ \left\lvert \frac{\overline{Y} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert &gt; \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert \right] \\
+=&amp; \, 2 \cdot \Phi \left[ - \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}}  \right\rvert\right].  \tag{4.3}
+\end{align}\]</span></p>
+<p>El valor <span class="math inline">\(p\)</span> es el área en las colas de la distribución <span class="math inline">\(\mathcal{N}(0,1)\)</span> que se encuentra más allá de</p>
+<p><span class="math display" id="eq:pvaluenorm2">\[\begin{equation}
+\pm \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert \tag{4.4}
+\end{equation}\]</span></p>
+<p>Ahora usando <strong>R</strong> para visualizar lo que se indica en <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvaluenorm1">(4.3)</a> y <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvaluenorm2">(4.4)</a>. El siguiente fragmento de código replica la Figura 3.1.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar la densidad normal estándar en el intervalo [-4,4]</span></span>
+<span id="cb12-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x),</span>
+<span id="cb12-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb12-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">&quot;Calcular un valor p&quot;</span>,</span>
+<span id="cb12-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">yaxs =</span> <span class="st">&quot;i&quot;</span>,</span>
+<span id="cb12-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlab =</span> <span class="st">&quot;z&quot;</span>,</span>
+<span id="cb12-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">ylab =</span> <span class="st">&quot;&quot;</span>,</span>
+<span id="cb12-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb12-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">axes =</span> <span class="st">&quot;F&quot;</span>)</span>
+<span id="cb12-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar eje x</span></span>
+<span id="cb12-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, </span>
+<span id="cb12-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">at =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.5</span>, <span class="dv">0</span>, <span class="fl">1.5</span>), </span>
+<span id="cb12-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">padj =</span> <span class="fl">0.75</span>,</span>
+<span id="cb12-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">labels =</span> <span class="fu">c</span>(<span class="fu">expression</span>(<span class="sc">-</span><span class="fu">frac</span>(<span class="fu">bar</span>(Y)<span class="sc">^</span><span class="st">&quot;act&quot;</span><span class="sc">~-</span><span class="er">~</span><span class="fu">bar</span>(mu)[Y,<span class="dv">0</span>], sigma[<span class="fu">bar</span>(Y)])),</span>
+<span id="cb12-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-16" aria-hidden="true" tabindex="-1"></a>                <span class="dv">0</span>,</span>
+<span id="cb12-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-17" aria-hidden="true" tabindex="-1"></a>                <span class="fu">expression</span>(<span class="fu">frac</span>(<span class="fu">bar</span>(Y)<span class="sc">^</span><span class="st">&quot;act&quot;</span><span class="sc">~-</span><span class="er">~</span><span class="fu">bar</span>(mu)[Y,<span class="dv">0</span>], sigma[<span class="fu">bar</span>(Y)]))))</span>
+<span id="cb12-18"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co"># sombrear la región del valor p/2 en la cola izquierda</span></span>
+<span id="cb12-20"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fu">polygon</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="sc">-</span><span class="fl">1.5</span>, <span class="fl">0.01</span>), <span class="sc">-</span><span class="fl">1.5</span>),</span>
+<span id="cb12-21"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">dnorm</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="sc">-</span><span class="fl">1.5</span>, <span class="fl">0.01</span>)),<span class="dv">0</span>), </span>
+<span id="cb12-22"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>)</span>
+<span id="cb12-23"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="co"># sombrear la región del valor p/2 en la cola derecha</span></span>
+<span id="cb12-25"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">polygon</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="fl">1.5</span>, <span class="fu">seq</span>(<span class="fl">1.5</span>, <span class="dv">6</span>, <span class="fl">0.01</span>), <span class="dv">6</span>),</span>
+<span id="cb12-26"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">dnorm</span>(<span class="fu">seq</span>(<span class="fl">1.5</span>, <span class="dv">6</span>, <span class="fl">0.01</span>)), <span class="dv">0</span>), </span>
+<span id="cb12-27"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb12-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/236-1.png" width="80%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar" class="section level3 unnumbered">
+<h3>Varianza de muestra, desviación estándar de muestra y error estándar</h3>
+<p>Si se desconoce <span class="math inline">\(\sigma^2_Y\)</span>, debe estimarse. Esto se puede hacer usando la varianza de la muestra:</p>
+<p><span class="math display">\[\begin{equation}
+s_Y^2 = \frac{1}{n-1} \sum_{i=1}^n (Y_i - \overline{Y})^2.
+\end{equation}\]</span></p>
+<p>Además</p>
+<p><span class="math display">\[\begin{equation}
+s_Y = \sqrt{\frac{1}{n-1} \sum_{i=1}^n (Y_i - \overline{Y})^2}
+\end{equation}\]</span></p>
+<p>es un estimador adecuado para la desviación estándar de <span class="math inline">\(Y\)</span>. En <strong>R</strong>, <span class="math inline">\(s_Y\)</span> se implementa en la función <strong>sd()</strong>, ver <code>?Sd</code>.</p>
+<p>Usando <strong>R</strong> se puede ilustrar que <span class="math inline">\(s_Y\)</span> es un estimador consistente para <span class="math inline">\(\sigma_Y\)</span>, es decir</p>
+<p><span class="math display">\[ s_Y \overset{p}{\longrightarrow} \sigma_Y. \]</span></p>
+<p>La idea aquí es generar una gran cantidad de muestras <span class="math inline">\(Y_1,\dots,Y_n\)</span> donde, <span class="math inline">\(Y\sim \mathcal{N}(10, 9)\)</span> digamos, estimar <span class="math inline">\(\sigma_Y\)</span> usando <span class="math inline">\(s_Y\)</span> e investigar cómo la distribución de <span class="math inline">\(s_Y\)</span> cambia a medida que <span class="math inline">\(n\)</span> aumenta.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># vector de tamaños de muestra</span></span>
+<span id="cb13-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">10000</span>, <span class="dv">5000</span>, <span class="dv">2000</span>, <span class="dv">1000</span>, <span class="dv">500</span>)</span>
+<span id="cb13-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># observaciones de muestra, estimando usando &#39;sd()&#39; y graficar las distribuciones estimadas</span></span>
+<span id="cb13-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-5" aria-hidden="true" tabindex="-1"></a>sq_y <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="at">n =</span> <span class="dv">10000</span>, <span class="at">expr =</span> <span class="fu">sd</span>(<span class="fu">rnorm</span>(n[<span class="dv">1</span>], <span class="dv">10</span>, <span class="dv">3</span>)))</span>
+<span id="cb13-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(sq_y),</span>
+<span id="cb13-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="fu">expression</span>(<span class="st">&quot;Distribuciones de muestreo o&quot;</span> <span class="sc">~</span> s[Y]),</span>
+<span id="cb13-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="fu">expression</span>(s[y]),</span>
+<span id="cb13-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb13-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(n)) {</span>
+<span id="cb13-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-12" aria-hidden="true" tabindex="-1"></a>  sq_y <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="at">n =</span> <span class="dv">10000</span>, <span class="at">expr =</span> <span class="fu">sd</span>(<span class="fu">rnorm</span>(n[i], <span class="dv">10</span>, <span class="dv">3</span>)))</span>
+<span id="cb13-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lines</span>(<span class="fu">density</span>(sq_y), </span>
+<span id="cb13-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> i, </span>
+<span id="cb13-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb13-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co"># agrega una leyenda</span></span>
+<span id="cb13-19"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>,</span>
+<span id="cb13-20"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="fu">expression</span>(n <span class="sc">==</span> <span class="dv">10000</span>),</span>
+<span id="cb13-21"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-21" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">expression</span>(n <span class="sc">==</span> <span class="dv">5000</span>),</span>
+<span id="cb13-22"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-22" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">expression</span>(n <span class="sc">==</span> <span class="dv">2000</span>),</span>
+<span id="cb13-23"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-23" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">expression</span>(n <span class="sc">==</span> <span class="dv">1000</span>),</span>
+<span id="cb13-24"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-24" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">expression</span>(n <span class="sc">==</span> <span class="dv">500</span>)), </span>
+<span id="cb13-25"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
+<span id="cb13-26"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb13-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/237-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>El gráfico muestra que la distribución de <span class="math inline">\(s_Y\)</span> se ajusta alrededor del valor real <span class="math inline">\(\sigma_Y = 3\)</span> a medida que aumenta <span class="math inline">\(n\)</span>.</p>
+<p>La función que estima la desviación estándar de un estimador se llama <em>error estándar del estimador</em>. El concepto clave 3.4 resume la terminología en el contexto de la media muestral.</p>
+<div id="KC3.4" class="keyconcept">
+<h3 class="right">
+Concepto clave 3.4
+</h3>
+<h3 class="left">
+El error estándar de <span class="math inline">\(\overline{Y}\)</span>
+</h3>
+<p>Tomar una muestra i.i.d. <span class="math inline">\(Y_1, \dots, Y_n\)</span>. La media de <span class="math inline">\(Y\)</span> se estima consistentemente mediante <span class="math inline">\(\overline{Y}\)</span>, la media muestral de $ Y_i $. Dado que <span class="math inline">\(\overline{Y}\)</span> es una variable aleatoria, tiene una distribución de muestreo con varianza <span class="math inline">\(\frac{\sigma_Y^2}{n}\)</span>.</p>
+<p>El error estándar de <span class="math inline">\(\overline{Y}\)</span>, denotado <span class="math inline">\(SE(\overline{Y})\)</span> es un estimador de la desviación estándar de <span class="math inline">\(\overline{Y}\)</span>:</p>
+<p><span class="math display">\[ SE(\overline{Y}) = \hat\sigma_{\overline{Y}} = \frac{s_Y}{\sqrt{n}} \]</span></p>
+<p>El signo de intercalación (^) sobre <span class="math inline">\(\sigma\)</span> indica que <span class="math inline">\(\hat\sigma_{\overline{Y}}\)</span> es un estimador de <span class="math inline">\(\sigma_{\overline{Y}}\)</span>.</p>
+</div>
+<p>Como ejemplo para respaldar el Concepto clave 3.4, considere una muestra de <span class="math inline">\(n = 100\)</span> i.i.d. observaciones de la variable distribuida de Bernoulli <span class="math inline">\(Y\)</span> con probabilidad de éxito <span class="math inline">\(p=0.1\)</span>. Entonces <span class="math inline">\(E(Y)=p=0.1\)</span> y <span class="math inline">\(\text{Var}(Y)=p(1-p)\)</span>. <span class="math inline">\(E(Y)\)</span> se puede estimar mediante <span class="math inline">\(\overline{Y}\)</span>, que luego tiene una variación</p>
+<p><span class="math display">\[ \sigma^2_{\overline{Y}} = p(1-p)/n = 0.0009 \]</span></p>
+<p>y desviación estándar</p>
+<p><span class="math display">\[ \sigma_{\overline{Y}} = \sqrt{p(1-p)/n} = 0.03. \]</span></p>
+<p>En este caso, el error estándar de <span class="math inline">\(\overline{Y}\)</span> puede estimarse mediante</p>
+<p><span class="math display">\[ SE(\overline{Y}) = \sqrt{\overline{Y}(1-\overline{Y})/n}. \]</span></p>
+<p>Se comprueba si <span class="math inline">\(\overline{Y}\)</span> y <span class="math inline">\(SE(\overline{Y})\)</span> estiman los valores verdaderos respectivos, en promedio.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># extraiga 10000 muestras de tamaño 100 y estime la media de Y y</span></span>
+<span id="cb14-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el error estándar de la media muestral</span></span>
+<span id="cb14-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-4" aria-hidden="true" tabindex="-1"></a>mean_estimates <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">10000</span>)</span>
+<span id="cb14-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-5" aria-hidden="true" tabindex="-1"></a>se_estimates <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">10000</span>)</span>
+<span id="cb14-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10000</span>) {</span>
+<span id="cb14-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-9" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, </span>
+<span id="cb14-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">size =</span> <span class="dv">100</span>,  </span>
+<span id="cb14-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-11" aria-hidden="true" tabindex="-1"></a>              <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.9</span>, <span class="fl">0.1</span>),</span>
+<span id="cb14-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">replace =</span> T)</span>
+<span id="cb14-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-14" aria-hidden="true" tabindex="-1"></a>  mean_estimates[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(s)</span>
+<span id="cb14-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-15" aria-hidden="true" tabindex="-1"></a>  se_estimates[i] <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(s) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">mean</span>(s)) <span class="sc">/</span> <span class="dv">100</span>)</span>
+<span id="cb14-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-18"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-19"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(mean_estimates)</span>
+<span id="cb14-20"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.10047</span></span>
+<span id="cb14-21"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(se_estimates)</span>
+<span id="cb14-22"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.02961587</span></span></code></pre></div>
+<p>Ambos estimadores parecen no tener sesgos para los parámetros verdaderos. De hecho, esto es cierto para la media de la muestra, pero no para <span class="math inline">\(SE(\overline{Y})\)</span>. Sin embargo, ambos estimadores son <em>consistentes</em> para los parámetros verdaderos.</p>
+</div>
+<div id="cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida" class="section level3 unnumbered">
+<h3>Cálculo del valor p cuando la desviación estándar es desconocida</h3>
+<p>Cuando se desconoce <span class="math inline">\(\sigma_Y\)</span>, el valor de <span class="math inline">\(p\)</span> para una prueba de hipótesis sobre <span class="math inline">\(\mu_Y\)</span> usando <span class="math inline">\(\overline{Y}\)</span> se puede calcular reemplazando <span class="math inline">\(\sigma_{\overline{Y}}\)</span> en <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:pvaluenorm1">(4.3)</a> por el error estándar <span class="math inline">\(SE(\overline{Y}) = \hat\sigma_{\overline{Y}}\)</span>. Luego,</p>
+<p><span class="math display">\[ p\text{-value} = 2\cdot\Phi\left(-\left\lvert \frac{\overline{Y}^{act}-\mu_{Y,0}}{SE(\overline{Y})} \right\rvert \right). \]</span></p>
+<p>Esto se hace fácilmente en <strong>R</strong>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># muestra y estimación, calcula el error estándar</span></span>
+<span id="cb15-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-2" aria-hidden="true" tabindex="-1"></a>samplemean_act <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb15-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, </span>
+<span id="cb15-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.9</span>, <span class="fl">0.1</span>), </span>
+<span id="cb15-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">replace =</span> T, </span>
+<span id="cb15-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">size =</span> <span class="dv">100</span>))</span>
+<span id="cb15-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-8" aria-hidden="true" tabindex="-1"></a>SE_samplemean <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(samplemean_act <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> samplemean_act) <span class="sc">/</span> <span class="dv">100</span>)</span>
+<span id="cb15-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># hipótesis nula</span></span>
+<span id="cb15-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-11" aria-hidden="true" tabindex="-1"></a>mean_h0 <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb15-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular el valor p</span></span>
+<span id="cb15-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-14" aria-hidden="true" tabindex="-1"></a>pvalue <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">pnorm</span>(<span class="sc">-</span> <span class="fu">abs</span>(samplemean_act <span class="sc">-</span> mean_h0) <span class="sc">/</span> SE_samplemean)</span>
+<span id="cb15-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-15" aria-hidden="true" tabindex="-1"></a>pvalue</span>
+<span id="cb15-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.7492705</span></span></code></pre></div>
+<p>Más adelante en el curso, se encontrarán enfoques más convenientes para obtener estadísticos <span class="math inline">\(t\)</span> y valores <span class="math inline">\(p\)</span> usando <strong>R</strong>.</p>
+</div>
+<div id="la-estadística-t" class="section level3 unnumbered">
+<h3>La estadística t</h3>
+<p>En la prueba de hipótesis, el promedio de la muestra estandarizada</p>
+<p><span class="math display" id="eq:tstat">\[\begin{equation}
+t = \frac{\overline{Y} - \mu_{Y,0}}{SE(\overline{Y})} \tag{4.5}
+\end{equation}\]</span></p>
+<p>se llama un estadístico <span class="math inline">\(t\)</span>. Dicho estadístico de <span class="math inline">\(t\)</span> juega un papel importante en la prueba de hipótesis sobre <span class="math inline">\(\mu_Y\)</span>. Es un ejemplo destacado de estadística de prueba.</p>
+<p>Implícitamente, ya se ha calculado un estadístico <span class="math inline">\(t\)</span> para <span class="math inline">\(\overline{Y}\)</span> en el fragmento de código anterior.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular un estadístico t para la media de la muestra</span></span>
+<span id="cb16-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb16-2" aria-hidden="true" tabindex="-1"></a>tstatistic <span class="ot">&lt;-</span> (samplemean_act <span class="sc">-</span> mean_h0) <span class="sc">/</span> SE_samplemean</span>
+<span id="cb16-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb16-3" aria-hidden="true" tabindex="-1"></a>tstatistic</span>
+<span id="cb16-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3196014</span></span></code></pre></div>
+<p>Usando <strong>R</strong> se puede ilustrar que si <span class="math inline">\(\mu_{Y,0}\)</span> es igual al valor verdadero, es decir, si la hipótesis nula es verdadera, <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:tstat">(4.5)</a> es aproximadamente <span class="math inline">\(\mathcal{N}(0,1)\)</span> distribuido cuando <span class="math inline">\(n\)</span> es grande.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># preparar un vector vacío para estadísticas t</span></span>
+<span id="cb17-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-2" aria-hidden="true" tabindex="-1"></a>tstatistics <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">10000</span>)</span>
+<span id="cb17-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># establecer tamaño de muestra</span></span>
+<span id="cb17-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-5" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">300</span></span>
+<span id="cb17-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># simular 10000 estadísticos t</span></span>
+<span id="cb17-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10000</span>) {</span>
+<span id="cb17-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-10" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, </span>
+<span id="cb17-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-11" aria-hidden="true" tabindex="-1"></a>              <span class="at">size =</span> n,  </span>
+<span id="cb17-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.9</span>, <span class="fl">0.1</span>),</span>
+<span id="cb17-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">replace =</span> T)</span>
+<span id="cb17-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-15" aria-hidden="true" tabindex="-1"></a>  tstatistics[i] <span class="ot">&lt;-</span> (<span class="fu">mean</span>(s)<span class="sc">-</span><span class="fl">0.1</span>)<span class="sc">/</span><span class="fu">sqrt</span>(<span class="fu">var</span>(s)<span class="sc">/</span>n)</span>
+<span id="cb17-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb17-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>En la simulación anterior, se estimó la varianza de <span class="math inline">\(Y_i\)</span> usando <strong>var(s)</strong>. Esto es más general que <code>mean(s)*(1-mean(s))</code>, ya que esta última requiere que los datos estén distribuidos por Bernoulli y que se sepa esto.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar densidad y comparar con la densidad N(0,1)</span></span>
+<span id="cb18-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(tstatistics),</span>
+<span id="cb18-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Estadístico t&quot;</span>,</span>
+<span id="cb18-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Distribución estimada del estadístico t cuando n = 300&quot;</span>,</span>
+<span id="cb18-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb18-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb18-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>)</span>
+<span id="cb18-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># N(0,1) densidad (discontinua)</span></span>
+<span id="cb18-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x), </span>
+<span id="cb18-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">add =</span> T, </span>
+<span id="cb18-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">lty =</span> <span class="dv">2</span>, </span>
+<span id="cb18-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb18-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/244-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>A juzgar por el gráfico, la aproximación normal funciona razonablemente bien para el tamaño de muestra elegido. Esta aproximación normal ya se ha utilizado en la definición del valor <span class="math inline">\(p\)</span>, ver <a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#eq:tstat">(4.5)</a>.</p>
+</div>
+<div id="prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado" class="section level3 unnumbered">
+<h3>Prueba de hipótesis con un nivel de significancia preespecificado</h3>
+<div id="KC3.5" class="keyconcept">
+<h3 class="right">
+Concepto clave 3.5
+</h3>
+<h3 class="left">
+La terminología de la prueba de hipótesis
+</h3>
+<p>En la prueba de hipótesis, son posibles dos tipos de errores:</p>
+<ol style="list-style-type: decimal">
+<li><p>La hipótesis nula <em>es</em> rechazada aunque es cierta (error de tipo I)</p></li>
+<li><p>La hipótesis nula <em>no se</em> rechaza aunque es falsa (error de tipo II)</p></li>
+</ol>
+<p>El <strong>nivel de significancia</strong> de la prueba es la probabilidad de cometer un error de tipo I, que se está dispuesto a aceptar de antemano. Por ejemplo, usando un nivel de significancia preespecificado de <span class="math inline">\(0.05\)</span>, se rechaza la hipótesis nula si y solo si el valor <span class="math inline">\(p\)</span> es menor que <span class="math inline">\(0.05\)</span>. El nivel de significancia se elige antes de realizar la prueba.</p>
+<p>Un procedimiento equivalente es rechazar la hipótesis nula si el estadístico de prueba observado es, en términos de valor absoluto, mayor que el <strong>valor crítico</strong> del estadístico de prueba. El valor crítico está determinado por el nivel de significancia elegido y define dos conjuntos de valores separados que se denominan <strong>región de aceptación</strong> y <strong>región de rechazo</strong>. La región de aceptación contiene todos los valores de la estadística de prueba para los que la prueba no rechaza, mientras que la región de rechazo contiene todos los valores para los que la prueba sí rechaza.</p>
+<p>El <strong>valor <span class="math inline">\(p\)</span></strong> es la probabilidad de que, en un muestreo repetido bajo las mismas condiciones, se observe un estadístico de prueba que proporcione tanta evidencia contra la hipótesis nula como el estadístico de prueba realmente observado.</p>
+<p>La probabilidad real de que la prueba rechace la verdadera hipótesis nula se denomina <strong>tamaño de la prueba</strong>. En un entorno ideal, el tamaño es igual al nivel de significancia.</p>
+<p>La probabilidad de que la prueba rechace correctamente una hipótesis nula falsa se llama <strong>potencia</strong>.</p>
+</div>
+<p>Reconsidere el <strong>valor p</strong> calculado más arriba:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># comprobar si el valor p &lt; 0.05</span></span>
+<span id="cb19-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb19-2" aria-hidden="true" tabindex="-1"></a>pvalue <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
+<span id="cb19-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p>La condición no se cumple por lo que no se rechaza correctamente la hipótesis nula.</p>
+<p>Cuando se trabaja con un estadístico <span class="math inline">\(t\)</span> en su lugar, es equivalente a aplicar la siguiente regla:</p>
+<p><span class="math display">\[ \text{Rechazar } H_0 \text{ si } \lvert t^{act} \rvert &gt; 1.96 \]</span></p>
+<p>Se rechaza la hipótesis nula al nivel de significancia de <span class="math inline">\(5\%\)</span> si la estadística de <span class="math inline">\(t\)</span> calculada se encuentra más allá del valor crítico de 1.96 en términos de valor absoluto. <span class="math inline">\(1.96\)</span> es el cuantil <span class="math inline">\(0.975\)</span> de la distribución normal estándar.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># comprobar el valor crítico</span></span>
+<span id="cb20-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qnorm</span>(<span class="at">p =</span> <span class="fl">0.975</span>)</span>
+<span id="cb20-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.959964</span></span>
+<span id="cb20-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># compruebar si la hipótesis nula se rechaza utilizando el estadístico t calculado más arriba</span></span>
+<span id="cb20-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">abs</span>(tstatistic) <span class="sc">&gt;</span> <span class="fl">1.96</span></span>
+<span id="cb20-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p>Al igual que con el valor <span class="math inline">\(p\)</span>, no se puede rechazar la hipótesis nula utilizando el estadístico <span class="math inline">\(t\)</span> correspondiente. El Concepto clave 3.6 resume el procedimiento de realizar una prueba de hipótesis bilateral sobre la media poblacional <span class="math inline">\(E(Y)\)</span>.</p>
+<div id="KC3.6" class="keyconcept">
+<h3 class="right">
+Concepto clave 3.6
+</h3>
+<h3 class="left">
+Prueba de la hipótesis <span class="math inline">\(E(Y) = \mu_{Y,0}\)</span> contra la alternativa <span class="math inline">\(E(Y) \neq \mu_{Y,0}\)</span>
+</h3>
+<ol style="list-style-type: decimal">
+<li><p>Estimar <span class="math inline">\(\mu_{Y}\)</span> usando <span class="math inline">\(\overline{Y}\)</span> y calculando el <span class="math inline">\(SE(\overline{Y})\)</span>, error estándar de <span class="math inline">\(\overline{Y}\)</span>.</p></li>
+<li><p>Calcular el estadístico <span class="math inline">\(t\)</span>.</p></li>
+<li><p>Calcular el valor <span class="math inline">\(p\)</span> y rechazar la hipótesis nula en el nivel de significancia <span class="math inline">\(5\%\)</span> si el valor <span class="math inline">\(p\)</span> es menor que <span class="math inline">\(0.05\)</span> o, de manera equivalente, si</p></li>
+</ol>
+<p><span class="math display">\[ \left\lvert t^{act} \right\rvert &gt; 1.96. \]</span></p>
+</div>
+</div>
+<div id="alternativas-unilaterales" class="section level3 unnumbered">
+<h3>Alternativas unilaterales</h3>
+<p>A veces interesa probar si la media es mayor o menor que algún valor hipotético bajo el nulo. Para ceñirse al curso, se toma la presunta brecha salarial entre los trabajadores con buena educación y los menos educados. Dado que se anticipó que existe tal diferencial, una alternativa relevante (a la hipótesis nula de que no existe un diferencial salarial) es que los individuos bien educados ganan más; es decir, que el salario promedio por hora para este grupo, <span class="math inline">\(\mu_Y\)</span> es <em>mayor</em> que <span class="math inline">\(\mu_{Y, 0}\)</span>, el salario promedio de los trabajadores con menos educación que se asume que se conoce aquí por simplicidad (la sección <a href="4-5-CMDP.html#CMDP">4.5</a> analiza cómo probar la equivalencia de medias poblacionales desconocidas).</p>
+<p>Este es un ejemplo de una <em>prueba del lado derecho</em> y el par de hipótesis se elige para ser</p>
+<p><span class="math display">\[ H_0: \mu_Y = \mu_{Y,0} \ \ \text{vs} \ \ H_1: \mu_Y &gt; \mu_{Y,0}. \]</span></p>
+<p>Se rechaza la hipótesis nula si el estadístico de prueba calculado es mayor que el valor crítico <span class="math inline">\(1.64\)</span>, el equivalente de <span class="math inline">\(0.95\)</span> de la distribución <span class="math inline">\(\mathcal{N}(0,1)\)</span>. Esto asegura que <span class="math inline">\(1-0.95=5\%\)</span> masa de probabilidad permanece en el área a la derecha del valor crítico. Como antes, se puede visualizar esto en <strong>R</strong> usando la función <strong>polygon()</strong>.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar la densidad normal estándar en el dominio [-4,4]</span></span>
+<span id="cb21-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x),</span>
+<span id="cb21-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb21-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">&quot;Región de rechazo de una prueba del lado derecho&quot;</span>,</span>
+<span id="cb21-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">yaxs =</span> <span class="st">&quot;i&quot;</span>,</span>
+<span id="cb21-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlab =</span> <span class="st">&quot;Estadístico t&quot;</span>,</span>
+<span id="cb21-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">ylab =</span> <span class="st">&quot;&quot;</span>,</span>
+<span id="cb21-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb21-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">axes =</span> <span class="st">&quot;F&quot;</span>)</span>
+<span id="cb21-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar el eje x</span></span>
+<span id="cb21-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, </span>
+<span id="cb21-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">at =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">0</span>, <span class="fl">1.64</span>, <span class="dv">4</span>), </span>
+<span id="cb21-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">padj =</span> <span class="fl">0.5</span>,</span>
+<span id="cb21-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="dv">0</span>, <span class="fu">expression</span>(Phi<span class="sc">^-</span><span class="dv">1</span><span class="sc">~</span>(.<span class="dv">95</span>)<span class="sc">==</span><span class="fl">1.64</span>), <span class="st">&quot;&quot;</span>))</span>
+<span id="cb21-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Sombrear la región de rechazo en la cola izquierda</span></span>
+<span id="cb21-18"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="fu">polygon</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="fl">1.64</span>, <span class="fu">seq</span>(<span class="fl">1.64</span>, <span class="dv">4</span>, <span class="fl">0.01</span>), <span class="dv">4</span>),</span>
+<span id="cb21-19"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">dnorm</span>(<span class="fu">seq</span>(<span class="fl">1.64</span>, <span class="dv">4</span>, <span class="fl">0.01</span>)), <span class="dv">0</span>), </span>
+<span id="cb21-20"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb21-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/251-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>De manera análoga, para la prueba del lado izquierdo se tiene</p>
+<p><span class="math display">\[ H_0: \ mu_Y = \ mu_ {Y, 0} \ \ \ text {vs.} \ \ H_1: \ mu_Y &lt;\ mu_ {Y, 0}. \]</span></p>
+<p>El nulo se rechaza si el estadístico de prueba observado no alcanza el valor crítico que, para una prueba en el nivel de significancia de <span class="math inline">\(0.05\)</span>, está dado por <span class="math inline">\(-1.64\)</span>, el equivalente de <span class="math inline">\(0.05\)</span> -cuantil de la distribución <span class="math inline">\(\mathcal{N}(0,1)\)</span>. <span class="math inline">\(5\%\)</span> masa de probabilidad se encuentra a la izquierda del valor crítico.</p>
+<p>Es sencillo adaptar el fragmento de código anterior al caso de una prueba del lado izquierdo. Solo se tiene que ajustar el sombreado de color y las marcas de graduación.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar la densidad normal estándar en el dominio [-4,4]</span></span>
+<span id="cb22-2"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x),</span>
+<span id="cb22-3"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb22-4"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">main =</span> <span class="st">&quot;Región de rechazo de una prueba del lado izquierdo&quot;</span>,</span>
+<span id="cb22-5"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">yaxs =</span> <span class="st">&quot;i&quot;</span>,</span>
+<span id="cb22-6"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">xlab =</span> <span class="st">&quot;Estadístico t&quot;</span>,</span>
+<span id="cb22-7"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">ylab =</span> <span class="st">&quot;&quot;</span>,</span>
+<span id="cb22-8"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb22-9"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">axes =</span> <span class="st">&quot;F&quot;</span>)</span>
+<span id="cb22-10"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar eje x</span></span>
+<span id="cb22-12"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, </span>
+<span id="cb22-13"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">at =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="fl">1.64</span>, <span class="dv">4</span>), </span>
+<span id="cb22-14"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">padj =</span> <span class="fl">0.5</span>,</span>
+<span id="cb22-15"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="dv">0</span>, <span class="fu">expression</span>(Phi<span class="sc">^-</span><span class="dv">1</span><span class="sc">~</span>(.<span class="dv">05</span>)<span class="sc">==-</span><span class="fl">1.64</span>), <span class="st">&quot;&quot;</span>))</span>
+<span id="cb22-16"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-17"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Región de rechazo de sombra en la cola derecha</span></span>
+<span id="cb22-18"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="fu">polygon</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="fl">1.64</span>, <span class="fl">0.01</span>), <span class="sc">-</span><span class="fl">1.64</span>),</span>
+<span id="cb22-19"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">dnorm</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="fl">1.64</span>, <span class="fl">0.01</span>)), <span class="dv">0</span>), </span>
+<span id="cb22-20"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cb22-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/252-1.png" width="80%" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="4-2-PMM.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_04.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

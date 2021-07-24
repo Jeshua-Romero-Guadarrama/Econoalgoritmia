@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+      <body>
+      <div data-datacamp-exercise data-lang='r' data-height =320>  
+      <code data-type="pre-exercise-code">
+      library(MASS)
+      mod_pl  <- lm(medv ~ poly(log(lstat), 2, raw = T), data = Boston)  
+      </code>
+      
+      <code data-type="sample-code">
+      # configurar los puntos de datos relevantes
+      
+      # predecir los valores correspondientes de medv
+      
+      # calcular el efecto esperado del cambio
+      
+      </code>
+      
+      <code data-type="solution">
+      # configurar los puntos de datos relevantes
+      new_data <- data.frame(lstat = c(10, 11))
+      
+      # predecir los valores correspondientes de medv
+      Y_hat <- predict(mod_pl, newdata = new_data)
+      
+      # calcular el efecto esperado del cambio
+      diff(Y_hat)
+      </code>
+      
+      <code data-type="sct">
+      ex() %>% check_object("new_data") %>% check_equal()
+      ex() %>% check_object("Y_hat") %>% check_equal()
+      ex() %>% check_function("diff") %>% check_result() %>% check_equal()
+      success_msg("¡Correcto! El cambio esperado en medv para un aumento en lstat del 10% al 11% es de aproximadamente -1.16 (es decir, $-1160).")
+      </code>
+      </div>
+      </body>
+</html>

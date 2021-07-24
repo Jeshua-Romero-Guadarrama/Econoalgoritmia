@@ -1,0 +1,1322 @@
+# Regresión lineal con un regresor {#RLR}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 277, child="_setup.Rmd"}
+```
+
+```{r, 278, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+El presente capítulo presenta los conceptos básicos de la regresión lineal y muestra cómo realizar análisis de regresión en **R**. En la regresión lineal, el objetivo es modelar la relación entre una variable dependiente $Y$ y una o más variables explicativas denotadas por $X_1, X_2, \dots, X_k$. En la siguiente parte del curso, y a lo largo de todo el capítulo, se estudiará el concepto de regresión lineal simple. En la regresión lineal simple, solo hay una variable explicativa $X_1$.
+
+Si, por ejemplo, una escuela reduce el tamaño de sus clases contratando nuevos maestros; es decir, la escuela reduce $X_1$, la proporción de estudiantes por maestro en las clases aumentará, ¿cómo afectaría esto a $Y$ (el desempeño de los estudiantes involucrados en una prueba estandarizada)? Con la regresión lineal, no solo se puede examinar si la proporción alumno-maestro *tiene un impacto* en los resultados de la prueba, sino que también se puede aprender sobre la *dirección* y la *fuerza* de este efecto.
+
+Los siguientes paquetes son necesarios para reproducir el código presentado en este capítulo:
+
++ **AER**: Que acompaña al Libro *Econometría aplicada con R* @kleiber2008 y proporciona funciones y conjuntos de datos útiles.
+
++ **MASS**: Una colección de funciones para estadística aplicadas.
+
+Asegúrese de que estén instalados antes de continuar e intentar replicar los ejemplos. La forma más segura de hacerlo es verificando si el siguiente fragmento de código se ejecuta sin errores:
+
+```{r, 279, warning=FALSE, message=FALSE, eval=FALSE}
+library(AER)
+library(MASS)
+```
+
+## Regresión lineal simple
+
+Para comenzar con un ejemplo sencillo, considere las siguientes combinaciones de puntaje promedio de exámenes y la proporción promedio de estudiantes por maestro en algunos distritos escolares ficticios.
+
+```{r kable, 280, echo=F, purl=F,, eval=my_output=="html"}
+library(knitr)
+library(kableExtra)
+
+frame <- data.frame(
+  TestScore = c(680, 640, 670, 660, 630, 660, 635),
+  STR = c(15, 17, 19, 20, 22, 23.5, 25)
+         )
+rownames(frame) <- 1:7
+
+t(frame) %>% kable("latex", booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+```{r, 281, echo=F, purl=F,, eval=my_output=="latex"}
+library(knitr)
+library(kableExtra)
+
+frame <- data.frame(
+  TestScore = c(680, 640, 670, 660, 630, 660, 635),
+  STR = c(15, 17, 19, 20, 22, 23.5, 25)
+         )
+rownames(frame) <- 1:7
+
+kable(t(frame), "latex", booktabs = T) %>% kable_styling(position = "center")
+```
+
+Para trabajar con estos datos en **R**, se comienza generando dos vectores: uno para las proporciones alumno-maestro (**STR**) y otro para los puntajes de las pruebas (**TestScore**), ambos contienen los datos de la tabla de arriba. 
+
+```{r, 282}
+# Crear datos de muestra
+STR <- c(15, 17, 19, 20, 22, 23.5, 25)
+TestScore <- c(680, 640, 670, 660, 630, 660, 635) 
+
+# Imprimir datos de muestra
+STR
+TestScore
+```
+
+Para construir un modelo de regresión lineal simple, se plantea la hipótesis de que la relación entre la variable dependiente y la independiente es lineal, formalmente: 
+
+$$ Y = b \cdot X + a. $$
+
+Por ahora, suponga que la función que relaciona la puntuación de la prueba y la proporción alumno-maestro entre sí es $$TestScore = 713 - 3 \times STR.$$
+
+Siempre es una buena idea visualizar los datos con los que trabaja. Aquí, es adecuado usar **plot()** para producir un diagrama de dispersión con **STR** en el eje $x$ y **TestScore** en el eje $y$. Simplemente llamando a **plot(y_variable ~ x_variable)** donde **y_variable** y **x_variable** son marcadores de posición para los vectores de observaciones que se quiere trazar. Además, es posible que se desee agregar una relación sistemática a la trama. Para dibujar una línea recta, **R** proporciona la función **abline()**. Solo se tiene que llamar a la función con el argumento **a** (que representan la intersección) y **b** (que representa la pendiente) después de ejecutar **plot()** para agregar la línea al gráfico.
+
+El siguiente código es clave:
+
+```{r, 283, echo=TRUE, fig.align='center', cache=TRUE}
+# crear un diagrama de dispersión de los datos
+plot(TestScore ~ STR)
+
+# agregar la relación sistemática a la trama
+abline(a = 713, b = -3)
+```
+
+Se encuentra que la línea no toca ninguno de los puntos aunque se afirma que representa la relación sistemática. La razón de esto es la aleatoriedad. La mayoría de las veces existen influencias adicionales que implican que no existe una relación bivariada entre las dos variables.
+
+Para tener en cuenta dichas diferencias entre los datos observados y la relación sistemática, se amplía el modelo de arriba con un *término de error* $u$ que captura efectos aleatorios adicionales. Dicho de otra manera, $u$ representa todas las diferencias entre la línea de regresión y los datos observados reales. Además de la pura aleatoriedad, estas desviaciones también podrían surgir de errores de medición o, como se discutirá más adelante, podrían ser la consecuencia de dejar de lado otros factores que son relevantes para explicar la variable dependiente.
+
+¿Qué otros factores son plausibles en el ejemplo? Por un lado, los puntajes de las pruebas pueden depender de la calidad de los profesores y los antecedentes de los estudiantes. También es posible que en algunas clases los alumnos tuvieran suerte en los días de prueba y así consiguieran puntuaciones más altas. Por ahora, se resumiran tales influencias por un componente aditivo:
+
+$$ TestScore = \beta_0 + \beta_1 \times STR + \text{other factors} $$
+
+Por supuesto, esta idea es muy general, ya que se puede extender fácilmente a otras situaciones que se pueden describir con un modelo lineal. Por tanto, el modelo de regresión lineal básico con el que se trabajará es
+
+$$ Y_i = \beta_0 + \beta_1 X_i + u_i. $$
+
+El Concepto clave 4.1 resume la terminología del modelo de regresión lineal simple.   
+
+```{r, 284, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC4.1">
+<h3 class = "right"> Concepto clave 4.1 </h3>          
+<h3 class = "left"> Terminología para el modelo de regresión lineal con un regresor único </h3>
+
+<p> El modelo de regresión lineal es
+
+$$Y_i = \\beta_0 + \\beta_1 X_i + u_i$$
+
+dónde
+
+- el índice $i$ corre sobre las observaciones, $i = 1, \\dots, n$.
+- $Y_i$ es la *variable dependiente*, la *regresiva*, o simplemente la *variable de la izquierda*.
+- $X_i$ es la *variable independiente*, el *regresor*, o simplemente la *variable de la derecha*.
+- $Y = \\beta_0 + \\beta_1 X$ es la *línea de regresión de población* también llamada *función de regresión de población*.
+- $\\beta_0$ es la *intersección* de la línea de regresión de la población.
+- $\\beta_1$ es la *pendiente* de la línea de regresión de la población.
+- $u_i$ es el *término de error*.
+</p>
+</div>
+')
+```
+
+```{r, 285, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Terminología para el modelo de regresión lineal con un regresor único]{4.1}
+El modelo de regresión lineal es
+
+$$Y_i = \\beta_0 + \\beta_1 X_i + u_i$$
+
+\\begin{itemize}
+\\item el índice $i$ corre sobre las observaciones, $i = 1, \\dots, n$.
+\\item $Y_i$ es la \\textit{variable dependiente}, la \\textit{regresiva}, o simplemente la \\textit{variable de la izquierda}.
+\\item $X_i$ es la \\textit{variable independiente}, el \\textit{regresor}, o simplemente la \\textit{variable de la derecha}.
+\\item $Y = \\beta_0 + \\beta_1 X$ es la \\textit{línea de regresión de población} también llamada \\textit{función de regresión de población}.
+\\item $\\beta_0$ es la \\textit{intersección} de la línea de regresión de la población.
+\\item $\\beta_1$ es la \\textit{pendiente} de la línea de regresión de la población.
+\\item $u_i$ es el \\textit{término de error}.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+## Estimación de los coeficientes del modelo de regresión lineal
+
+En la práctica, se desconocen la intersección $\beta_0$ y la pendiente $\beta_1$ de la línea de regresión de la población. Por lo tanto, se deben emplear datos para estimar ambos parámetros desconocidos. A continuación, se utilizará un ejemplo del mundo real para demostrar cómo se logra esto. Se quieren relacionar los resultados de las pruebas con la proporción de alumnos por maestro medida en las escuelas de California. El puntaje de la prueba es el promedio de todo el distrito de puntajes de lectura y matemáticas para los estudiantes de quinto grado. Nuevamente, el tamaño de la clase se mide como el número de estudiantes dividido por el número de maestros (la proporción de estudiantes por maestro). En cuanto a los datos, el conjunto de datos de las escuelas de California (**CASchools**) viene con un paquete **R** llamado **AER**, un acrónimo de [Econometría aplicada con R](https: //cran.r -project.org/web/packages/AER/AER.pdf) [@R-AER]. Después de instalar el paquete con **install.packages("AER")** y adjuntarlo con **library(AER)** el conjunto de datos se puede cargar usando la función **data()**.
+
+```{r, 286, message=FALSE, warning=FALSE, eval=5:8}
+# instalar el paquete AER (una vez)
+install.packages("AER")
+
+# cargar el paquete AER 
+library(AER)   
+
+# cargar el conjunto de datos en el espacio de trabajo
+data(CASchools) 
+```
+
+Una vez que se ha instalado un paquete, está disponible para su uso en otras ocasiones cuando se invoca con **library()** --- ¡no es necesario ejecutar **install.packages()** de nuevo!
+
+Es interesante saber con qué tipo de objeto se está tratando. En consecuencia, **class()** devuelve la clase de un objeto. Dependiendo de la clase de un objeto, algunas funciones (por ejemplo, **plot()** y **summary()**) se comportan de manera diferente.
+
+Comprobar la clase del objeto **CASchools**.
+
+```{r, 287}
+class(CASchools)
+```
+
+Resulta que **CASchools** es de la clase **data.frame**, que es un formato conveniente para trabajar, especialmente para realizar análisis de regresión.
+
+Con la ayuda de **head()** se obtiene una primera descripción general de los datos. Esta función muestra solo las primeras 6 filas del conjunto de datos, lo que evita una salida de consola sobrecargada. 
+
+```{block2, note-text, type='rmdnote'}
+Presionar <tt>ctrl + L</tt> para borrar la consola. Este comando elimina cualquier código que haya escrito y ejecutado por usted o impreso en la consola por las funciones <tt>R</tt>. La buena noticia es que todo lo demás queda intacto. No pierde variables definidas, entre otros, lo que incluye el historial del código. Todavía es posible recuperar comandos <tt>R</tt> ejecutados previamente usando las teclas arriba y abajo. Si está trabajando en *RStudio*, presione <tt>ctrl + Arriba</tt> en su teclado (<tt>CMD + Arriba</tt> en una Mac) para revisar una lista de comandos ingresados previamente.
+```
+
+```{r, 288}
+head(CASchools)
+```
+
+Se encuentra que el conjunto de datos consta de muchas variables y que la mayoría de ellas son numéricas.
+
+Por cierto: Una alternativa a **class()** y **head()** es **str()** que se deduce de la palabra 'estructura' en inglés y ofrece una descripción general completa del objeto. ¡Intenténtelo!
+
+Volviendo a **CASchools**, las dos variables que interesan (es decir, el puntaje promedio de la prueba y la proporción alumno-maestro) *no* están incluidas. Sin embargo, es posible calcular ambos a partir de los datos proporcionados. Para obtener las proporciones de estudiantes por maestro, simplemente se divide el número de estudiantes por el número de maestros. La puntuación media de la prueba es la media aritmética de la puntuación de la prueba de lectura y la puntuación de la prueba de matemáticas. El siguiente fragmento de código muestra cómo se pueden construir las dos variables como vectores y cómo se añaden a **CASchools**.
+
+```{r, 289}
+# calcular STR y agregarlo a CASchools
+CASchools$STR <- CASchools$students/CASchools$teachers 
+
+# calcular TestScore y añadirlo a CASchools
+CASchools$score <- (CASchools$read + CASchools$math)/2     
+```
+
+Si se ejecuta **head(CASchools)** nuevamente, se encontrarían las dos variables de interés como columnas adicionales llamadas **STR** y **score** (¡marque esto!).
+
+Resulta necesario hablar de la distribución de los puntajes de las pruebas y la proporción de alumnos por maestro. Existen varias funciones que pueden usarse para producir dichos resultados, por ejemplo:
+
+- **mean()** (calcula la media aritmética de los números proporcionados),
+
+- **sd()** (calcula la desviación estándar de la muestra),
+
+- **cuantile()** (devuelve un vector de los cuantiles de muestra especificados para los datos).
+
+El siguiente fragmento de código muestra cómo lograr esto. Primero, se calculan las estadísticas de resumen en las columnas **STR** y **score** de **CASchools**. Para obtener un buen resultado, recopilando las medidas en un **data.frame** llamado **DistributionSummary**.
+
+```{r Table 4.1, results='hold'}
+# calcular promedios de muestra de STR y score
+avg_STR <- mean(CASchools$STR) 
+avg_score <- mean(CASchools$score)
+
+# calcular las desviaciones estándar de la muestra de STR y score
+sd_STR <- sd(CASchools$STR) 
+sd_score <- sd(CASchools$score)
+
+# configurar un vector de percentiles y calcular los cuantiles
+quantiles <- c(0.10, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9)
+quant_STR <- quantile(CASchools$STR, quantiles)
+quant_score <- quantile(CASchools$score, quantiles)
+
+# recopilar todo en un marco de datos (data.frame)
+DistributionSummary <- data.frame(Average = c(avg_STR, avg_score), 
+                                  StandardDeviation = c(sd_STR, sd_score), 
+                                  quantile = rbind(quant_STR, quant_score))
+
+# imprimir el resumen en la consola
+DistributionSummary
+```
+
+En cuanto a los datos de muestra, usando **plot()** se pueden detectar características en los datos, como valores atípicos que son más difíciles de descubrir al observar simples números. Esta vez se agregan algunos argumentos adicionales a la llamada de **plot()**.
+
+El primer argumento en la llamada de **plot()**, **score ~ STR**, es nuevamente una fórmula que establece variables en el eje y y el eje x. Sin embargo, esta vez las dos variables no se guardan en vectores separados sino que son columnas de **CASchools**. Por lo tanto, **R** no los encontraría sin que el argumento **data** se haya especificado correctamente. El arguemnto **data** debe estar de acuerdo con el nombre del **data.frame** al que pertenecen las variables, en este caso **CASchools**. Se utilizan más argumentos para cambiar la apariencia del gráfico: mientras **main** agrega un título, **xlab** y **ylab** agregan etiquetas personalizadas a ambos ejes.
+
+```{r, 290, fig.align='center'}
+plot(score ~ STR, 
+     data = CASchools,
+     main = "Diagrama de dispersión de TestScore y STR", 
+     xlab = "STR (X)",
+     ylab = "Resultado de la prueba (Y)")
+```
+
+La gráfica de dispersión muestra todas las observaciones sobre la proporción alumno-maestro y la puntuación de la prueba. Se puede ver que los puntos están fuertemente dispersos y que las variables están correlacionadas negativamente. Es decir, se espera observar puntuaciones más bajas en las pruebas en clases más grandes.
+
+La función **cor()** (consultar **?Cor** para obtener más información) se puede utilizar para calcular la correlación entre dos vectores *numéricos*.
+
+```{r, 291}
+cor(CASchools$STR, CASchools$score)
+```
+
+Como ya sugiere el diagrama de dispersión, la correlación es negativa pero bastante débil.
+
+La tarea a la que se deben enfrentar ahora los economistas es encontrar la línea que mejor se ajuste a los datos. Por supuesto, se podría simplemente seguir con la inspección gráfica y el análisis de correlación y luego seleccionar la línea que mejor se ajuste a ojo de buen cubero. Sin embargo, esto sería bastante subjetivo: Diferentes observadores dibujarían diferentes líneas de regresión. Por este motivo, se está interesado en las técnicas menos arbitrarias. Esta técnica viene dada por la estimación de mínimos cuadrados ordinarios (MCO).
+
+### El estimador de mínimos cuadrados ordinarios {-}
+
+El estimador de MCO elige los coeficientes de regresión de manera que la línea de regresión estimada sea lo más "cercana" posible a los puntos de datos observados. Aquí, la cercanía se mide por la suma de los errores al cuadrado cometidos al predecir $Y$ dado $X$. Sea $b_0$ y $b_1$ algunos estimadores de $\beta_0$ y $\beta_1$. Entonces, la suma de los errores de estimación al cuadrado se puede expresar como: 
+
+$$ \sum^n_{i = 1} (Y_i - b_0 - b_1 X_i)^2. $$
+
+El estimador MCO en el modelo de regresión simple es el par de estimadores para la intersección y la pendiente que minimiza la expresión anterior. La derivación de los estimadores MCO para ambos parámetros se resumen en el Concepto clave 4.2.
+
+```{r, 292, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC4.2">
+<h3 class = "right"> Concepto clave 4.2 </h3>          
+<h3 class = "left"> Estimador de MCO, valores pronosticados y residuos </h3>
+<p> Los estimadores MCO de la pendiente $\\beta_1$ y la intersección $\\beta_0$ en el modelo de regresión lineal simple son:
+
+\\begin{align}
+  \\hat\\beta_1 & = \\frac{ \\sum_{i = 1}^n (X_i - \\overline{X})(Y_i - \\overline{Y}) } { \\sum_{i=1}^n (X_i - \\overline{X})^2},  \\\\
+  \\\\
+  \\hat\\beta_0 & =  \\overline{Y} - \\hat\\beta_1 \\overline{X}. 
+\\end{align}
+
+Los valores predichos por MCO $\\widehat{Y}_i$ y los residuos $\\hat{u}_i$ son:
+
+\\begin{align}
+  \\widehat{Y}_i & =  \\hat\\beta_0 + \\hat\\beta_1 X_i,\\\\
+  \\\\
+  \\hat{u}_i & =  Y_i - \\widehat{Y}_i. 
+\\end{align}
+
+La intersección estimada $\\hat{\\beta}_0$, el parámetro de pendiente $\\hat{\\beta}_1$ y los residuos $\\left(\\hat{u}_i\\right)$ son calculado a partir de una muestra de $n$ observaciones de $X_i$ y $Y_i$, $i$, $...$, $n$. Estas son *estimaciones* de la intersección de la población desconocida $\\left(\\beta_0 \\right)$, pendiente $\\left(\\beta_1\\right)$ y término de error $(u_i)$.
+</p>
+
+Las fórmulas presentadas anteriormente pueden no ser muy intuitivas a primera vista. La siguiente aplicación interactiva tiene como objetivo ayudarlo a comprender la mecánica de los MCO. Puede agregar observaciones haciendo clic en el sistema de coordenadas donde los datos están representados por puntos. Una vez que hay dos o más observaciones disponibles, la aplicación calcula una línea de regresión usando MCO y algunas estadísticas que se muestran en el panel derecho. Los resultados se actualizan a medida que agrega más observaciones al panel izquierdo. Un doble clic restablece la aplicación; es decir, se eliminan todos los datos.
+
+<iframe height="410" width="900" frameborder="0" scrolling="no" src="DCL/Regresión_simple.html"></iframe>
+
+</div>')
+```
+
+```{r, 293, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El estimador de MCO, valores pronosticados y residuos]{4.2}
+Los estimadores MCO de la pendiente $\\beta_1$ y la intersección $\\beta_0$ en el modelo de regresión lineal simple son:
+
+\\begin{align*}
+  \\hat\\beta_1 & = \\frac{ \\sum_{i = 1}^n (X_i - \\overline{X})(Y_i - \\overline{Y}) } { \\sum_{i=1}^n (X_i - \\overline{X})^2},  \\\\
+  \\hat\\beta_0 & =  \\overline{Y} - \\hat\\beta_1 \\overline{X}. 
+\\end{align*}
+
+Los valores predichos por MCO $\\widehat{Y}_i$ y los residuos $\\hat{u}_i$ son:
+
+\\begin{align*}
+  \\widehat{Y}_i & =  \\hat\\beta_0 + \\hat\\beta_1 X_i,\\\\
+  \\hat{u}_i & =  Y_i - \\widehat{Y}_i. 
+\\end{align*}
+
+La intersección estimada $\\hat{\\beta}_0$, el parámetro de pendiente $\\hat{\\beta}_1$ y los residuos $\\left(\\hat{u}_i\\right)$ son calculado a partir de una muestra de $n$ observaciones de $X_i$ y $Y_i$, $i$, $...$, $n$. Estas son *estimaciones* de la intersección de la población desconocida $\\left(\\beta_0 \\right)$, pendiente $\\left(\\beta_1\\right)$ y término de error $(u_i)$.
+
+\\end{keyconcepts}
+')
+```
+
+Existen muchas formas posibles de calcular $\hat{\beta}_0$ y $\hat{\beta}_1$ en **R**. Por ejemplo, se podrían implementar las fórmulas presentadas en el Concepto clave 4.2 con dos de las funciones más básicas de **R**: **mean()** y **sum()**. Antes de hacerlo, se *adjunta* el conjunto de datos **CASchools**.
+
+```{r, 294, echo=-1}
+rm(STR)
+attach(CASchools) # permite utilizar las variables contenidas en CASchools directamente
+
+# calcular beta_1_hat
+beta_1 <- sum((STR - mean(STR)) * (score - mean(score))) / sum((STR - mean(STR))^2)
+
+# calcular beta_0_hat
+beta_0 <- mean(score) - beta_1 * mean(STR)
+
+# imprimir los resultados en la consola
+beta_1
+beta_0
+```
+
+```{block2, attach, type='rmdknit'}
+Llamar a <tt>attach (CASchools)</tt> permite direccionar una variable contenida en <tt>CASchools</tt> por su nombre: ya no es necesario utilizar el operador <tt>$</tt> junto con el conjunto de datos: <tt>R</tt> puede evaluar el nombre de la variable directamente.
+
+<tt>R</tt> usa el objeto en el entorno del usuario si este objeto comparte el nombre de la variable contenida en una base de datos adjunta. Sin embargo, es una mejor práctica usar siempre nombres distintivos para evitar tales (aparentemente) ambivalencias.
+```
+
+<br>
+
+**¡Observe que se abordan las variables contenidas en el conjunto de datos adjunto <tt>CASchools</tt> directamente durante el resto de este capítulo!**
+
+Por supuesto, existen aún más formas manuales de realizar estas tareas. Dado que MCO es una de las técnicas de estimación más utilizadas, **R**, por supuesto, ya contiene una función incorporada llamada **lm()** (**l** inear **m** odel) que se puede utilizar para realizar análisis de regresión.
+
+El primer argumento de la función a especificar es, similar a **plot()**, la fórmula de regresión con la sintaxis básica **y ~ x** donde **y** es la variable dependiente y **x** la variable explicativa. El argumento **data** determina el conjunto de datos que se utilizará en la regresión. En este punto, es momento de examinar un ejemplo donde se analice la relación entre los puntajes de las pruebas y el tamaño de las clases. El siguiente código usa **lm()** para obtener los resultados.
+
+```{r, 295}
+# estimar el modelo y asignar el resultado a linear_model
+linear_model <- lm(score ~ STR, data = CASchools)
+
+# imprimir la salida estándar del objeto lm estimado en la consola
+linear_model
+```
+
+Agregar la línea de regresión estimada al gráfico. Esta vez también se amplian los rangos de ambos ejes estableciendo los argumentos **xlim** y **ylim**.
+
+```{r, 296, fig.align='center'}
+# graficar los datos
+plot(score ~ STR, 
+     data = CASchools,
+     main = "Diagrama de dispersión de TestScore y STR", 
+     xlab = "STR (X)",
+     ylab = "Resultado de la prueba (Y)",
+     xlim = c(10, 30),
+     ylim = c(600, 720))
+
+# agrega la línea de regresión
+abline(linear_model) 
+```
+
+¿Notaste que esta vez, no se pasaron los parámetros de intersección y pendiente a **abline**? Si llama a **abline()** en un objeto de clase **lm** que solo contiene un regresor, **R** grafica la línea de regresión automáticamente.
+
+## Medidas de ajuste
+
+Después de ajustar un modelo de regresión lineal, una pregunta natural es qué tan bien describe el modelo los datos. Visualmente, esto equivale a evaluar si las observaciones están estrechamente agrupadas alrededor de la línea de regresión. Tanto el *coeficiente de determinación* como el *error estándar de la regresión* miden qué tan bien se ajusta la línea de regresión MCO a los datos.
+
+### El coeficiente de determinación {-}
+
+$R^2$, el *coeficiente de determinación*, es la fracción de la varianza muestral de $Y_i$ que se explica por $X_i$. Matemáticamente, $R^2$ se puede escribir como la razón entre la suma de cuadrados explicada y la suma total de cuadrados. La *suma de cuadrados explicada* ($SCE$) es la suma de las desviaciones cuadradas de los valores predichos $\hat{Y_i}$, del promedio de $Y_i$. La *suma total de cuadrados* ($STC$) es la suma de las desviaciones cuadradas de $Y_i$ de su promedio. Así se tiene:
+
+\begin{align}
+  SCE & =  \sum_{i = 1}^n \left( \hat{Y_i} - \overline{Y} \right)^2,   \\
+  STC & =  \sum_{i = 1}^n \left( Y_i - \overline{Y} \right)^2,   \\
+  R^2 & = \frac{SCE}{STC}.
+\end{align}
+
+Como $STC = SCE + SRC$ también se puede escribir como:
+
+$$ R^2 = 1- \frac{SRC}{STC} $$ 
+
+donde $SRC$ es la suma de los residuos al cuadrado, una medida de los errores cometidos al predecir $Y$ por $X$. La $SRC$ se define como
+
+$$ SRC = \sum_{i=1}^n \hat{u}_i^2. $$
+
+$R^2$ se encuentra entre $0$ y $1$. Es fácil ver que un ajuste perfecto; es decir, que no se cometan errores al ajustar la línea de regresión, implica $R^2 = 1$ ya que entonces se tiene $SRC = 0$. Por el contrario, si nuestra línea de regresión estimada no explica ninguna variación en $Y_i$, se tiene $SCE = 0$ y, en consecuencia, $R^2 = 0$.
+
+### El error estándar de la regresión {-}
+
+El *error estándar de la regresión* ($EER$) es un estimador de la desviación estándar de los residuos $\hat{u}_i$. Como tal, mide la magnitud de una desviación típica de la línea de regresión; es decir, la magnitud de un residuo típico.
+
+$$ SER = s_{\hat{u}} = \sqrt{s_{\hat{u}}^2} \ \ \ \text{donde} \ \ \ s_{\hat{u} }^2 = \frac{1}{n-2} \sum_{i = 1}^n \hat{u}^2_i = \frac{SSR}{n - 2} $$
+
+Se debe recordar que los $u_i$ son *no observados*. Es por eso que se usan sus contrapartes estimadas, los residuos $\hat{u}_i$, en su lugar. El error estándar de la regresión $EER$ es el valor que muestra la diferencia entre los valores reales y los estimados de una regresión. Es utilizado para valorar si existe una correlación entre la regresión y los valores medidos. Muchos autores prefieren este dato a otros como el coeficiente de correlación lineal, ya que el error estándar se mide en las mismas unidades que los valores que se estudian. 
+
+### Aplicación a los datos de la prueba de puntuación {-}
+
+Ambas medidas de ajuste se pueden obtener utilizando la función **summary()** con un objeto **lm** proporcionado como único argumento. Mientras que la función **lm()** solo imprime los coeficientes estimados en la consola, **summary()** proporciona información adicional predefinida como $R^2$ y $EER$ de la regresión.
+
+```{r, 297}
+mod_summary <- summary(linear_model)
+mod_summary
+```
+
+El $R^2$ en la salida llama *R cuadrada múltiple* y tiene un valor de $0.051$. Por tanto, $5.1\%$ de la varianza de la variable dependiente $score$ se explica por la variable explicativa $STR$. Es decir, la regresión explica poco de la varianza en $score$, y gran parte de la variación en los puntajes de las pruebas permanece sin explicación.
+
+El $EER$ se llama *error estándar residual* y equivale a $18.58$. La unidad del $EER$ es la misma que la unidad de la variable dependiente. Es decir, en promedio, la desviación del puntaje de prueba alcanzado real y la línea de regresión es de $18.58$ puntos.
+
+Ahora, se verifica si **summary()** usa las mismas definiciones para $R^2$ y $EER$ que se usan cuando se calculan manualmente.
+
+```{r, 298}
+# calcular R^2 manualmente
+SSR <- sum(mod_summary$residuals^2)
+STC <- sum((score - mean(score))^2)
+R2 <- 1 - SSR/STC
+
+# imprimir el valor en la consola
+R2
+
+# calcular EER manualmente
+n <- nrow(CASchools)
+EER <- sqrt(SSR / (n-2))
+
+# imprimir el valor en la consola
+EER
+```
+
+Se encuentra que los resultados coinciden. Se debe tener en cuenta que los valores proporcionados por **summary()** se redondean a dos lugares decimales.
+
+## Supuestos de mínimos cuadrados {#SMC}
+
+MCO funciona bien en una amplia variedad de circunstancias diferentes. Sin embargo, existen algunas suposiciones que deben cumplirse para asegurar que las estimaciones se distribuyan normalmente en muestras grandes (se discute esto en el Capítulo \@ref(DMEMCO).
+
+```{r, 299, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC4.3">
+<h3 class = "right"> Concepto clave 4.3 </h3>          
+<h3 class = "left"> Los supuestos de mínimos cuadrados </h3>
+<p> 
+$$Y_i = \\beta_0 + \\beta_1 X_i + u_i \\text{, } i = 1,\\dots,n$$
+
+donde
+
+1. El término de error $u_i$ tiene una media condicional cero dada $X_i$: $E(u_i|X_i) = 0$.
+2. $(X_i,Y_i), i = 1,\\dots,n$ son extractos independientes e idénticamente distribuidos (i.i.d.) de su distribución conjunta.
+3. Los valores atípicos grandes son poco probables: $X_i$ y $Y_i$ tienen momentos finitos distintos de cero.
+</p>
+</div>
+')
+```
+
+```{r, 300, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Los supuestos de mínimos cuadrados]{4.3}
+$$Y_i = \\beta_0 + \\beta_1 X_i + u_i \\text{, } i = 1,\\dots,n$$
+
+donde
+
+\\begin{enumerate}
+\\item El término de error $u_i$ tiene una media condicional cero dada $X_i$: $E(u_i|X_i) = 0$.
+\\item $(X_i,Y_i), i = 1,\\dots,n$ son extractos independientes e idénticamente distribuidos (i.i.d.) de su distribución conjunta.
+\\item Los valores atípicos grandes son poco probables: $X_i$ y $Y_i$ tienen momentos finitos distintos de cero.
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+### Supuesto 1: El término de error tiene una media condicional de cero {-}
+
+Esto significa que, independientemente del valor que se elija para $X$, el término de error $u$ no debe mostrar ningún patrón sistemático y debe tener una media de $0$.
+Considere el caso de que, incondicionalmente, $E(u) = 0$, pero para valores bajos y altos de $X$, el término de error tiende a ser positivo y para valores de rango medio de
+$X$ el error tiende a ser negativo. Se puede usar R para construir tal ejemplo. Para hacerlo, se generan datos propios utilizando los generadores de números aleatorios integrados de **R**.
+
+Se usarán las siguientes funciones:
+
+* **runif()** - genera números aleatorios distribuidos uniformemente
+* **rnorm()** - genera números aleatorios distribuidos normalmente
+* **predecir()** - realiza predicciones basadas en los resultados de funciones de ajuste del modelo como **lm()**
+* **lines()** - agrega segmentos de línea a un gráfico existente
+
+Se comienza creando un vector que contenga valores que se distribuyan uniformemente en el intervalo $[-5, 5]$. Esto se puede hacer con la función **runif()**. También se necesita simular el término de error. Para esto, se generan números aleatorios normalmente distribuidos con una media igual a $0$ y una varianza de $1$ usando **rnorm()**. Los valores de $Y$ se obtienen como una función cuadrática de los valores de $X$ y del error.
+
+Después de generar los datos, se estima tanto un modelo de regresión simple como un modelo cuadrático que también incluye el regresor $X^2$ (este es un modelo de regresión múltiple, consulte el Capítulo \@ref(MRVR)). Finalmente, se grafican los datos simulados y se agrega la línea de regresión estimada de un modelo de regresión simple, así como las predicciones hechas con un modelo cuadrático para comparar el ajuste gráficamente.
+
+```{r, 301, fig.align='center'}
+# establecer una semilla para que los resultados sean reproducibles
+set.seed(321)
+
+# simular los datos
+X <- runif(50, min = -5, max = 5)
+u <- rnorm(50, sd = 1)  
+
+# la verdadera relación
+Y <- X^2 + 2 * X + u                
+
+# estimar un modelo de regresión simple
+mod_simple <- lm(Y ~ X)
+
+# predecir usando un modelo cuadrático
+prediction <- predict(lm(Y ~ X + I(X^2)), data.frame(X = sort(X)))
+
+# graficar los resultados
+plot(Y ~ X)
+abline(mod_simple, col = "red")
+lines(sort(X), prediction)
+```
+
+El gráfico muestra qué se entiende por $E(u_i|X_i) = 0$ y por qué no es válido para el modelo lineal:
+
+Usando el modelo cuadrático (representado por la curva negra) se ve que no existe desviaciones sistemáticas de la observación de la relación predicha. Es creíble que no se viole la suposición cuando se emplea tal modelo. Sin embargo, al usar un modelo de regresión lineal simple, se ve que la suposición probablemente se viola ya que $E(u_i|X_i)$ varía con $X_i$.
+
+### Supuesto 2: Datos independientes e idénticamente distribuidos  {-}
+
+La mayoría de los esquemas de muestreo utilizados para recopilar datos de poblaciones producen muestras i.i.d. Por ejemplo, se podría usar el generador de números aleatorios de **R** para seleccionar al azar las identificaciones de los estudiantes de la lista de inscripción de una universidad y registrar la edad $X$ y los ingresos $Y$ de los estudiantes correspondientes. Este es un ejemplo típico de muestreo aleatorio simple y garantiza que todos los $(X_i, Y_i)$ se extraigan al azar de la misma población.
+
+Un ejemplo destacado en que la suposición de i.i.d. no se cumple es en los datos de series de tiempo donde se tienen observaciones en la misma unidad a lo largo del tiempo. Por ejemplo, al tomar $X$ como el número de trabajadores en una empresa de producción a lo largo del tiempo. Debido a las transformaciones comerciales, la empresa recorta puestos de trabajo periódicamente por una participación específica, pero también hay algunas influencias no deterministas que se relacionan con la economía, la política, entre otrs. Con **R** se puede simular fácilmente un proceso de este tipo y graficarlo.
+
+Se comienza la serie con un total de 5000 trabajadores y se simula la reducción del empleo con un proceso autorregresivo que exhibe un movimiento descendente en el largo plazo y tiene errores normalmente distribuidos:^[Ver Capítulo \@ref(IRSTP) para más información sobre autorregresión procesos y análisis de series de tiempo en general.]
+
+$$ employment_t = -5 + 0.98 \cdot employment_{t-1} + u_t $$
+ 
+```{r, 302, fig.align="center"}
+# sembrar semilla
+set.seed(123)
+
+# generar un vector de fecha
+Date <- seq(as.Date("1951/1/1"), as.Date("2000/1/1"), "years")
+
+# inicializar el vector de empleo
+X <- c(5000, rep(NA, length(Date)-1))
+
+# generar observaciones de series de tiempo con influencias aleatorias
+for (i in 2:length(Date)) {
+  
+    X[i] <- -50 + 0.98 * X[i-1] + rnorm(n = 1, sd = 200)
+    
+}
+
+# trazar los resultados
+plot(x = Date, 
+     y = X, 
+     type = "l", 
+     col = "steelblue", 
+     ylab = "Trabajadores", 
+     xlab = "Tiempo")
+```
+
+Es evidente que las observaciones sobre el número de empleados no pueden ser independientes en este ejemplo: el nivel de empleo de hoy está correlacionado con el nivel de empleo de mañana. Por lo tanto, se viola la suposición de i.i.d.
+
+### Supuesto 3: Los valores atípicos grandes son poco probables {-}
+
+Es fácil pensar en situaciones en las que pueden ocurrir observaciones extremas; es decir, observaciones que se desvían considerablemente del rango habitual de datos. Estas observaciones se denominan valores atípicos. Técnicamente hablando, el supuesto 3 requiere que $X$ y $Y$ tengan una curtosis finita.^[La curtosis de una variable estadística/aleatoria es una característica de la forma de su distribución de frecuencias/probabilidad. Según la concepción clásica, una curtosis grande implica una mayor concentración de valores de la variable tanto muy cerca de la media de la distribución (pico) como muy lejos de ella (colas), al tiempo que existe una relativamente menor frecuencia de valores intermedios. Esto explica una forma de la distribución de frecuencias/probabilidad con colas más gruesas, con un centro más apuntado y una menor proporción de valores intermedios entre el pico y colas. Una mayor curtosis no implica una mayor varianza, ni viceversa.].
+
+Los casos comunes en los que se quiere excluir o (si es posible) corregir dichos valores atípicos son cuando aparentemente son errores tipográficos, errores de conversión o errores de medición. Incluso si parece que las observaciones extremas se han registrado correctamente, es aconsejable excluirlas antes de estimar un modelo, ya que MCO adolece de *sensibilidad a valores atípicos*.
+
+¿Qué significa esto? Se puede demostrar que las observaciones extremas reciben una gran ponderación en la estimación de los coeficientes de regresión desconocidos cuando se utiliza MCO. Por lo tanto, los valores atípicos pueden dar lugar a estimaciones de los coeficientes de regresión muy distorsionadas. Para tener una mejor impresión de este problema, considere la siguiente aplicación donde se han colocado algunos datos de muestra en $X$ y $Y$ que están altamente correlacionados. La relación entre $X$ y $Y$ parece explicarse bastante bien por la línea de regresión trazada: todos los puntos de datos blancos se encuentran cerca de la línea de regresión roja y se tiene $R^2 = 0.92$.
+
+Ahora continúe y agregue una observación adicional en, digamos, $(18, 2)$. Esta observación claramente es un caso atípico. El resultado es bastante sorprendente: la línea de regresión estimada difiere mucho de la que se considera que se ajusta bien a los datos. ¡La pendiente está fuertemente sesgada a la baja y $R^2$ disminuyó a solo $29\%$! 
+
+<br>
+
+Haga doble clic dentro del sistema de coordenadas para restablecer la aplicación. Siéntase libre de experimentar. Elija diferentes coordenadas para el valor atípico o agregue otras adicionales.
+
+<iframe height="410" width="900" frameborder="0" scrolling="no" src="DCL/Valor_atípico.html"></iframe>
+
+En el siguiente código se usan datos de muestra generados usando las funciones de números aleatorios de **R**: **rnorm()** y **runif()**. Se estiman dos modelos de regresión simple, uno basado en el conjunto de datos original y otro usando un conjunto modificado donde una observación cambia para ser un valor atípico y luego se grafican los resultados. Para comprender el código completo, debe estar familiarizado con la función **sort()** que ordena las entradas de un vector numérico en orden ascendente.
+
+```{r, 303, fig.align='center'}
+# sembrar semilla
+set.seed(123)
+
+# generar los datos
+X <- sort(runif(10, min = 30, max = 70))
+Y <- rnorm(10 , mean = 200, sd = 50)
+Y[9] <- 2000
+
+# ajustar modelo con valor atípico
+fit <- lm(Y ~ X)
+
+# ajuste del modelo sin valores atípicos
+fitWithoutOutlier <- lm(Y[-9] ~ X[-9])
+
+# graficar los resultados
+plot(Y ~ X)
+abline(fit)
+abline(fitWithoutOutlier, col = "red")
+```
+
+## La distribución muestral del estimador de MCO {#DMEMCO}
+
+Como $\hat{\beta}_0$ y $\hat{\beta}_1$ se calculan a partir de una muestra, los estimadores en sí mismos son variables aleatorias con una distribución de probabilidad, --- la denominada distribución muestral de los estimadores --- describe los valores que podrían tomar en diferentes muestras. Aunque la distribución muestral de $\hat\beta_0$ y $\hat\beta_1$  puede ser complicada cuando el tamaño de la muestra es pequeño y generalmente cambia con el número de observaciones, $n$, es posible, siempre que se cumplan los supuestos discutidos sean válidos, para hacer ciertas declaraciones sobre lo que se mantiene para todos los $n$. En particular
+
+$$ E(\hat{\beta}_0) = \beta_0 \ \ \text{and} \ \  E(\hat{\beta}_1) = \beta_1,$$
+
+es decir, $\hat\beta_0$ y $\hat\beta_1$  son estimadores no sesgados de $\beta_0$ y $\beta_1$, los parámetros verdaderos. Si la muestra es lo suficientemente grande, según el teorema del límite central, la distribución muestral *conjunta* de los estimadores está bien aproximada por la distribución normal bivariada (<a href="#mjx-eqn-2.1">2.1</a>). Esto implica que las distribuciones marginales también son normales en muestras grandes. Los datos básicos sobre las distribuciones de muestras grandes de $\hat\beta_0$ y $\hat\beta_1$ se presentan en el Concepto clave 4.4.
+
+```{r, 304, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC4.4">
+<h3 class = "right"> Concepto clave 4.4 </h3>          
+<h3 class = "left"> Distribución de muestra grande de $\\hat\\beta_0$ y $\\hat\\beta_1$ </h3>
+
+<p> 
+Si se cumplen los supuestos de mínimos cuadrados del Concepto clave 4.3, entonces en muestras grandes $\\hat\\beta_0$ y $\\hat\\beta_1$ tienen una distribución muestral normal conjunta. La distribución normal de muestra grande de $\\hat\\beta_1$ es $\\mathcal{N}(\\beta_1, \\sigma^2_{\\hat\\beta_1})$, donde la varianza de la distribución, $\\sigma^2_{\\hat\\beta_1}$, es
+
+\\begin{align}
+\\sigma^2_{\\hat\\beta_1} = \\frac{1}{n} \\frac{Var \\left[ \\left(X_i - \\mu_X \\right) u_i  \\right]}  {\\left[  Var \\left(X_i \\right)  \\right]^2}. (\\#eq:olsvar1)
+\\end{align}
+
+La distribución normal de muestra grande de $\\hat\\beta_0$ es $\\mathcal{N}(\\beta_0, \\sigma^2_{\\hat\\beta_0})$ con
+
+\\begin{align}
+\\sigma^2_{\\hat\\beta_0} =  \\frac{1}{n} \\frac{Var \\left( H_i u_i \\right)}{ \\left[  E \\left(H_i^2  \\right)  \\right]^2 } \\ , \\ \\text{donde} \\ \\ H_i = 1 - \\left[ \\frac{\\mu_X} {E \\left( X_i^2\\right)} \\right] X_i. (\\#eq:olsvar2)
+\\end{align}
+
+La siguiente simulación interactiva genera continuamente muestras aleatorias $(X_i, Y_i)$ de $200$ observaciones donde $E(Y\\vert X) = 100 + 3X$, estima un modelo de regresión simple, almacena la estimación de la pendiente $\\beta_1$ y visualiza la distribución de los $\\widehat{\\beta}_1$ observados hasta ahora usando un histograma. La idea aquí es que para un gran número de $\\widehat{\\beta}_1$, el histograma da una buena aproximación de la distribución muestral del estimador. Al disminuir el tiempo entre dos iteraciones de muestreo, queda claro que la forma del histograma se aproxima a la forma de campana característica de una distribución normal centrada en la pendiente real de $3$.
+
+<iframe height="470" width="700" frameborder="0" scrolling="no" src="DCL/Distribución_de_regresión_de_muestras_pequeñas.html"></iframe>
+
+(Haga doble clic en el histograma para reiniciar la simulación.)
+
+</p>
+</div>
+')
+```
+
+```{r, 305, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Distribución de muestra grande de $\\hat\\beta_0$ y $\\hat\\beta_1$]{4.4}
+
+Si se cumplen los supuestos de mínimos cuadrados del Concepto clave 4.3, entonces en muestras grandes $\\hat\\beta_0$ y $\\hat\\beta_1$ tienen una distribución muestral normal conjunta. La distribución normal de muestra grande de $\\hat\\beta_1$ es $\\mathcal{N}(\\beta_1, \\sigma^2_{\\hat\\beta_1})$, donde la varianza de la distribución, $\\sigma^2_{\\hat\\beta_1}$, es
+
+\\begin{equation}
+\\sigma^2_{\\hat\\beta_1} = \\frac{1}{n} \\frac{Var \\left[ \\left(X_i - \\mu_X \\right) u_i  \\right]}  {\\left[  Var \\left(X_i \\right)  \\right]^2}.
+\\end{equation}
+
+La distribución normal de muestra grande de $\\hat\\beta_0$ es $\\mathcal{N}(\\beta_0, \\sigma^2_{\\hat\\beta_0})$ con
+
+\\begin{equation}
+\\sigma^2_{\\hat\\beta_0} =  \\frac{1}{n} \\frac{Var \\left( H_i u_i \\right)}{ \\left[  E \\left(H_i^2  \\right)  \\right]^2 } \\ , \\ \\text{donde} \\ \\ H_i = 1 - \\left[ \\frac{\\mu_X} {E \\left( X_i^2\\right)} \\right] X_i.
+\\end{equation}
+
+La siguiente simulación interactiva genera continuamente muestras aleatorias $(X_i, Y_i)$ de $200$ observaciones donde $E(Y\\vert X) = 100 + 3X$, estima un modelo de regresión simple, almacena la estimación de la pendiente $\\beta_1$ y visualiza la distribución de los $\\widehat{\\beta}_1$ observados hasta ahora usando un histograma. La idea aquí es que para un gran número de $\\widehat{\\beta}_1$, el histograma da una buena aproximación de la distribución muestral del estimador. Al disminuir el tiempo entre dos iteraciones de muestreo, queda claro que la forma del histograma se aproxima a la forma de campana característica de una distribución normal centrada en la pendiente real de $3$.\\vspace{0.5cm}
+
+\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}
+
+\\end{keyconcepts}
+')
+```
+
+### Estudio de simulación 1 {-}
+
+También se puede verificar si las afirmaciones del Concepto clave 4.4 realmente son válidas mediante **R**. Para esto, primero se construye una población de observaciones de $100 000$ en total. Para hacer esto, se necesitan valores para la variable independiente $X$, para el término de error $u$ y para los parámetros $\beta_0$ y $\beta_1$. Con estos combinados en un modelo de regresión simple, se calcula la variable dependiente $Y$. 
+
+<br> 
+
+En el ejemplo, se generan los números $X_i$, $i = 1$, ..., $100000$ extrayendo una muestra aleatoria de una distribución uniforme en el intervalo $[0, 20]$. La realización de los términos de error $u_i$ se extraen de una distribución normal estándar con parámetros $\mu = 0$ y $\sigma^2 = 100$ (se debe tener en cuenta que **rnorm()** requiere $\sigma$ como entrada para el argumento **sd**, consultar **?rnorm**). Además, se elige $\beta_0 = -2$ y $\beta_1 = 3.5$, por lo que el modelo verdadero es
+
+$$ Y_i = -2 + 3.5 \cdot X_i. $$
+
+Finalmente, se almacenan los resultados en un marco de datos (data.frame):
+
+```{r, 306}
+# simular datos
+N <- 100000
+X <- runif(N, min = 0, max = 20)
+u <- rnorm(N, sd = 10)
+
+# regresión de población
+Y <- -2 + 3.5 * X + u
+population <- data.frame(X, Y)
+```
+
+De ahora en adelante, se consideran los datos generados previamente como la población real (que por supuesto sería *desconocida* en una aplicación del mundo real, de lo contrario no habría razón para extraer una muestra aleatoria en primer lugar). El conocimiento sobre la población real y la verdadera relación entre $Y$ y $X$ se puede utilizar para verificar las afirmaciones hechas en el Concepto clave 4.4.
+
+Primero, se calculan las verdaderas varianzas $\sigma^2_{\hat{\beta}_0}$ y $\sigma^2_{\hat{\beta}_1}$ para una muestra extraída al azar de tamaño $n = 100$:
+
+```{r, 307, fig.align='center'}
+# establecer el tamaño de la muestra
+n <- 100
+
+# calcular la varianza de beta_hat_0
+H_i <- 1 - mean(X) / mean(X^2) * X
+var_b0 <- var(H_i * u) / (n * mean(H_i^2)^2 )
+
+# calcular la varianza de hat_beta_1
+var_b1 <- var( ( X - mean(X) ) * u ) / (100 * var(X)^2)
+```
+
+```{r, 308}
+# imprimir variaciones en la consola
+var_b0
+var_b1
+```
+
+Suponga ahora que no conoce los valores verdaderos de $\beta_0$ y $\beta_1$ y que no es posible observar a toda la población. Sin embargo, se puede observar una muestra aleatoria de $n$ observaciones. Entonces, no sería posible calcular los parámetros verdaderos, pero se podrían obtener estimaciones de $\beta_0$ y $\beta_1$ a partir de los datos de muestra utilizando MCO. Sin embargo, se sabe que estas estimaciones son resultado de variables aleatorias en sí mismas, ya que las observaciones se extraen aleatoriamente de la población. El Concepto clave 4.4 describe sus distribuciones para grandes $n$. Cuando se extrae una sola muestra de tamaño $n$, no es posible hacer ninguna afirmación sobre estas distribuciones. Las cosas cambian si se repite el esquema de muestreo muchas veces y se calculan las estimaciones para cada muestra: usando este procedimiento, se simulan los resultados de las respectivas distribuciones.
+
+Para lograr esto en R, se emplea el siguiente enfoque:
+
+- Se asigna el número de repeticiones, suponiendo $10000$, a **repeticiones** y luego se inicializa una matriz **ajuste** donde las estimaciones obtenidas en cada iteración de muestreo se almacenan en filas. Por lo tanto, **ajuste** tiene que ser una matriz de dimensiones **repeticiones** $\times2$.
+
+- En el siguiente paso, se extraen **repeticiones** de muestras aleatorias de tamaño **n** de la población y se obtienen las estimaciones de MCO para cada muestra. Los resultados se almacenan como entradas de fila en la matriz de resultados **ajuste**. Esto se hace usando un bucle **for()**.
+
+- Por último, se estiman las varianzas de ambos estimadores utilizando los resultados muestreados y se grafican los histogramas de estos últimos. También se agrega una gráfica de las funciones de densidad que pertenecen a las distribuciones que se derivan del Concepto clave 4.4. La función **bquote()** se usa para obtener expresiones matemáticas en los títulos y etiquetas de ambos gráficos. Ver **?Bquote**.
+
+```{r, 309, cache=T}
+# establecer repeticiones y tamaño de muestra
+n <- 100
+reps <- 10000
+
+# inicializar la matriz de resultados
+fit <- matrix(ncol = 2, nrow = reps)
+
+# muestreo de bucle y estimación de los coeficientes
+for (i in 1:reps){
+  
+ sample <- population[sample(1:N, n), ]
+ fit[i, ] <- lm(Y ~ X, data = sample)$coefficients
+ 
+}
+
+# calcular estimaciones de varianza utilizando resultados
+var(fit[, 1])
+var(fit[, 2])
+```
+
+```{r, 310, fig.align='center'}
+# dividir el área de graficado como una matriz de 1 por 2
+par(mfrow = c(1, 2))
+
+# graficar histogramas de estimaciones beta_0
+hist(fit[, 1],
+     cex.main = 1,
+     main = bquote(La ~ distribución ~ de ~ 10000 ~ estimaciones ~ beta[0]), 
+     xlab = bquote(hat(beta)[0]), 
+     freq = F)
+
+# agregar una distribución verdadera a la gráfica
+curve(dnorm(x, 
+            -2, 
+            sqrt(var_b0)), 
+      add = T, 
+      col = "darkred")
+
+# grraficar histogramas de beta_hat_1
+hist(fit[, 2],
+    cex.main = 1,
+     main = bquote(La ~ distribución ~ de ~ 10000 ~ estimaciones ~ beta[1]), 
+     xlab = bquote(hat(beta)[1]), 
+     freq = F)
+
+# agregar una distribución verdadera a la gráfica
+curve(dnorm(x, 
+            3.5, 
+            sqrt(var_b1)), 
+      add = T, 
+      col = "darkred")
+```
+
+Las estimaciones de varianza apoyan las afirmaciones realizadas en el Concepto clave 4.4, acercándose a los valores teóricos. Los histogramas sugieren que las distribuciones de los estimadores pueden aproximarse bien mediante las respectivas distribuciones normales teóricas establecidas en el Concepto clave 4.4.
+
+### Estudio de simulación 2 {-}
+
+Otro resultado implícito en el Concepto clave 4.4 es que ambos estimadores son consistentes; es decir, convergen en probabilidad a los parámetros verdaderos que interesan. Esto se debe a que son asintóticamente insesgados y sus varianzas convergen a $0$ a medida que $n$ aumentan. Se puede comprobar esto repitiendo la simulación anterior para una secuencia de tamaños de muestra crecientes. Esto significa que ya no se asigna el tamaño de la muestra sino un *vector* de tamaños de muestra: **n <- c(...)**. 
+
+<br>
+
+Viendo las distribuciones de $\beta_1$. La idea aquí es agregar una llamada adicional de **for()** al código. Esto se hace para recorrer el vector de tamaños de muestra **n**. Para cada uno de los tamaños de muestra, se realiza la misma simulación que antes, pero se traza una estimación de densidad para los resultados de cada iteración sobre **n**. Se puede observar que se tiene que cambiar **n** a **n[j]** en el ciclo interno para asegurar de que se use el elemento **j**$^{esimo}$ de **n**. En la simulación, se usan tamaños de muestra de $100, 250, 1000$ y $3000$. En consecuencia, se tiene un total de cuatro simulaciones distintas que utilizan diferentes tamaños de muestra.
+ 
+```{r, 311, fig.align='center', cache=T}
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# establecer repeticiones y el vector de tamaños de muestra
+reps <- 1000
+n <- c(100, 250, 1000, 3000)
+
+# inicializar la matriz de resultados
+fit <- matrix(ncol = 2, nrow = reps)
+
+# dividir el panel de la grafica en una matriz de 2 por 2
+par(mfrow = c(2, 2))
+
+# muestreo y graficado de bucles
+
+# bucle exterior sobre n
+for (j in 1:length(n)) {
+  
+  # bucle interno: muestreo y estimación de los coeficientes
+  for (i in 1:reps){
+    
+    sample <- population[sample(1:N, n[j]), ]
+    fit[i, ] <- lm(Y ~ X, data = sample)$coefficients
+    
+  }
+  
+  # dibujar estimaciones de densidad
+  plot(density(fit[ ,2]), xlim=c(2.5, 4.5), 
+       col = j, 
+       main = paste("n=", n[j]), 
+       xlab = bquote(hat(beta)[1]))
+  
+}
+```
+
+Se encontró que, a medida que aumenta $n$, la distribución de $\hat\beta_1$ se concentra alrededor de su media; es decir, su varianza disminuye. Dicho de otra manera, la probabilidad de observar estimaciones cercanas al valor real de $\beta_1 = 3.5$ aumenta a medida que aumenta el tamaño de la muestra. Se puede observar el mismo comportamiento si se analiza la distribución de $\hat\beta_0$ en su lugar.
+
+### Estudio de simulación 3 {-}
+
+Además, la varianza del estimador MCO para $\beta_1$ disminuye a medida que aumenta la varianza de $X_i$. En otras palabras, a medida que aumenta la cantidad de información proporcionada por el regresor; es decir, aumentando $Var(X)$, que se utiliza para estimar $\beta_1$, se tiene más confianza en que la estimación se acerca al valor real. (es decir, $Var(\hat\beta_1)$ disminuye). 
+
+<br>
+
+Se puede visualizar esto tomando muestras de las observaciones $(X_i, Y_i)$, $i = 1, \dots, 100$ de una distribución normal bivariada con 
+
+$$E(X)=E(Y)=5,$$ 
+
+$$Var(X)=Var(Y)=5$$ 
+
+y
+
+$$Cov(X,Y)=4.$$
+
+Formalmente, esto se escribe como
+
+\begin{align}
+  \begin{pmatrix}
+    X \\
+    Y \\
+  \end{pmatrix}
+  \overset{i.i.d.}{\sim} & \ \mathcal{N} 
+  \left[
+    \begin{pmatrix}
+      5 \\
+      5 \\
+    \end{pmatrix}, \ 
+    \begin{pmatrix}
+      5 & 4 \\
+      4 & 5 \\
+    \end{pmatrix}
+  \right]. \tag{4.3}
+\end{align}
+
+Para realizar el muestreo aleatorio se utiliza la función **mvrnorm()** del paquete **MASS** [@R-MASS] que permite extraer muestras aleatorias de distribuciones normales multivariadas, ver **?Mvtnorm**. A continuación, se usa **subset()** para dividir la muestra en dos subconjuntos de modo que el primer conjunto, **set1**, consista en observaciones que cumplan la condición $\lvert X - \overline{X} \rvert > 1$ y el segundo conjunto, **set2**, incluya el resto de la muestra. Luego se grafican ambos conjuntos y se usan diferentes colores para distinguir las observaciones.
+
+```{r, 312, fig.align = 'center', cache = T}
+# carga el paquete MASS
+library(MASS)
+
+# sembrar la semilla para la reproducibilidad
+set.seed(4)
+
+# simular datos normales bivariados
+bvndata <- mvrnorm(100, 
+                mu = c(5, 5), 
+                Sigma = cbind(c(5, 4), c(4, 5))) 
+
+# asignar nombres de columna / convertir a data.frame
+colnames(bvndata) <- c("X", "Y")
+bvndata <- as.data.frame(bvndata)
+
+# subconjunto de los datos
+set1 <- subset(bvndata, abs(mean(X) - X) > 1)
+set2 <- subset(bvndata, abs(mean(X) - X) <= 1)
+
+# graficar ambos conjuntos de datos
+plot(set1, 
+     xlab = "X", 
+     ylab = "Y", 
+     pch = 19)
+
+points(set2, 
+       col = "steelblue", 
+       pch = 19)
+```
+
+Está claro que las observaciones que están cerca del promedio muestral de $X_i$ tienen menos varianza que las que están más lejos. Ahora, si se tuviera que dibujar una línea con la mayor precisión posible a través de cualquiera de los dos conjuntos, es intuitivo que elegir las observaciones indicadas por los puntos negros; es decir, usar el conjunto de observaciones que tiene una varianza mayor que las azules, resultaría en una línea más precisa. Ahora, se usarán los MCO para estimar la pendiente y la intersección para ambos conjuntos de observaciones. Luego se grafican las observaciones junto con ambas líneas de regresión.
+
+```{r, 313, fig.align='center'}
+# estimar ambas líneas de regresión
+lm.set1 <- lm(Y ~ X, data = set1)
+lm.set2 <- lm(Y ~ X, data = set2)
+
+# graficar las observaciones
+plot(set1, xlab = "X", ylab = "Y", pch = 19)
+points(set2, col = "steelblue", pch = 19)
+
+# agregar ambas líneas a la gráfica
+abline(lm.set1, col = "green")
+abline(lm.set2, col = "red")
+```
+
+Evidentemente, la línea de regresión verde es mucho mejor para describir los datos muestreados de la distribución normal bivariada indicada en (<a href="#mjx-eqn-4.3">4.3</a>) que la línea roja. Este es un buen ejemplo para demostrar por qué se está interesado en una alta varianza del regresor $X$: más varianza en $X_i$ significa más información de la que se beneficia la precisión de la estimación.
+
+## Ejercicios {#Ejercicios-4}
+
+```{r, 314, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Tamaños de clases y puntajes de exámenes {-}
+
+Un investigador desea analizar la relación entre el tamaño de la clase (medida por la proporción de alumnos por maestro) y el puntaje promedio de la prueba. Por lo tanto, mide ambas variables en clases diferentes de $10$ y obtiene los siguientes resultados.
+
+<!--html_preserve-->
+
+  <table>
+      <tr>
+        <td><b>Tamaño de la clase</b></td>
+        <td>23</td>
+        <td>19</td>
+        <td>30</td>
+        <td>22</td>
+        <td>23</td>
+        <td>29</td>
+        <td>35</td>
+        <td>36</td>
+        <td>33</td>
+        <td>25</td>
+      </tr>
+      <tr>
+        <td><b>Resultado de la prueba</b></td>
+        <td>430</td>
+        <td>430</td>
+        <td>333</td>
+        <td>410</td>
+        <td>390</td>
+        <td>377</td>
+        <td>325</td>
+        <td>310</td>
+        <td>328</td>
+        <td>375</td>
+      </tr>
+    </table>
+
+<!--/html_preserve-->
+
+**Instrucciones:**
+
+  + Crear los vectores <tt>cs</tt> (el tamaño de la clase) y <tt>ts</tt> (la puntuación de la prueba), que contengan las observaciones anteriores.
+
+  + Dibujar un diagrama de dispersión de los resultados usando <tt>plot()</tt>.
+
+<iframe src="DCL/ex4_1.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')
+} else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 315, echo=F, purl=F, results='asis'}
+if (my_output=='html') {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. Media, varianza, covarianza y correlación {-}
+
+Los vectores <tt>cs</tt> y <tt>ts</tt> están disponibles en el entorno de trabajo (puede comprobar esto: escribiendo sus nombres en la consola y presionando enter).
+
+**Instrucciones:**
+
+  + Calcular la media, la varianza muestral y la desviación estándar muestral de <tt>ts</tt>.
+
+  + Calcular la covarianza y el coeficiente de correlación para <tt>ts</tt> y <tt>cs</tt>.
+
+<iframe src="DCL/ex4_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:** 
+
+  + Utilizar las funciones <tt>R</tt> presentadas en este capítulo: <tt>mean()</tt>, <tt>sd()</tt>, <tt>cov()</tt>, <tt>cor()</tt> y <tt>var()</tt>.
+
+</div>')}
+```
+
+```{r, 316, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. Regresión lineal simple {-}
+
+Los vectores <tt>cs</tt> y <tt>ts</tt> están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + La función <tt>lm()</tt> es parte del paquete <tt>AER</tt>. Adjunte el paquete usando <tt>library()</tt>.
+
+  + Utilizar <tt>lm()</tt> para estimar el modelo de regresión $$TestScore_i = \\beta_0 + \\beta_1 STR_i + u_i.$$ Asignar el resultado a <tt>mod</tt>.
+
+  + Obtener un resumen estadístico del modelo.
+
+<iframe src="DCL/ex4_3.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 317, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. El objeto de modelo {-}
+
+  Resulta importante obervar cómo se estructura un objeto de clase <tt>lm</tt>.
+
+  Los vectores <tt>cs</tt> y <tt>ts</tt> así como el objeto modelo <tt>mod</tt> del ejercicio anterior están disponibles en su espacio de trabajo.
+
+**Instrucciones:**
+
+  + Usar <tt>class()</tt> para aprender sobre la clase del objeto <tt>mod</tt>.
+  
+  + <tt>mod</tt> es un objeto de tipo <tt>list</tt> con entradas con nombre. Verificar esto usando la función <tt>is.list()</tt>.
+  
+  + Vea qué información puede obtener de <tt>mod</tt> usando <tt>names()</tt>.
+
+  + Leer una entrada arbitraria del objeto <tt>mod</tt> usando el operador <tt>$</tt>.
+
+<iframe src="DCL/ex4_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 318, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Graficar la línea de regresión {-}
+
+  Se proporciona el código para el diagrama de dispersión en el <tt>script.R</tt>
+
+**Instrucciones:**
+
+  + Agregar la línea de regresión al diagrama de dispersión de algunos ejercicios anteriores.
+
+  + El objeto <tt>mod</tt> está disponible en el entorno de trabajo.
+
+<iframe src="DCL/ex4_5.html" frameborder="0" scrolling="no" style="width:100%; height:340px"> </iframe>
+
+**Sugerencia:** 
+
+  + Usar la función <tt>abline()</tt>.
+
+</div>')}
+```
+
+```{r, 319, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Resumen de un objeto modelo {-}
+
+Ahora leer y almacenar parte de la información contenida en la salida de <tt>summary()</tt>.
+
+**Instrucciones:**
+
+  + Asignar la salida de <tt>summary (mod)</tt> a la variable <tt>s</tt>.
+
+  + Comprobar los nombres de entrada del objeto <tt>s</tt>.
+
+  + Crear una nueva variable <tt>R2</tt> y asignar el $R^2$ de la regresión.
+
+  + El objeto <tt>mod</tt> está disponible en el entorno de trabajo.
+
+<iframe src="DCL/ex4_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 320, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Coeficientes estimados {-}
+
+La función <tt>summary()</tt> también proporciona información sobre la significancia estadística de los coeficientes estimados.
+
+**Instrucciones:**
+
+  + Extraer la matriz denominada $2\\times4$ con coeficientes estimados, errores estándar, $t$ -estadísticos y los correspondientes valores $p$- del resumen del modelo <tt>s</tt>. Guardar esta matriz en un objeto llamado <tt>coefs</tt>.
+
+  + Los objetos <tt>mod</tt> y <tt>s</tt> están disponibles en su entorno de trabajo.
+
+<iframe src="DCL/ex4_7.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 321, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 8. Dejar caer la intersección {-}
+
+Hasta ahora, se han estimado modelos de regresión que consisten en una intersección y un regresor único. En este ejercicio aprenderá a especificar y estimar la regresión de un modelo sin intersección.
+
+Se debe tener en cuenta que excluir la intersección de un modelo de regresión podría ser una práctica poco fiable en algunas aplicaciones, ya que esto impone que la función de expectativa condicional de la variable dependiente sea cero si el regresor es cero.
+
+**Instrucciones:**
+
+  + Averiguar cómo se debe especificar el argumento de la <tt>formula</tt> para una regresión de <tt>ts</tt> únicamente en <tt>cs</tt>; es decir, una regresión sin intercepto. ¡Google es tu amigo!
+
+  + Estimar el modelo de regresión sin interceptar y almacenar el resultado en <tt>mod_ni</tt>.
+
+  + Los vectores <tt>cs</tt>, <tt>ts</tt> y el objeto modelo <tt>mod</tt> de ejercicios anteriores están disponibles en el entorno de trabajo.
+
+<iframe src="DCL/ex4_8.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 322, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 9. Resultado de la regresión: Sin caso constante {-}
+
+En el ejercicio 8 se estimó un modelo sin intersección. La función de regresión estimada es
+
+$$\\widehat{TestScore} = \\underset{(1.36)}{12.65} \\times STR.$$
+
+**Instrucciones:**
+
+  + Convénzase de que todo es como se indicó anteriormente: extraer la matriz de coeficientes del resumen de <tt>mod_ni</tt> y guardar en una variable llamada <tt>coef</tt>.
+
+  + Los vectores <tt>cs</tt>, <tt>ts</tt> así como el objeto modelo <tt>mod_ni</tt> del ejercicio anterior están disponibles en el entorno de trabajo.
+
+<iframe src="DCL/ex4_9.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:** 
+
+  + Se puede acceder a la entrada de una lista con nombre usando el operador <tt>$</tt>.
+
+</div>')}
+```
+
+```{r, 323, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 10. Salida de regresión: Sin caso constante --- Ctd. {-}
+
+En los Ejercicios 8 y 9 se ha tratado con un modelo sin intersección. La función de regresión estimada fue
+
+$$\\widehat{TestScore_i} = \\underset{(1.36)}{12.65} \\times STR_i.$$
+
+La matriz de coeficientes <tt>coef</tt> del ejercicio 9 contiene el coeficiente estimado en $STR$, su error estándar, el estadístico $t$ de la prueba de significancia y el valor $p$ correspondiente.
+
+**Instrucciones:**
+
+  + Imprimir el contenido de <tt>coef</tt> en la consola.
+  
+  + Convénzase de que el estadístico $t$ reportada es correcta: Usar las entradas de <tt>coef</tt> para calcular el estadístico $t$ y guardarlo en <tt>t_stat</tt>.
+
+  + La matriz <tt>coef</tt> del ejercicio anterior está disponible en el entorno de trabajo.
+
+<iframe src="DCL/ex4_10.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:** 
+
+  + <tt>X[a, b]</tt> devuelve el elemento <tt>[a, b]</tt> de la matriz <tt>X</tt>.
+
+  + El estadístico $t$ para una prueba de la hipótesis $H_0: \\beta_1 = 0$ se calcula como $$t = \\frac{\\hat{\\beta}_1}{SE(\\hat{\\beta}_1)}.$$
+
+</div>')}
+```
+
+```{r, 324, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 11. Dos regresiones, una gráfica {-}
+
+Los dos modelos de regresión estimados de los ejercicios anteriores son
+
+$$\\widehat{TestScore_i} = \\underset{(1.36)}{12.65} \\times STR_i$$
+
+<center>y</center>
+
+$$\\widehat{TestScore_i} = \\underset{(23.96)}{567.4272} \\underset{(0.85)}{-7.1501} \\times STR_i.$$
+
+Se le proporciona la línea de código <tt>plot(cs, ts)</tt> que crea un diagrama de dispersión de <tt>ts</tt> y <tt>cs</tt>. ¡Se debe tener en cuenta que esta línea debe ejecutarse antes de llamar a <tt>abline()</tt>! Se pueden colorear las líneas de regresión usando; por ejemplo, <tt>col = "red"</tt> o <tt>col = "blue"</tt> como un argumento adicional para <tt>abline()</tt> para una mejor distinción.
+
+Los vectores <tt>cs</tt> y <tt>ts</tt> así como los objetos de lista <tt>mod</tt> y <tt>mod_ni</tt> de ejercicios anteriores están disponibles en su trabajo. ambiente.
+
+**Instrucciones:**
+
+  + Generar un diagrama de dispersión de <tt>ts</tt> y <tt>cs</tt> y agregar las líneas de regresión estimadas de <tt>mod</tt> y <tt>mod_ni</tt>.
+
+<iframe src="DCL/ex4_11.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 325, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 12. $STC$ y $SRC$ {-}
+
+Si la inspección gráfica no ayuda, los investigadores recurren a técnicas analíticas para detectar si un modelo se ajusta bien o mejor a los datos disponibles que otro modelo.
+
+Volviendo al modelo de regresión simple que incluye una intersección. La línea de regresión estimada para <tt>mod</tt> fue
+
+$$\\widehat{TestScore_i} = 567.43 - 7.15 \\times STR_i, \\, R^2 = 0.8976, \\, SER=15.19.$$
+
+Se puede comprobar esto como <tt>mod</tt> y los vectores <tt>cs</tt> y <tt>ts</tt> que están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular $SRC$, la suma de los residuos al cuadrado, y guardar en <tt>ssr</tt>.
+  
+  + Calcule $STC$, la suma total de cuadrados y guardar en <tt>STC</tt>.
+
+<iframe src="DCL/ex4_12.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 326, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 13. El $R^2$ de un modelo de regresión {-}
+
+El $R^2$ de la regresión guardada en <tt>mod</tt> es $0.8976$. Puede verificar esto ejecutando <tt>summary(mod)$r.squared</tt> en la consola a continuación.
+
+Recordar la fórmula de $R^2$:
+
+$$R^2 = \\frac{ESS}{STC} = 1 - \\frac{SSR}{STC}$$
+
+Los objetos <tt>mod</tt>, <tt>STC</tt> y <tt>ssr</tt> del ejercicio anterior están disponibles en el entorno de trabajo.
+
+**Instrucciones:**
+
+  + Utilizar <tt>ssr</tt> y <tt>STC</tt> para calcular $R^2$ manualmente. *Redondear* el resultado a *cuatro* decimales y guárdalo en <tt>R2</tt>.
+
+  + Utilizar el operador lógico <tt>==</tt> para comprobar si el resultado coincide con el valor mencionado anteriormente.
+
+<iframe src="DCL/ex4_13.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Se pueden redondear valores numéricos usando la función <tt>round()</tt>.
+
+</div>')}
+```
+
+```{r, 327, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 14. El error estándar de la regresión {-}
+
+El error estándar de la regresión en el modelo de regresión simple es 
+
+$$SER = \\frac{1}{n-2} \\sum_{i=1}^n \\widehat{u}_i^2 =\\sqrt{\\frac{SSR}{n-2}}.$$ 
+
+$SER$ mide el tamaño de un residuo promedio que es una estimación de la magnitud de un error de regresión típico.
+
+El objeto modelo <tt>mod</tt> y los vectores <tt>cs</tt> y </tt>ts</tt> están disponibles en su espacio de trabajo.
+
+**Instrucciones:**
+
+  + Usar <tt>summary()</tt> para obtener el $SER$ de la regresión <tt>ts</tt> en <tt>cs</tt> guardado en el objeto modelo <tt>mod</tt>. Guardar el resultado en la variable <tt>SER</tt>.
+
+  + Use <tt>SER</tt> para calcular el $SSR$ y almacenarlo en <tt>SSR</tt>.
+
+  + Comprobar que <tt>SSR</tt> es de hecho el $SSR$ comparando <tt>SSR</tt> con el resultado de <tt>sum(mod$residuals^2)</tt>
+
+<iframe src="DCL/ex4_14.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```
+
+```{r, 328, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 15. La matriz de covarianza estimada {-}
+
+Como se discutió en el Capítulo \\@ref(SMC), los estimadores MCO $\\widehat{\\beta}_0$ y $\\widehat{\\beta}_1$ son funciones del término de error aleatorio. Por tanto, son variables aleatorias en sí mismas. Para dos o más variables aleatorias, sus covarianzas y varianzas se resumen mediante una *matriz de varianza-covarianza* (que a menudo se denomina simplemente *matriz de covarianza*). Tomando la raíz cuadrada de los elementos diagonales de la matriz de covarianza estimada se obtiene $SE(\\widehat\\beta_0)$ y $SE(\\widehat\\beta_1)$, los errores estándar de $\\widehat{\\beta}_0$ y $\\widehat{\\beta}_1$.
+
+<tt>summary()</tt> calcula una estimación de la matriz. La entrada respectiva en la salida de resumen (recuerde que <tt>resumen()</tt> produce una lista) se llama <tt>cov.unscaled</tt>. El objeto modelo <tt>mod</tt> está disponible en su espacio de trabajo.
+
+**Instrucciones:**
+
+  + Utilizar <tt>summary()</tt> para obtener la estimación de la matriz de covarianza para la regresión de los puntajes de las pruebas en las proporciones alumno-maestro almacenadas en el objeto modelo <tt>mod</tt>. Guardar el resultado en <tt>cov_matrix</tt>.
+
+  + Obtener los elementos diagonales de <tt>cov_matrix</tt>, calcular su raíz cuadrada y asignar el resultado a la variable <tt>SES</tt>.
+
+<iframe src="DCL/ex4_15.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:** 
+
+  + <tt>diag(A)</tt> devuelve un vector que contiene los elementos diagonales de la matriz <tt>A</tt>.
+
+</div>')}
+```

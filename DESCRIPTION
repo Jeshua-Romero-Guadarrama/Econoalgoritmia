@@ -1,0 +1,6 @@
+Package: placeholder
+Type: Book
+Title: Econoalgoritmia: Econometría avanzada y ciencia de datos con R
+Version: 0.0.1
+Imports: bookdown
+Remotes: rstudio/bookdown

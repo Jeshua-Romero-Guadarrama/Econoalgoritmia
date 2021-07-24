@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+      <body>
+      <div data-datacamp-exercise data-lang='r' data-height =320>
+      <code data-type="pre-exercise-code">
+      library(foreign)
+      library(dplyr)
+      data_URL <- "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/tree/main/data/fastfood.dta?raw=true"
+      dat <- read.dta(data_URL)
+      dat <- dat %>% 
+        mutate(FTE = nmgrs + empft + (0.5 * emppt),
+        FTE2 = nmgrs2 + empft2 + (0.5 * emppt2))
+      dat_NJ <- subset(dat, state == 1)
+      dat_PA <- subset(dat, state == 0)
+      reg_dat <- data.frame(
+            rbind(
+              data.frame(id = dat$sheet, 
+                         chain = dat$chain,
+                         state = dat$state,
+                         empl = dat$FTE,
+                         D = 0),
+              data.frame(id = dat$sheet,
+                         chain = dat$chain,
+                         state = dat$state,
+                         empl = dat$FTE2,
+                         D = 1)))
+      </code>
+      
+      <code data-type="sample-code">
+      # estimar el modelo de regresión
+      
+      # obtener un resumen sólido
+
+      </code>
+           
+      <code data-type="solution">
+      # estimar el modelo de regresión
+      emp_mod <- lm(empl ~ D, data = reg_dat, subset = state == 1)
+
+      # obtener un resumen sólido
+      library(AER)
+      coeftest(emp_mod, vcov. = vcovHC, type = "HC1")
+      </code>
+           
+      <code data-type="sct">
+      ex() %>% check_predefined_objects("reg_dat")
+      ex() %>% check_library("AER")
+      ex() %>% check_object("emp_mod") %>% check_equal(undefined_msg = "¡Asegúrate de no eliminar `emp_mod`!")
+      check_or(
+          ex() %>%
+          check_function(., "lm") %>% {
+            check_arg(., "formula") %>% check_equal(incorrect_msg = "Parece que el argumento `formula` en `lm()` es incorrecto.")
+            check_arg(., "data") %>% check_equal(incorrect_msg = "Parece que el argumento `data` en `lm()` es incorrecto.")
+          },
+          ex() %>%
+          override_solution("emp_mod <- lm(dat_NJ$empl ~ dat_NJ$D)") %>% 
+          check_function("lm") %>% check_arg("formula") %>% check_equal(incorrect_msg = "Parece que el argumento `data` en `lm()` es incorrecto."))
+          check_or(
+            ex() %>% check_function("coeftest") %>% {
+            check_arg(., "x") %>% check_equal()
+            check_arg(., "vcov.") %>% check_equal()
+            },
+          ex() %>% 
+          override_solution("emp_mod <- lm(dat_NJ$empl ~ dat_NJ$D); coeftest(emp_mod, vcov. = vcovHC, type = 'HC1')") %>%
+          check_function("coeftest") %>% {
+          check_arg(., "x") %>% check_equal()
+          check_arg(., "vcov.") %>% check_equal()
+            })
+           success_msg(msg = "¡Bien hecho! La estimación del coeficiente en "D", así como el estadístico t y, por lo tanto, también el valor p, coinciden con los resultados informados por "t.test()". No se puede rechazar la hipótesis de que el coeficiente de "D" sea cero.")
+          </code>
+          </div>
+          </body>
+</html>

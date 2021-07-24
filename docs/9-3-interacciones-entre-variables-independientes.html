@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>9.3 Interacciones entre variables independientes | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="9.3 Interacciones entre variables independientes | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="9.3 Interacciones entre variables independientes | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-30" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="9-2-FNLUVI.html"/>
+<link rel="next" href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="interacciones-entre-variables-independientes" class="section level2" number="9.3">
+<h2><span class="header-section-number">9.3</span> Interacciones entre variables independientes</h2>
+<p>Existen preguntas de investigación en las que es interesante saber cómo el efecto sobre <span class="math inline">\(Y\)</span> de un cambio en una variable independiente, depende del valor de otra variable independiente. Por ejemplo, se puede preguntar si los distritos con muchos estudiantes de inglés se benefician de manera diferente de una disminución en el tamaño de las clases que aquellos con pocos estudiantes de inglés. Para evaluar esto usando un modelo de regresión múltiple, se incluye un término de interacción. Se consideran tres casos:</p>
+<ol style="list-style-type: decimal">
+<li><p>Interacciones entre dos variables binarias.</p></li>
+<li><p>Interacciones entre una variable binaria y una continua.</p></li>
+<li><p>Interacciones entre dos variables continuas.</p></li>
+</ol>
+<p>Las siguientes subsecciones discuten estos casos brevemente y demuestran cómo realizar tales regresiones en <strong>R</strong>.</p>
+<div id="interacciones-entre-dos-variables-binarias" class="section level4 unnumbered">
+<h4>Interacciones entre dos variables binarias</h4>
+<p>Tomando dos variables binarias <span class="math inline">\(D_1\)</span> y <span class="math inline">\(D_2\)</span>, así como el modelo de regresión de población</p>
+<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 \times D_{1i} + \beta_2 \times D_{2i} + u_i. \]</span></p>
+<p>Se asume que:</p>
+<p><span class="math display">\[\begin{align*}
+  Y_i=&amp; \, \ln(Ganancias_i),\\
+  D_{1i} =&amp; \,
+   \begin{cases}
+      1 &amp; \text{si $i^{ésimo}$ la persona tiene un título universitario,} \\
+      0 &amp; \text{de otro modo}.
+    \end{cases} \\
+  D_{2i} =&amp; \, 
+    \begin{cases}
+      1 &amp; \text{si $i^{ésimo}$ la persona es mujer,} \\
+      0 &amp; \text{si $i^{ésimo}$ la persona es hombre}.
+    \end{cases}
+\end{align*}\]</span></p>
+<p>Se sabe que <span class="math inline">\(\beta_1\)</span> mide la diferencia promedio en <span class="math inline">\(\ln(Ganancias)\)</span> entre personas con y sin título universitario y <span class="math inline">\(\beta_2\)</span> es la diferencia de género en <span class="math inline">\(\ln(Ganancias)\)</span>, ceteris paribus. Este modelo <em>no permite determinar si existe un efecto específico del género al tener un título universitario</em> y, de ser así, <em>qué tan fuerte es este efecto</em>. Es fácil llegar a una especificación de modelo que permita investigar esto:</p>
+<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 \times D_{1i} + \beta_2 \times D_{2i} + \beta_3 \times (D_{1i} \times D_{2i}) + u_i \]</span></p>
+<p><span class="math inline">\((D_{1i} \times D_{2i})\)</span> se llama un término de interacción y <span class="math inline">\(\beta_3\)</span> mide la diferencia en el efecto de tener un título universitario para mujeres versus hombres.</p>
+<div id="KC8.3" class="keyconcept">
+<h3 class="right">
+Concepto clave 8.3
+</h3>
+<h3 class="left">
+Un método para interpretar coeficientes en regresión con variables binarias
+</h3>
+<p>Calcular los valores esperados de <span class="math inline">\(Y\)</span> para cada conjunto posible descrito por el conjunto de variables binarias. Comparar los valores esperados.</p>
+<p>Los coeficientes se pueden expresar como valores esperados o como la diferencia entre al menos dos valores esperados.</p>
+</div>
+<p>Siguiendo el Concepto clave 8.3 se tiene que</p>
+<p><span class="math display">\[\begin{align*}
+  E(Y_i\vert D_{1i}=0, D_{2i} = d_2) =&amp; \, \beta_0 + \beta_1 \times 0 + \beta_2 \times d_2 + \beta_3 \times (0 \times d_2) \\
+  =&amp; \, \beta_0 + \beta_2 \times d_2.
+\end{align*}\]</span></p>
+<p>Si <span class="math inline">\(D_ {1i}\)</span> cambia de <span class="math inline">\(0\)</span> a <span class="math inline">\(1\)</span> se tiene</p>
+<p><span class="math display">\[\begin{align*}
+  E(Y_i\vert D_{1i}=1, D_{2i} = d_2) =&amp; \, \beta_0 + \beta_1 \times 1 + \beta_2 \times d_2 + \beta_3 \times (1 \times d_2) \\
+  =&amp; \, \beta_0 + \beta_1 + \beta_2 \times d_2 + \beta_3 \times d_2.
+\end{align*}\]</span></p>
+<p>Por lo tanto, el efecto general es</p>
+<p><span class="math display">\[ E(Y_i\vert D_{1i}=1, D_{2i} = d_2) - E(Y_i\vert D_{1i}=0, D_{2i} = d_2) = \beta_1 + \beta_3 \times d_2 \]</span></p>
+<p>por lo que el efecto es una diferencia de los valores esperados.</p>
+</div>
+<div id="aplicación-a-la-proporción-de-estudiantes-por-maestro-y-el-porcentaje-de-estudiantes-de-inglés" class="section level4 unnumbered">
+<h4>Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés</h4>
+<p>Ahora sea</p>
+<p><span class="math display">\[\begin{align*}
+  HiSTR =&amp; \, 
+    \begin{cases}
+      1, &amp; \text{si $STR \geq 20$} \\
+      0, &amp; \text{de otro modo}.
+    \end{cases} \\
+  \\
+  HiEL =&amp; \,
+    \begin{cases}
+      1, &amp; \text{si $PctEL \geq 10$} \\
+      0, &amp; \text{de otro modo}.
+    \end{cases}
+\end{align*}\]</span></p>
+<p>Se puede usar <strong>R</strong> para construir las variables anteriores de la siguiente manera:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adjuntar HiSTR a CASchools</span></span>
+<span id="cb23-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb23-2" aria-hidden="true" tabindex="-1"></a>CASchools<span class="sc">$</span>HiSTR <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(CASchools<span class="sc">$</span>size <span class="sc">&gt;=</span> <span class="dv">20</span>)</span>
+<span id="cb23-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># adjuntar HiEL a CASchools</span></span>
+<span id="cb23-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb23-5" aria-hidden="true" tabindex="-1"></a>CASchools<span class="sc">$</span>HiEL <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(CASchools<span class="sc">$</span>english <span class="sc">&gt;=</span> <span class="dv">10</span>)</span></code></pre></div>
+<p>Se procede a estimar el modelo</p>
+<p><span class="math display" id="eq:im">\[\begin{align}
+TestScore = \beta_0 + \beta_1 \times HiSTR + \beta_2 \times HiEL + \beta_3 \times (HiSTR \times HiEL) + u_i. \tag{9.1}
+\end{align}\]</span></p>
+<p>Existen varias formas de agregar el término de interacción al argumento <strong>formula</strong> cuando se usa <strong>lm()</strong>, pero la forma más intuitiva es usar .<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo con un término de interacción binaria</span></span>
+<span id="cb24-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-2" aria-hidden="true" tabindex="-1"></a>bi_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> HiSTR <span class="sc">*</span> HiEL, <span class="at">data =</span> CASchools)</span>
+<span id="cb24-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir un resumen sólido de los coeficientes</span></span>
+<span id="cb24-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(bi_model, <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb24-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb24-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; t test of coefficients:</span></span>
+<span id="cb24-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb24-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Estimate Std. Error  t value  Pr(&gt;|t|)    </span></span>
+<span id="cb24-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) 664.1433     1.3881 478.4589 &lt; 2.2e-16 ***</span></span>
+<span id="cb24-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; HiSTR        -1.9078     1.9322  -0.9874    0.3240    </span></span>
+<span id="cb24-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; HiEL        -18.3155     2.3340  -7.8472 3.634e-14 ***</span></span>
+<span id="cb24-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; HiSTR:HiEL   -3.2601     3.1189  -1.0453    0.2965    </span></span>
+<span id="cb24-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb24-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+<p>El modelo de regresión estimado es</p>
+<p><span class="math display">\[\widehat{TestScore} = \underset{(1.39)}{664.1} - \underset{(1.93)}{1.9} \times HiSTR - \underset{(2.33)}{18.3} \times HiEL - \underset{(3.12)}{3.3} \times (HiSTR \times HiEL)\]</span></p>
+<p>y predice que el efecto de pasar de un distrito escolar con una proporción baja de alumnos por maestro a un distrito con una alta proporción de alumnos por maestro, dependiendo del porcentaje alto o bajo de estudiantes de inglés, es de <span class="math inline">\(-1.9-3.3\times HiEL\)</span>. Entonces, para los distritos con una baja proporción de estudiantes de inglés (<span class="math inline">\(HiEL = 0\)</span>), el efecto estimado es una disminución de <span class="math inline">\(1.9\)</span> puntos en los puntajes de las pruebas, mientras que para los distritos con una gran fracción de estudiantes de inglés (<span class="math inline">\(HiEL = 1\)</span>), la disminución prevista en los puntajes de las pruebas asciende a <span class="math inline">\(1.9 + 3.3 = 5.2\)</span> puntos.</p>
+<p>También se puede utilizar el modelo para estimar la puntuación media de la prueba para cada combinación posible de las variables binarias incluidas.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># medias estimadas para todas las combinaciones de HiSTR y HiEL</span></span>
+<span id="cb25-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1.</span></span>
+<span id="cb25-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(bi_model, <span class="at">newdata =</span> <span class="fu">data.frame</span>(<span class="st">&quot;HiSTR&quot;</span> <span class="ot">=</span> <span class="dv">0</span>, <span class="st">&quot;HiEL&quot;</span> <span class="ot">=</span> <span class="dv">0</span>))</span>
+<span id="cb25-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        1 </span></span>
+<span id="cb25-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 664.1433</span></span>
+<span id="cb25-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2.</span></span>
+<span id="cb25-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(bi_model, <span class="at">newdata =</span> <span class="fu">data.frame</span>(<span class="st">&quot;HiSTR&quot;</span> <span class="ot">=</span> <span class="dv">0</span>, <span class="st">&quot;HiEL&quot;</span> <span class="ot">=</span> <span class="dv">1</span>))</span>
+<span id="cb25-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        1 </span></span>
+<span id="cb25-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 645.8278</span></span>
+<span id="cb25-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3.</span></span>
+<span id="cb25-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(bi_model, <span class="at">newdata =</span> <span class="fu">data.frame</span>(<span class="st">&quot;HiSTR&quot;</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">&quot;HiEL&quot;</span> <span class="ot">=</span> <span class="dv">0</span>))</span>
+<span id="cb25-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        1 </span></span>
+<span id="cb25-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 662.2354</span></span>
+<span id="cb25-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.</span></span>
+<span id="cb25-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(bi_model, <span class="at">newdata =</span> <span class="fu">data.frame</span>(<span class="st">&quot;HiSTR&quot;</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">&quot;HiEL&quot;</span> <span class="ot">=</span> <span class="dv">1</span>))</span>
+<span id="cb25-20"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        1 </span></span>
+<span id="cb25-21"><a href="9-3-interacciones-entre-variables-independientes.html#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 640.6598</span></span></code></pre></div>
+<p>Ahora se verifica que estas predicciones son diferencias en las estimaciones de coeficientes presentadas en la ecuación <a href="9-3-interacciones-entre-variables-independientes.html#eq:im">(9.1)</a>:</p>
+<p><span class="math display">\[\begin{align*}
+\widehat{TestScore} = \hat\beta_0 = 664.1 \quad &amp;\Leftrightarrow \quad HiSTR = 0, \, HIEL = 0\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_2 = 664.1 - 18.3 = 645.8 \quad &amp;\Leftrightarrow \quad HiSTR = 0, \, HIEL = 1\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_1 = 664.1 - 1.9 = 662.2 \quad &amp;\Leftrightarrow \quad HiSTR = 1, \, HIEL = 0\\
+\widehat{TestScore} = \hat\beta_0 + \hat\beta_1 + \hat\beta_2 + \hat\beta_3  = 664.1 - 1.9 - 18.3 - 3.3 = 640.6 \quad &amp;\Leftrightarrow \quad HiSTR = 1, \, HIEL = 1
+\end{align*}\]</span></p>
+</div>
+<div id="interacciones-entre-una-variable-continua-y-una-binaria" class="section level4 unnumbered">
+<h4>Interacciones entre una variable continua y una binaria</h4>
+<p>Ahora suponga que <span class="math inline">\(X_i\)</span> denota los años de experiencia laboral de la persona <span class="math inline">\(i\)</span>, que es una variable continua. Se tiene que:</p>
+<p><span class="math display">\[\begin{align*}
+  Y_i =&amp; \, \ln(Ganancias_i), \\
+  \\
+  X_i =&amp; \, \text{experiencia laboral de la persona }i, \\
+  \\
+  D_i =&amp; \,  
+    \begin{cases}
+      1, &amp; \text{si $i^{ésimo}$ persona tiene un título universitario} \\
+      0, &amp; \text{de otro modo}.
+    \end{cases}
+\end{align*}\]</span></p>
+<p>Por tanto, el modelo de línea base es</p>
+<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + u_i, \]</span></p>
+<p>un modelo de regresión múltiple que permite estimar el beneficio promedio de tener un título universitario manteniendo constante la experiencia laboral, así como el efecto promedio sobre los ingresos de un cambio en la experiencia laboral manteniendo constante el título universitario.</p>
+<p>Al agregar el término de interacción <span class="math inline">\(X_i \times D_i\)</span> permite que el efecto de un año adicional de experiencia laboral difiera entre individuos con y sin título universitario,</p>
+<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + \beta_3  (X_i \times D_i) + u_i. \]</span></p>
+<p>Aquí, <span class="math inline">\(\beta_3\)</span> es la diferencia esperada en el efecto de un año adicional de experiencia laboral para graduados universitarios versus no graduados. Otra posible especificación es:</p>
+<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 (X_i \times D_i) + u_i. \]</span></p>
+<p>Este modelo establece que el impacto esperado de un año adicional de experiencia laboral en los ingresos difiere para los graduados universitarios y los no graduados, pero que graduarse por sí solo no aumenta los ingresos.</p>
+<p>Las tres funciones de regresión se pueden visualizar mediante líneas rectas. El Concepto clave 8.4 resume las diferencias.</p>
+<div id="KC8.4" class="keyconcept">
+<h3 class="right">
+Concepto clave 8.4
+</h3>
+<h3 class="left">
+Interacciones entre variables binarias y continuas
+</h3>
+<p>Un término de interacción como <span class="math inline">\(X_i \times D_i\)</span> (donde <span class="math inline">\(X_i\)</span> es continuo y <span class="math inline">\(D_i\)</span> es binario) permite que la pendiente dependa de la variable binaria <span class="math inline">\(D_i\)</span>. Existen tres posibilidades:</p>
+<ol style="list-style-type: decimal">
+<li><p>Diferente intersección y misma pendiente:
+<span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + u_i \]</span></p></li>
+<li><p>Diferente intersección y diferente pendiente:
+<span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 D_i + \beta_3 \times (X_i \times D_i) + u_i \]</span></p></li>
+<li><p>Misma intersección y pendiente diferente:
+<span class="math display">\[ Y_i = \beta_0 + \beta_1 X_i + \beta_2 (X_i \times D_i) + u_i \]</span></p></li>
+</ol>
+</div>
+<p>El siguiente fragmento de código demuestra cómo replicar los resultados utilizando datos artificiales.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generar datos artificiales</span></span>
+<span id="cb26-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb26-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">200</span>,<span class="dv">0</span>, <span class="dv">15</span>)</span>
+<span id="cb26-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-5" aria-hidden="true" tabindex="-1"></a>D <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="dv">200</span>, <span class="at">replace =</span> T)</span>
+<span id="cb26-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-6" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="dv">450</span> <span class="sc">+</span>  <span class="dv">150</span> <span class="sc">*</span> X <span class="sc">+</span> <span class="dv">500</span> <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">50</span> <span class="sc">*</span> (X <span class="sc">*</span> D) <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">200</span>, <span class="at">sd =</span> <span class="dv">300</span>)</span>
+<span id="cb26-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co"># dividir el área de graficado de manera congruente</span></span>
+<span id="cb26-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-9" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">0</span>))</span>
+<span id="cb26-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-10" aria-hidden="true" tabindex="-1"></a>graphics<span class="sc">::</span><span class="fu">layout</span>(m)</span>
+<span id="cb26-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar los modelos y graficar las líneas de regresión</span></span>
+<span id="cb26-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. (modelo de línea base)</span></span>
+<span id="cb26-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X, <span class="fu">log</span>(Y),</span>
+<span id="cb26-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb26-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb26-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Diferentes intercepciones, Misma pendiente&quot;</span>)</span>
+<span id="cb26-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-20"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-20" aria-hidden="true" tabindex="-1"></a>mod1_coef <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Y) <span class="sc">~</span> X <span class="sc">+</span> D)<span class="sc">$</span>coefficients</span>
+<span id="cb26-21"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-22"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-22" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod1_coef[<span class="dv">1</span>], mod1_coef[<span class="dv">2</span>]), </span>
+<span id="cb26-23"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb26-24"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb26-25"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-26"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-26" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod1_coef[<span class="dv">1</span>] <span class="sc">+</span> mod1_coef[<span class="dv">3</span>], mod1_coef[<span class="dv">2</span>]), </span>
+<span id="cb26-27"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;green&quot;</span>,</span>
+<span id="cb26-28"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb26-29"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-29" aria-hidden="true" tabindex="-1"></a>       </span>
+<span id="cb26-30"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-30" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. (modelo de línea base + término de interacción)</span></span>
+<span id="cb26-31"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-31" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X, <span class="fu">log</span>(Y),</span>
+<span id="cb26-32"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-32" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb26-33"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-33" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb26-34"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-34" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Diferentes interceptos, Diferentes pendientes&quot;</span>)</span>
+<span id="cb26-35"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-36"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-36" aria-hidden="true" tabindex="-1"></a>mod2_coef <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Y) <span class="sc">~</span> X <span class="sc">+</span> D <span class="sc">+</span> X<span class="sc">:</span>D)<span class="sc">$</span>coefficients</span>
+<span id="cb26-37"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-38"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-38" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod2_coef[<span class="dv">1</span>], mod2_coef[<span class="dv">2</span>]), </span>
+<span id="cb26-39"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-39" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb26-40"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-40" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb26-41"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-42"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-42" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod2_coef[<span class="dv">1</span>] <span class="sc">+</span> mod2_coef[<span class="dv">3</span>], mod2_coef[<span class="dv">2</span>] <span class="sc">+</span> mod2_coef[<span class="dv">4</span>]), </span>
+<span id="cb26-43"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-43" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;green&quot;</span>,</span>
+<span id="cb26-44"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb26-45"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-46"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-46" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. (omisión de D como regresor + término de interacción)</span></span>
+<span id="cb26-47"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-47" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(X, <span class="fu">log</span>(Y),</span>
+<span id="cb26-48"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-48" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb26-49"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-49" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb26-50"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-50" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Mismo intercepto, Diferentes pendientes&quot;</span>)</span>
+<span id="cb26-51"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-52"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-52" aria-hidden="true" tabindex="-1"></a>mod3_coef <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Y) <span class="sc">~</span> X <span class="sc">+</span> X<span class="sc">:</span>D)<span class="sc">$</span>coefficients</span>
+<span id="cb26-53"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-54"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-54" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod3_coef[<span class="dv">1</span>], mod3_coef[<span class="dv">2</span>]), </span>
+<span id="cb26-55"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-55" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb26-56"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-56" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb26-57"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-58"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-58" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(mod3_coef[<span class="dv">1</span>], mod3_coef[<span class="dv">2</span>] <span class="sc">+</span> mod3_coef[<span class="dv">3</span>]), </span>
+<span id="cb26-59"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-59" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;green&quot;</span>,</span>
+<span id="cb26-60"><a href="9-3-interacciones-entre-variables-independientes.html#cb26-60" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/495-1.png" width="80%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="aplicación-a-la-proporción-de-estudiantes-por-maestro-y-el-porcentaje-de-estudiantes-de-inglés-1" class="section level4 unnumbered">
+<h4>Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés</h4>
+<p>Usando una especificación de modelo como la segunda discutida en el Concepto clave 8.3 (pendiente diferente, intersección diferente) se puede responder a la pregunta de si el efecto en los puntajes de las pruebas de disminuir la proporción de estudiantes por maestro depende de si hay muchos o pocos estudiantes de inglés. Estimando el modelo de regresión:</p>
+<p><span class="math display">\[ \widehat{TestScore_i} = \beta_0 + \beta_1 \times size_i + \beta_2 \times HiEL_i + \beta_2 (size_i \times HiEL_i) + u_i. \]</span></p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo</span></span>
+<span id="cb27-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-2" aria-hidden="true" tabindex="-1"></a>bci_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> size <span class="sc">+</span> HiEL <span class="sc">+</span> size <span class="sc">*</span> HiEL, <span class="at">data =</span> CASchools)</span>
+<span id="cb27-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir un resumen sólido de coeficientes en la consola</span></span>
+<span id="cb27-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(bci_model, <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb27-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb27-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; t test of coefficients:</span></span>
+<span id="cb27-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb27-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
+<span id="cb27-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) 682.24584   11.86781 57.4871   &lt;2e-16 ***</span></span>
+<span id="cb27-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; size         -0.96846    0.58910 -1.6440   0.1009    </span></span>
+<span id="cb27-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; HiEL          5.63914   19.51456  0.2890   0.7727    </span></span>
+<span id="cb27-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; size:HiEL    -1.27661    0.96692 -1.3203   0.1875    </span></span>
+<span id="cb27-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb27-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+<p>El modelo de regresión estimado es</p>
+<p><span class="math display">\[ \widehat{TestScore} = \underset{(11.87)}{682.2} - \underset{(0.59)}{0.97} \times size + \underset{(19.51)}{5.6} \times HiEL - \underset{(0.97)}{1.28} \times (size \times HiEL). \]</span></p>
+<p>La línea de regresión estimada para distritos con una fracción baja de estudiantes de inglés (<span class="math inline">\(HiEL_i=0\)</span>) es</p>
+<p><span class="math display">\[ \widehat{TestScore} = 682.2 - 0.97\times size_i. \]</span></p>
+<p>Para los distritos con una alta fracción de estudiantes de inglés, se tiene:</p>
+<p><span class="math display">\[\begin{align*} 
+  \widehat{TestScore} =&amp; \, 682.2 + 5.6 - 0.97\times size_i - 1.28 \times size_i \\
+   =&amp; \, 687.8 - 2.25 \times size_i.
+\end{align*}\]</span></p>
+<p>El aumento previsto en los puntajes de las pruebas después de una reducción de la proporción de estudiantes por maestro en <span class="math inline">\(1\)</span> unidad es de aproximadamente <span class="math inline">\(0.97\)</span> puntos en distritos donde la fracción de estudiantes de inglés es baja, pero <span class="math inline">\(2.25\)</span> en distritos con una alta proporción de estudiantes de inglés. A partir del coeficiente del término de interacción <span class="math inline">\(size \times HiEL\)</span>, se puede ver que la diferencia entre ambos efectos es de <span class="math inline">\(1.28\)</span> puntos.</p>
+<p>El siguiente fragmento de código grafica ambas líneas que pertenecen al modelo. Para hacer observaciones con <span class="math inline">\(HiEL = 0\)</span> distinguibles de aquellas con <span class="math inline">\(HiEL = 1\)</span>, usando diferentes colores.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># identificar observaciones con PctEL&gt; = 10</span></span>
+<span id="cb28-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-2" aria-hidden="true" tabindex="-1"></a>id <span class="ot">&lt;-</span> CASchools<span class="sc">$</span>english <span class="sc">&gt;=</span> <span class="dv">10</span></span>
+<span id="cb28-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar observaciones con HiEL = 0 como puntos rojos</span></span>
+<span id="cb28-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(CASchools<span class="sc">$</span>size[<span class="sc">!</span>id], CASchools<span class="sc">$</span>score[<span class="sc">!</span>id],</span>
+<span id="cb28-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">27</span>),</span>
+<span id="cb28-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">600</span>, <span class="dv">720</span>),</span>
+<span id="cb28-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb28-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb28-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;&quot;</span>,</span>
+<span id="cb28-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Tamaño de la clase&quot;</span>,</span>
+<span id="cb28-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Resultado de la prueba&quot;</span>)</span>
+<span id="cb28-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar observaciones con HiEL = 1 como puntos verdes</span></span>
+<span id="cb28-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(CASchools<span class="sc">$</span>size[id], CASchools<span class="sc">$</span>score[id],</span>
+<span id="cb28-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>,</span>
+<span id="cb28-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;green&quot;</span>)</span>
+<span id="cb28-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="co"># leer los coeficientes estimados de bci_model</span></span>
+<span id="cb28-20"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-20" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> bci_model<span class="sc">$</span>coefficients</span>
+<span id="cb28-21"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-22"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="co"># dgraficar la línea de regresión estimada para HiEL = 0</span></span>
+<span id="cb28-23"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(coefs[<span class="dv">1</span>], coefs[<span class="dv">2</span>]),</span>
+<span id="cb28-24"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb28-25"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb28-26"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-27"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar la línea de regresión estimada para HiEL = 1</span></span>
+<span id="cb28-28"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-28" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(coefs[<span class="dv">1</span>] <span class="sc">+</span> coefs[<span class="dv">3</span>], coefs[<span class="dv">2</span>] <span class="sc">+</span> coefs[<span class="dv">4</span>]),</span>
+<span id="cb28-29"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;green&quot;</span>, </span>
+<span id="cb28-30"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span> )</span>
+<span id="cb28-31"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-32" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar una leyenda a la trama</span></span>
+<span id="cb28-33"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-33" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, </span>
+<span id="cb28-34"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-34" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">20</span>), </span>
+<span id="cb28-35"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-35" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;green&quot;</span>), </span>
+<span id="cb28-36"><a href="9-3-interacciones-entre-variables-independientes.html#cb28-36" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;HiEL = 0&quot;</span>, <span class="st">&quot;HiEL = 1&quot;</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/497-1.png" width="80%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="interacciones-entre-dos-variables-continuas" class="section level4 unnumbered">
+<h4>Interacciones entre dos variables continuas</h4>
+<p>Considere un modelo de regresión con <span class="math inline">\(Y\)</span> las ganancias logarítmicas y dos regresores continuos <span class="math inline">\(X_1\)</span>, los años de experiencia laboral, y <span class="math inline">\(X_2\)</span>, los años de escolaridad. Se quiere estimar el efecto sobre los salarios de un año adicional de experiencia laboral en función de un nivel de escolaridad determinado. Este efecto se puede evaluar al incluir el término de interacción <span class="math inline">\((X_{1i} \times X_{2i})\)</span> en el modelo:</p>
+<p><span class="math display">\[ \Delta Y_i = \beta_0 + \beta_1 \times X_{1i} + \beta_2 \times X_{2i} + \beta_3 \times (X_{1i} \times X_{2i}) + u_i \]</span></p>
+<p>Siguiendo el Concepto clave 8.1 se puede encontrar que el efecto en <span class="math inline">\(Y\)</span> de un cambio en <span class="math inline">\(X_1\)</span> dado <span class="math inline">\(X_2\)</span> es:</p>
+<p><span class="math display">\[ \frac{\Delta Y}{\Delta X_1} = \beta_1 + \beta_3 X_2. \]</span></p>
+<p>En el ejemplo de ingresos, un <span class="math inline">\(\beta_3\)</span> positivo implica que el efecto sobre los ingresos logarítmicos de un año adicional de experiencia laboral crece linealmente con los años de escolaridad. Viceversa, se tiene <span class="math display">\[ \frac{\Delta Y}{\Delta X_2} = \beta_2 + \beta_3 X_1 \]</span> como el efecto sobre los ingresos logarítmicos de un año adicional de escolaridad manteniendo constante la experiencia laboral.</p>
+<p>En total, se puede encontrar que <span class="math inline">\(\beta_3\)</span> mide el efecto de un aumento unitario en <span class="math inline">\(X_1\)</span> y <span class="math inline">\(X_2\)</span> <em>más allá de</em> los efectos de aumentar <span class="math inline">\(X_1\)</span> y <span class="math inline">\(X_2\)</span> solo en una unidad. El cambio general en <span class="math inline">\(Y\)</span> es por lo tanto</p>
+<p><span class="math display" id="eq:generalinteraction">\[\begin{align}
+Y_i = (\beta_1 + \beta_3 X_2) \Delta X_1 + (\beta_2 + \beta_3 X_1) \Delta X_2 + \beta_3\Delta X_1 \Delta X_2. \tag{9.2}
+\end{align}\]</span></p>
+<p>El Concepto clave 8.5 resume las interacciones entre dos regresores en regresión múltiple.</p>
+<div id="KC8.5" class="keyconcept">
+<h3 class="right">
+Concepto clave 8.5
+</h3>
+<h3 class="left">
+Interacciones en regresión múltiple
+</h3>
+<p>El término de interacción entre los dos regresores <span class="math inline">\(X_1\)</span> y <span class="math inline">\(X_2\)</span> viene dado por su producto <span class="math inline">\(X_1 \times X_2\)</span>.</p>
+<p>Agregar dicho término de interacción como regresor al modelo <span class="math display">\[ Y_i = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + u_i \]</span> permite que el efecto en <span class="math inline">\(Y\)</span> de un cambio en <span class="math inline">\(X_2\)</span> dependa del valor de <span class="math inline">\(X_1\)</span> y viceversa. Así, el coeficiente <span class="math inline">\(\beta_3\)</span> en el modelo <span class="math display">\[ Y_i = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 (X_1 \times X_2) + u_i \]</span> mide el efecto de un aumento unitario en <span class="math inline">\(X_1\)</span> <it>y</it> <span class="math inline">\(X_2\)</span> por encima y más allá de la suma de ambos efectos individuales. Esto es válido para regresores <em>continuos</em> y <em>binarios</em>.</p>
+</div>
+</div>
+<div id="aplicación-a-la-proporción-de-estudiantes-por-maestro-y-el-porcentaje-de-estudiantes-de-inglés-2" class="section level4" number="9.3.0.1">
+<h4><span class="header-section-number">9.3.0.1</span> Aplicación a la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés</h4>
+<p>Ahora se necesita examinar la interacción entre las variables continuas de la proporción de estudiantes por maestro y el porcentaje de estudiantes de inglés.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo de regresión, incluida la interacción entre &#39;PctEL&#39; y &#39;size&#39;</span></span>
+<span id="cb29-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-2" aria-hidden="true" tabindex="-1"></a>cci_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(score <span class="sc">~</span> size <span class="sc">+</span> english <span class="sc">+</span> english <span class="sc">*</span> size, <span class="at">data =</span> CASchools) </span>
+<span id="cb29-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir un resumen en la consola</span></span>
+<span id="cb29-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(cci_model, <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb29-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb29-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; t test of coefficients:</span></span>
+<span id="cb29-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb29-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 Estimate  Std. Error t value Pr(&gt;|t|)    </span></span>
+<span id="cb29-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)  686.3385268  11.7593466 58.3654  &lt; 2e-16 ***</span></span>
+<span id="cb29-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; size          -1.1170184   0.5875136 -1.9013  0.05796 .  </span></span>
+<span id="cb29-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; english       -0.6729119   0.3741231 -1.7986  0.07280 .  </span></span>
+<span id="cb29-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; size:english   0.0011618   0.0185357  0.0627  0.95005    </span></span>
+<span id="cb29-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb29-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+<p>La ecuación del modelo estimada es</p>
+<p><span class="math display">\[ \widehat{TestScore} = \underset{(11.76)}{686.3} - \underset{(0.59)}{1.12} \times STR - \underset{(0.37)}{0.67} \times PctEL + \underset{(0.02)}{0.0012} \times (STR\times PctEL). \]</span></p>
+<p>Para la interpretación, se consideran los cuartiles de <span class="math inline">\(PctEL\)</span>.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(CASchools<span class="sc">$</span>english)</span>
+<span id="cb30-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span id="cb30-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   0.000   1.941   8.778  15.768  22.970  85.540</span></span></code></pre></div>
+<p>De acuerdo con <a href="9-3-interacciones-entre-variables-independientes.html#eq:generalinteraction">(9.2)</a>, si <span class="math inline">\(PctEL\)</span> se encuentra en su valor mediano de <span class="math inline">\(8.78\)</span>, se predice que la pendiente de la función de regresión que relaciona los puntajes de las pruebas y la proporción alumno-maestro será <span class="math inline">\(-1.12 + 0.0012 \times 8.78 = -1.11\)</span>. Esto implica que el aumento de la proporción de estudiantes por maestro en una unidad deteriora los puntajes de las pruebas en <span class="math inline">\(1.11\)</span> puntos. Para el cuantil <span class="math inline">\(75\%\)</span>, el cambio estimado en <span class="math inline">\(TestScore\)</span> de un aumento de una unidad en <span class="math inline">\(STR\)</span> se estima en <span class="math inline">\(-1.12 + 0.0012 \times 23.0 = -1.09\)</span>, por lo que la pendiente es algo menor. La interpretación es que para un distrito escolar con una participación del <span class="math inline">\(23\%\)</span> de estudiantes de inglés, se espera que una reducción de la proporción de estudiantes por maestro en una unidad aumente los puntajes de las pruebas en solo <span class="math inline">\(1.09\)</span> puntos.</p>
+<p>Sin embargo, el resultado de <strong>summary()</strong> indica que la diferencia del efecto para la mediana y el cuantil <span class="math inline">\(75\%\)</span> no es estadísticamente significativa. <span class="math inline">\(H_0: \beta_3 = 0\)</span> no puede rechazarse en el nivel de significancia de <span class="math inline">\(5\%\)</span> (el valor <span class="math inline">\(p\)</span> es <span class="math inline">\(0.95\)</span>).</p>
+</div>
+<div id="ejemplo-la-demanda-de-revistas-económicas" class="section level4 unnumbered">
+<h4>Ejemplo: La demanda de revistas económicas</h4>
+<p>En esta sección se replica el ejemplo empírico . La pregunta central es: ¿Qué tan elástica es la demanda por parte de las bibliotecas de revistas económicas? La idea aquí es analizar la relación entre el número de suscripciones a una revista en las bibliotecas de EE. UU. y el precio de suscripción de la revista. El estudio utiliza el conjunto de datos <strong>Journals</strong> que se proporciona con el paquete <strong>AER</strong> y contiene observaciones para revistas económicas de <span class="math inline">\(180\)</span> para el año 2000. Puede usar la función de ayuda (<code>?Journals</code>) para obtener más información sobre los datos después de cargar el paquete.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cargar el paquete y conjunto de datos</span></span>
+<span id="cb31-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AER)</span>
+<span id="cb31-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;Journals&quot;</span>)</span></code></pre></div>
+<p>Se mide el precio como “precio por cita” y se calcula la antigüedad de la revista y el número de caracteres manualmente. Para mantener la coherencia, también se cambia el nombre de las variables.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># definir y renombrar variables</span></span>
+<span id="cb32-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb32-2" aria-hidden="true" tabindex="-1"></a>Journals<span class="sc">$</span>PricePerCitation <span class="ot">&lt;-</span> Journals<span class="sc">$</span>price<span class="sc">/</span>Journals<span class="sc">$</span>citations</span>
+<span id="cb32-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb32-3" aria-hidden="true" tabindex="-1"></a>Journals<span class="sc">$</span>Age <span class="ot">&lt;-</span> <span class="dv">2000</span> <span class="sc">-</span> Journals<span class="sc">$</span>foundingyear</span>
+<span id="cb32-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb32-4" aria-hidden="true" tabindex="-1"></a>Journals<span class="sc">$</span>Characters <span class="ot">&lt;-</span> Journals<span class="sc">$</span>charpp <span class="sc">*</span> Journals<span class="sc">$</span>pages<span class="sc">/</span><span class="dv">10</span><span class="sc">^</span><span class="dv">6</span></span>
+<span id="cb32-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb32-5" aria-hidden="true" tabindex="-1"></a>Journals<span class="sc">$</span>Subscriptions <span class="ot">&lt;-</span> Journals<span class="sc">$</span>subs</span></code></pre></div>
+<p>El rango de “precio por cita” es bastante amplio:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular estadísticas resumidas para el precio por cita</span></span>
+<span id="cb33-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(Journals<span class="sc">$</span>PricePerCitation)</span>
+<span id="cb33-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. </span></span>
+<span id="cb33-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  0.005223  0.464495  1.320513  2.548455  3.440171 24.459459</span></span></code></pre></div>
+<p>El precio más bajo observado es de solo <span class="math inline">\(0.5\)</span>¢ por cita, mientras que el precio más alto es de más de <span class="math inline">\(20\)</span>¢ por cita.</p>
+<p>Ahora se estiman cuatro especificaciones de modelo diferentes. Todos los modelos son modelos log-log. Esto es útil porque permite interpretar directamente los coeficientes como elasticidades, ver Concepto clave 8.2. <span class="math inline">\((I)\)</span> sobre un modelo lineal. Para aliviar un posible sesgo de variable omitida, <span class="math inline">\((II)\)</span> aumenta <span class="math inline">\((I)\)</span> por las covariables <span class="math inline">\(\ln(Age)\)</span> y <span class="math inline">\(\ln(Characters)\)</span>. El modelo más grande <span class="math inline">\((III)\)</span> intenta capturar las no linealidades en la relación de <span class="math inline">\(\ln(Subscriptions)\)</span> y <span class="math inline">\(\ln(PricePerCitation)\)</span> usando una función de regresión cúbica de <span class="math inline">\(\ln(PricePerCitation)\)</span> y también agrega el término de interacción <span class="math inline">\((PricePerCitation \times Age)\)</span> mientras que la especificación <span class="math inline">\((IV)\)</span> no incluye el término cúbico.</p>
+<p><span class="math display">\[\begin{align*}
+  (I)\quad \ln(Subscriptions_i) =&amp; \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + u_i \\
+  \\
+  (II)\quad \ln(Subscriptions_i) =&amp; \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_4 \ln(Age_i) + \beta_6 \ln(Characters_i) + u_i \\
+  \\
+  (III)\quad \ln(Subscriptions_i) =&amp; \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_2 \ln(PricePerCitation_i)^2 \\
+  +&amp; \, \beta_3 \ln(PricePerCitation_i)^3 + \beta_4 \ln(Age_i) + \beta_5 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] \\ +&amp; \, \beta_6 \ln(Characters_i) + u_i \\
+  \\
+  (IV)\quad \ln(Subscriptions_i) =&amp; \, \beta_0 + \beta_1 \ln(PricePerCitation_i) + \beta_4 \ln(Age_i) + \beta_6 \ln(Characters_i) + u_i
+\end{align*}\]</span></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimar modelos (I) - (IV)</span></span>
+<span id="cb34-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-2" aria-hidden="true" tabindex="-1"></a>Journals_mod1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Subscriptions) <span class="sc">~</span> <span class="fu">log</span>(PricePerCitation), </span>
+<span id="cb34-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> Journals)</span>
+<span id="cb34-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-5" aria-hidden="true" tabindex="-1"></a>Journals_mod2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Subscriptions) <span class="sc">~</span> <span class="fu">log</span>(PricePerCitation) </span>
+<span id="cb34-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-6" aria-hidden="true" tabindex="-1"></a>                    <span class="sc">+</span> <span class="fu">log</span>(Age) <span class="sc">+</span> <span class="fu">log</span>(Characters), </span>
+<span id="cb34-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> Journals)</span>
+<span id="cb34-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-9" aria-hidden="true" tabindex="-1"></a>Journals_mod3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Subscriptions) <span class="sc">~</span> </span>
+<span id="cb34-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-10" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">log</span>(PricePerCitation) <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">log</span>(PricePerCitation)<span class="sc">^</span><span class="dv">2</span>) </span>
+<span id="cb34-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-11" aria-hidden="true" tabindex="-1"></a>                    <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">log</span>(PricePerCitation)<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> <span class="fu">log</span>(Age) </span>
+<span id="cb34-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-12" aria-hidden="true" tabindex="-1"></a>                    <span class="sc">+</span> <span class="fu">log</span>(Age)<span class="sc">:</span><span class="fu">log</span>(PricePerCitation) <span class="sc">+</span> <span class="fu">log</span>(Characters), </span>
+<span id="cb34-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-13" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> Journals)</span>
+<span id="cb34-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-15" aria-hidden="true" tabindex="-1"></a>Journals_mod4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(Subscriptions) <span class="sc">~</span> </span>
+<span id="cb34-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-16" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">log</span>(PricePerCitation) <span class="sc">+</span> <span class="fu">log</span>(Age) </span>
+<span id="cb34-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-17" aria-hidden="true" tabindex="-1"></a>                    <span class="sc">+</span> <span class="fu">log</span>(Age)<span class="sc">:</span><span class="fu">log</span>(PricePerCitation) <span class="sc">+</span> </span>
+<span id="cb34-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-18" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">log</span>(Characters), </span>
+<span id="cb34-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb34-19" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> Journals)</span></code></pre></div>
+<p>Usando <strong>summary()</strong>, se obtienen los siguientes modelos estimados:</p>
+<p><span class="math display">\[\begin{align*}
+  (I)\quad \widehat{\ln(Subscriptions_i)} =&amp; \, 4.77 - 0.53 \ln(PricePerCitation_i) \\
+  \\
+  (II)\quad \widehat{\ln(Subscriptions_i)} =&amp; \, 3.21 - 0.41 \ln(PricePerCitation_i) + 0.42 \ln(Age_i) + 0.21 \ln(Characters_i) \\
+  \\
+  (III)\quad \widehat{\ln(Subscriptions_i)} =&amp; \, 3.41 - 0.96 \ln(PricePerCitation_i) + 0.02 \ln(PricePerCitation_i)^2 \\
+  &amp;+ 0.004 \ln(PricePerCitation_i)^3 + 0.37 \ln(Age_i) \\
+  &amp;+ 0.16 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] \\ &amp;+ 0.23 \ln(Characters_i) \\
+  \\
+  (IV)\quad \widehat{\ln(Subscriptions_i)} =&amp; \, 3.43 - 0.90 \ln(PricePerCitation_i) + 0.37 \ln(Age_i) \\ 
+  &amp;+ 0.14 \left[\ln(Age_i) \times \ln(PricePerCitation_i)\right] + 0.23 \ln(Characters_i)
+\end{align*}\]</span></p>
+<p>Se usa una prueba <span class="math inline">\(F\)</span> para probar si las transformaciones de <span class="math inline">\(\ln(PricePerCitation)\)</span> en el modelo <span class="math inline">\((III)\)</span> son estadísticamente significativas.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba F de significancia de términos cúbicos</span></span>
+<span id="cb35-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(Journals_mod3, </span>
+<span id="cb35-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-3" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;I(log(PricePerCitation)^2)=0&quot;</span>, <span class="st">&quot;I(log(PricePerCitation)^3)=0&quot;</span>),</span>
+<span id="cb35-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> vcovHC, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>)</span>
+<span id="cb35-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Linear hypothesis test</span></span>
+<span id="cb35-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb35-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Hypothesis:</span></span>
+<span id="cb35-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; I(log(PricePerCitation)^2) = 0</span></span>
+<span id="cb35-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; I(log(PricePerCitation)^3) = 0</span></span>
+<span id="cb35-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb35-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Model 1: restricted model</span></span>
+<span id="cb35-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Model 2: log(Subscriptions) ~ log(PricePerCitation) + I(log(PricePerCitation)^2) + </span></span>
+<span id="cb35-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     I(log(PricePerCitation)^3) + log(Age) + log(Age):log(PricePerCitation) + </span></span>
+<span id="cb35-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     log(Characters)</span></span>
+<span id="cb35-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb35-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Note: Coefficient covariance matrix supplied.</span></span>
+<span id="cb35-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb35-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Res.Df Df      F Pr(&gt;F)</span></span>
+<span id="cb35-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    175                 </span></span>
+<span id="cb35-20"><a href="9-3-interacciones-entre-variables-independientes.html#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2    173  2 0.1943 0.8236</span></span></code></pre></div>
+<p>Claramente, no se puede rechazar la hipótesis nula <span class="math inline">\(H_0: \beta_3=\beta_4=0\)</span> en el modelo <span class="math inline">\((III)\)</span>.</p>
+<p>Ahora se muestra cómo se puede usar la función <strong>stargazer()</strong> para generar una representación tabular de los cuatro modelos.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load the stargazer package</span></span>
+<span id="cb36-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stargazer)</span>
+<span id="cb36-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># recopilar errores estándar robustos en una lista</span></span>
+<span id="cb36-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-5" aria-hidden="true" tabindex="-1"></a>rob_se <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(Journals_mod1, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb36-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-6" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(Journals_mod2, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb36-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(Journals_mod3, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))),</span>
+<span id="cb36-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-8" aria-hidden="true" tabindex="-1"></a>               <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcovHC</span>(Journals_mod4, <span class="at">type =</span> <span class="st">&quot;HC1&quot;</span>))))</span>
+<span id="cb36-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="co"># generar una tabla LaTeX usando stargazer</span></span>
+<span id="cb36-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="fu">stargazer</span>(Journals_mod1, Journals_mod2, Journals_mod3, Journals_mod4,</span>
+<span id="cb36-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">se =</span> rob_se,</span>
+<span id="cb36-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb36-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb36-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">column.labels =</span> <span class="fu">c</span>(<span class="st">&quot;(I)&quot;</span>, <span class="st">&quot;(II)&quot;</span>, <span class="st">&quot;(III)&quot;</span>, <span class="st">&quot;(IV)&quot;</span>))</span></code></pre></div>
+
+
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4">Variable dependiente: Logaritmo de suscripciones</td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">log(Subscriptions)</td></tr>
+<tr><td style="text-align:left"></td><td>(I)</td><td>(II)</td><td>(III)</td><td>(IV)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">log(PricePerCitation)</td><td>-0.533<sup>***</sup></td><td>-0.408<sup>***</sup></td><td>-0.961<sup>***</sup></td><td>-0.899<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.034)</td><td>(0.044)</td><td>(0.160)</td><td>(0.145)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(log(PricePerCitation)2)</td><td></td><td></td><td>0.017</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.025)</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">I(log(PricePerCitation)3)</td><td></td><td></td><td>0.004</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.006)</td><td></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">log(Age)</td><td></td><td>0.424<sup>***</sup></td><td>0.373<sup>***</sup></td><td>0.374<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.119)</td><td>(0.118)</td><td>(0.118)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">log(Characters)</td><td></td><td>0.206<sup>**</sup></td><td>0.235<sup>**</sup></td><td>0.229<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.098)</td><td>(0.098)</td><td>(0.096)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">log(PricePerCitation):log(Age)</td><td></td><td></td><td>0.156<sup>***</sup></td><td>0.141<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.052)</td><td>(0.040)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>4.766<sup>***</sup></td><td>3.207<sup>***</sup></td><td>3.408<sup>***</sup></td><td>3.434<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.055)</td><td>(0.380)</td><td>(0.374)</td><td>(0.367)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>180</td><td>180</td><td>180</td><td>180</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.557</td><td>0.613</td><td>0.635</td><td>0.634</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>0.555</td><td>0.607</td><td>0.622</td><td>0.626</td></tr>
+<tr><td style="text-align:left">Residual Std. Error</td><td>0.750 (df = 178)</td><td>0.705 (df = 176)</td><td>0.691 (df = 173)</td><td>0.688 (df = 175)</td></tr>
+<tr><td style="text-align:left">F Statistic</td><td>224.037<sup>***</sup> (df = 1; 178)</td><td>93.009<sup>***</sup> (df = 3; 176)</td><td>50.149<sup>***</sup> (df = 6; 173)</td><td>75.749<sup>***</sup> (df = 4; 175)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
+<caption><p style='text-align:center'><span id="tab:nrmojs">Table 9.1: </span> Modelos de regresión no lineal de suscripciones a revistas</p></caption>
+
+
+<p>El siguiente fragmento de código reproduce diversos gráficos.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dividir el área de graficado</span></span>
+<span id="cb37-2"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-2" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">0</span>))</span>
+<span id="cb37-3"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-3" aria-hidden="true" tabindex="-1"></a>graphics<span class="sc">::</span><span class="fu">layout</span>(m)</span>
+<span id="cb37-4"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico de dispersión</span></span>
+<span id="cb37-6"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Journals<span class="sc">$</span>PricePerCitation, </span>
+<span id="cb37-7"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-7" aria-hidden="true" tabindex="-1"></a>     Journals<span class="sc">$</span>Subscriptions, </span>
+<span id="cb37-8"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>, </span>
+<span id="cb37-9"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb37-10"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Suscripciones&quot;</span>,</span>
+<span id="cb37-11"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;ln(Precio por cita)&quot;</span>,</span>
+<span id="cb37-12"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;(a)&quot;</span>)</span>
+<span id="cb37-13"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-14"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="co"># diagrama de dispersión log-log y línea de regresión estimada (I)</span></span>
+<span id="cb37-15"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">log</span>(Journals<span class="sc">$</span>PricePerCitation), </span>
+<span id="cb37-16"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-16" aria-hidden="true" tabindex="-1"></a>     <span class="fu">log</span>(Journals<span class="sc">$</span>Subscriptions), </span>
+<span id="cb37-17"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>, </span>
+<span id="cb37-18"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb37-19"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;ln(Suscripciones)&quot;</span>,</span>
+<span id="cb37-20"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;ln(Precio por cita)&quot;</span>,</span>
+<span id="cb37-21"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-21" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;(b)&quot;</span>)</span>
+<span id="cb37-22"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-23"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-23" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(Journals_mod1,</span>
+<span id="cb37-24"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb37-25"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-26"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-26" aria-hidden="true" tabindex="-1"></a><span class="co"># diagrama de dispersión log-log y líneas de regresión (IV) para Age = 5 y Age = 80</span></span>
+<span id="cb37-27"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-27" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">log</span>(Journals<span class="sc">$</span>PricePerCitation), </span>
+<span id="cb37-28"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-28" aria-hidden="true" tabindex="-1"></a>     <span class="fu">log</span>(Journals<span class="sc">$</span>Subscriptions), </span>
+<span id="cb37-29"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-29" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">20</span>, </span>
+<span id="cb37-30"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-30" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb37-31"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-31" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;ln(Suscripciones)&quot;</span>,</span>
+<span id="cb37-32"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-32" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;ln(Precio por cita)&quot;</span>,</span>
+<span id="cb37-33"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-33" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;(c)&quot;</span>)</span>
+<span id="cb37-34"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-35"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-35" aria-hidden="true" tabindex="-1"></a>JM4C <span class="ot">&lt;-</span>Journals_mod4<span class="sc">$</span>coefficients</span>
+<span id="cb37-36"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-37"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Age = 80</span></span>
+<span id="cb37-38"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-38" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(JM4C[<span class="dv">1</span>] <span class="sc">+</span> JM4C[<span class="dv">3</span>] <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">80</span>), </span>
+<span id="cb37-39"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-39" aria-hidden="true" tabindex="-1"></a>                JM4C[<span class="dv">2</span>] <span class="sc">+</span> JM4C[<span class="dv">5</span>] <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">80</span>)),</span>
+<span id="cb37-40"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-40" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkred&quot;</span>,</span>
+<span id="cb37-41"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-41" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span>
+<span id="cb37-42"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-43"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Age = 5</span></span>
+<span id="cb37-44"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-44" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">coef =</span> <span class="fu">c</span>(JM4C[<span class="dv">1</span>] <span class="sc">+</span> JM4C[<span class="dv">3</span>] <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">5</span>), </span>
+<span id="cb37-45"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-45" aria-hidden="true" tabindex="-1"></a>                JM4C[<span class="dv">2</span>] <span class="sc">+</span> JM4C[<span class="dv">5</span>] <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">5</span>)),</span>
+<span id="cb37-46"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">&quot;darkgreen&quot;</span>,</span>
+<span id="cb37-47"><a href="9-3-interacciones-entre-variables-independientes.html#cb37-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fl">1.5</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/510-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Como puede verse en los gráficos (a) y (b), la relación entre las suscripciones y el precio de la cita es adversa y no lineal. La transformación logarítmica de ambas variables la hace aproximadamente lineal. El gráfico (c) muestra que la elasticidad del precio de las suscripciones a revistas depende de la edad de la revista: La línea roja muestra la relación estimada para <span class="math inline">\(Age = 80\)</span> mientras que la línea verde representa la predicción del modelo <span class="math inline">\((IV)\)</span> para <span class="math inline">\(Age = 5\)</span>.</p>
+<p>¿Qué conclusión se pueden obtener?</p>
+<ol style="list-style-type: decimal">
+<li><p>Se concluye que la demanda de revistas es más elástica para revistas jóvenes que para revistas antiguas.</p></li>
+<li><p>Para el modelo <span class="math inline">\((III)\)</span> no se puede rechazar la hipótesis nula de que los coeficientes en <span class="math inline">\(\ln(PricePerCitation)^2\)</span> y <span class="math inline">\(\ln(PricePerCitation)^3\)</span> son ambos cero usando una prueba <span class="math inline">\(F\)</span>. Esta es una evidencia compatible con una relación lineal entre las suscripciones logarítmicas y el precio logarítmico.</p></li>
+<li><p>La demanda es mayor para las revistas con más caracteres, manteniendo constante el precio y la edad.</p></li>
+</ol>
+<p>En conjunto, las estimaciones sugieren que la demanda es muy inelástica; es decir, la demanda de revistas económicas de las bibliotecas es bastante insensible al precio: Utilizando el modelo <span class="math inline">\((IV)\)</span>, incluso para una revista joven (<span class="math inline">\(Age = 5\)</span>) la estimación de la elasticidad del precio es <span class="math inline">\(-0.899+0.374\times\ln(5)+0.141\times\left[\ln(1)\times\ln(5)\right] \approx -0.3\)</span> , por lo que un aumento del precio en <span class="math inline">\(1\%\)</span> Se predice que reducirá la demanda en solo <span class="math inline">\(0.3\%\)</span>.</p>
+<p>Este hallazgo no sorprende, ya que proporcionar las publicaciones más recientes es una necesidad para las bibliotecas.</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="1">
+<li id="fn1"><p>Anexando  a la fórmula agregará <strong>HiEL</strong>, <strong>HiSTR</strong> y <strong>su interacción</strong> como regresores, mientras que <strong>HiEL: HiSTR</strong> solo agrega el término de interacción.<a href="9-3-interacciones-entre-variables-independientes.html#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="9-2-FNLUVI.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_09.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

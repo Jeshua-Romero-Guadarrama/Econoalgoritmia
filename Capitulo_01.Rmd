@@ -1,0 +1,893 @@
+# Introducción {#Introducción}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 7, child="_setup.Rmd"}
+```
+
+```{r, 8, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+El interés en el entorno de software y lenguaje de programación estadística disponible gratuitamente **R** [@R-base] está aumentando, con más de 11000 complementos (muchos de ellos proporcionan métodos de vanguardia) que están disponibles en la Red Integral de Archivos **R** ([CRAN](https: // cran .r-project.org /)), una extensa red de servidores FTP en todo el mundo que almacenan versiones idénticas y actualizadas del código **R** y su documentación. En este contexto, **R** domina como software (comercial) para la computación estadística en la mayoría de los campos de investigación en estadística aplicada. Los beneficios de estar disponible gratuitamente, de código abierto y de tener una comunidad grande y en constante crecimiento de usuarios que contribuyen a CRAN hacen que **R** sea cada vez más atractivo tanto para los economistas empíricos como para los econometristas.
+
+Una ventaja sorprendente de usar **R** en econometría es que permite a los estudiantes documentar explícitamente su análisis paso a paso, de modo que sea fácil de actualizar y expandir. Esto permite reutilizar el código para aplicaciones similares con datos diferentes. Además, los programas **R** son completamente reproducibles, lo que facilita que otros comprendan y validen los resultados.
+
+En los últimos años, **R** se ha convertido en una parte integral del plan de estudios de las clases de econometría que se imparten en la Universidad Nacional Autónoma de México. En cierto sentido, aprender a codificar es comparable a aprender un idioma extranjero y la práctica continua es esencial para el éxito del aprendizaje. 
+
+No hace falta decir que presentar el código **R** desnudo en las diapositivas no anima a los estudiantes a participar en la experiencia práctica por sí mismos; por lo tanto, una introducción amigable a **R** es crucial. En cuanto a la literatura complementaria, hay algunos libros excelentes que tratan sobre **R** y sus aplicaciones a la econometría, por ejemplo, @kleiber2008. Sin embargo, dichas fuentes pueden estar algo más allá del alcance de los estudiantes de pregrado en economía que tienen poca comprensión de los métodos econométricos y poca experiencia en programación. 
+
+En consecuencia, se ha compilado una colección de informes reproducibles para usar en clase. Dichos informes brindan orientación sobre cómo implementar aplicaciones seleccionadas del libro de texto *Introducción a la econometría* [@stock2015] que sirve como base para el curso y los tutoriales que lo acompañan. Dicho proceso fue facilitado considerablemente por **knitr** [@R-knitr] y **R markdown** [@R-rmarkdown]. En conjunto, ambos paquetes de **R** proporcionan potentes funcionalidades para la generación de informes dinámicos que permiten combinar perfectamente texto puro, LaTeX, código **R** y su salida en una variedad de formatos, incluidos PDF y HTML. 
+
+Además, la redacción y distribución de informes reproducibles para su uso en el ámbito académico se ha enriquecido enormemente con el paquete **bookdown** [@R-bookdown], que se ha convertido en la principal herramienta para el presente proyecto. En otras palabras, **bookdown** encuentra fundamento en **R markdown** y permite crear páginas HTML atractivas como esta, entre otras cosas.
+
+Inspirándo en *Introduccion a la Econometria* [@wooldridge2016] y replicando las aplicaciones discutidas en él libro *Using R for Introductory Econometrics* [@heiss2016] se ha usado este poderoso conjunto de herramientas para redactar el presente complemento empírico para cualquier economista en formación. 
+
+De manera similar al libro de @heiss2016, este proyecto no es un libro de texto completo de econometría ni pretende ser una introducción general a **R**. En cualquier caso, ¡mejor que en otro libro de texto introductorio! el presente proyecto es una descripción que sirve como un guión interactivo con el estilo de un informe de investigación reproducible que tiene como objetivo proporcionar a los estudiantes un arreglo de aprendizaje electrónico independiente, entrelazando a la perfección el conocimiento básico teórico y las habilidades empíricas en econometría de pregrado. Por supuesto, la atención se centra en las aplicaciones empíricas con **R**, se dejan de lado las derivaciones y las demostraciones siempre que se pueda. El objetivo es permitir que los estudiantes no solo aprendan cómo los resultados de los estudios de casos se pueden replicar con **R**, sino que también tiene la intención de fortalecer su capacidad para usar las habilidades recién adquiridas en otras aplicaciones empíricas.
+
+Para darse cuenta de esto, cada capítulo contiene ejercicios interactivos de programación en **R**. Estos ejercicios se utilizan como suplementos de fragmentos de código que muestran cómo se pueden implementar las técnicas discutidas anteriormente dentro de **R**. Se generan utilizando el [widget de luz DataCamp](https://github.com/datacamp/datacamp-light), que están respaldados por una sesión **R** que se mantiene en [DataCamp](https://www.datacamp.com/home). Puede jugar el ejercicio de ejemplo que se presenta a continuación.
+
+<iframe src="DCL/intro_1.html" frameborder="0" scrolling="no" style="width:100%;height:360px"></iframe>
+
+Como se puede ver arriba, el widget consta de dos pestañas. **script.R** imita un archivo **.R**, un formato de archivo que se usa comúnmente para almacenar código **R**. Las líneas que comienzan con # se comentan, es decir, no se reconocen como código. Además, **script.R** funciona como una hoja de ejercicios en la que puede escribir la solución que se le ocurra. Si presiona el botón *Ejecutar*, se ejecutará el código, se ejecutarán las pruebas de corrección del envío y se le notificará si su enfoque es correcto. Si no es correcto, recibirá comentarios que sugieren mejoras o sugerencias. La otra pestaña, **R Console**, es una consola **R** completamente funcional que se puede utilizar para probar soluciones a los ejercicios antes de enviarlos. Por supuesto, puede enviar (casi cualquier) código **R** y usar la consola para jugar y explorar. Simplemente escriba un comando y presione la tecla *Enter* en su teclado.
+
+Mirando el widget de arriba, notará que hay un <tt> > </tt> en el panel derecho (en la consola). Este símbolo se llama "aviso" e indica que el usuario puede ingresar el código que se ejecutará. Para evitar confusiones, no se mostrará este símbolo en el curso. La salida producida por el código R se comenta con <tt> #> </tt>.
+
+Por lo general, se muestra el código R junto con la salida generada en fragmentos de código. Como ejemplo, si se considera la siguiente línea de código que se presenta en el fragmento a continuación. Le dice a **R** que calcule el número de paquetes disponibles en **CRAN**. El fragmento de código es seguido por la salida generada.
+
+```{r, 9}
+# check the number of R packages available on CRAN
+nrow(available.packages(repos = "http://cran.us.r-project.org"))
+```
+
+Cada fragmento de código está equipado con un botón en el lado exterior derecho que copia el código en su portapapeles. Esto hace que sea conveniente trabajar con segmentos de código más grandes en su versión de *R*/*RStudio* o en los widgets presentados a lo largo del curso. En el widget de arriba, puede hacer clic en **R Console** y escribir `nrow(available.packages(repos ="http://cran.us.r-project.org"))` (el comando del código fragmento de arriba) y ejecútarlo presionando *Enter* en su teclado.^[La sesión **R** se inicializa haciendo clic en el widget. Esto puede tardar unos segundos. Espere a que el indicador junto al botón *Ejecutar* se ponga verde.]
+
+Se debe tener en cuenta que algunas líneas en el widget están comentadas y le piden que asigne un valor numérico a una variable y luego que imprima el contenido de la variable en la consola. Puede ingresar su enfoque de solución a **script.R** y presionar el botón *Ejecutar* para obtener los comentarios que se describen más arriba. En caso de que no sepa cómo resolver este ejercicio de muestra (no se asuste, probablemente por eso está leyendo esto), un clic en *Pista* le proporcionará algunos consejos. Si aún no puede encontrar una solución, un clic en *Solución* le proporcionará otra pestaña, **Solución.R**, que contiene un código de solución de muestra. A menudo ocurre que los ejercicios se pueden resolver de muchas formas diferentes y **Solution.R** presenta lo que se considera comprensible e idiomático.
+
+## Marco teórico {#MT}
+
+### ¿Qué es la econometría? {-}
+
+Hoy en día la econometría se ha difundido ampliamente entre quienes estudian y buscan aplicar la teoría económica. En general, cualquier licenciatura en economía cuenta con uno o más cursos de econometría, dado que es usual que la econometría se enseñe con la misma relevancia que se le da a los cursos de microeconomía y macroeconomía. No existe posgrado en economía que deje de incorporar el estudio de la econometría como una disciplina fundamental. Incluso, es posible aseverar que en disciplinas distintas a la economía, como en las matemáticas, algunas ingenierías, la sociología y psicología, sus estudiantes reciben algún curso de econometría. 
+
+No sólo en la formación académica la econometría está presente, en la vida laboral se realizan todos los días aplicaciones econométricas: 
+
+- En las oficinas gubernamentales se emplean modelos econométricos para realizar pronósticos de variables económicas. 
+- En empresas privadas se utilizan algunas técnicas econométricas para proyectar a futuro variables como ventas, precios y demanda, entre otras variables. En consecuencia, en el mercado existen numerosos servicios de consultoría que han hecho de la econometría un negocio al ofrecer la venta de pronósticos generados a través de modelos econométricos. 
+- En el mundo de la investigación científica la econometría es un ingrediente indispensable. Diariamente se publican en todo el orbe una gran cantidad de artículos de economía en revistas especializadas, la evidencia empírica que aportan, generalmente, se sustenta en algún modelo econométrico.
+
+La importancia de esta disciplina es tal que basta escribir en internet la palabra *Econometría* para obtener diez millones de referencias.
+
+Con la econometría se busca comprender fenómenos como el de las crisis, identificar sus causas, valorar sus consecuencias futuras y proponer medidas de política para enfrentarlas. Para ello, la econometría utiliza modelos, con estos se busca representar de forma simplificada a los principales factores causales de un problema de interés. La especificación y estimación de esos modelos requiere del conocimiento de teorías económicas, para poder establecer relaciones sustentadas en datos entre las variables, así como para poder realizar mediciones de dichas relaciones.
+
+No existe una definición única y generalmente aceptable de lo qué es la econometría. Debido a que en ella concurren una gran diversidad de perspectivas teóricas y metodológicas. Por tanto, existen diferentes posturas sobre su significado.
+
+A diferencia de lo que ocurre hoy en día, en los años treinta, época en la que se institucionaliza la econometría, existía cierto consenso metodológico. A ese consenso se le identifica como la "metodología de libro de texto" y su definición de econometría era la siguiente:
+
+"La aplicación de métodos estadísticos y matemáticos al análisis de los datos económicos, con el propósito de dar un contenido empírico a las teorías económicas y verificarlas o refutarlas." (Maddala, 1996, p.1)
+
+Bajo esta última conceptualización la econometría aparece, por un lado, como un mero instrumental técnico al ser la aplicación de métodos matemáticos y estadísticos. Por otro lado, es vista prácticamente como la piedra filosofal, al darle el papel de criterio último de verdad al ser la vía para verificar o refutar teorías. El econometrista aparece en esa definición como un técnico, cuyo único fin es intentar medir lo que la teoría económica ha postulado.
+
+Esta visión de la econometría se ha transformado en los últimos años, en este sentido, vale la pena retomar la definición proporcionada por Aris Spanos:
+
+"La econometría se interesa por el estudio sistemático de fenómenos económicos utilizando datos observables." (Spanos, 1996, p.3)
+
+Este es un enfoque moderno con el cual coincido, lo que hace a la econometría diferente de otros campos de la economía es la utilización de datos observables. Por lo tanto, la econometría tiene una perspectiva empírica, no se reduce a la teoría. La econometría necesariamente hace uso de datos, los cuales no son experimentales sino que son resultado del funcionamiento de la actividad económica y de millones de interacciones sociales. El papel del econometrista no se reduce a medir lo que la teoría económica establece, dado que un economista es un científico social que, a través de un método científico, emprende el estudio de fenómenos sociales relacionados con la economía. Por lo tanto, no es un observador pasivo de la teoría, al contrario, es capaz de contribuir a la teoría.
+
+La econometría que se utiliza hoy en día se ha ido transformando y modernizando, hasta convertirse en una de las herramientas más potentes a
+disposición de los economistas y principalmente del análisis empírico de problemas económicos. Esta evolución de la disciplina la sintetiza perfectamente Spanos:
+
+"En el amanecer del siglo veintiuno, la econometría se ha desarrollado desde los modestos orígenes del "ajuste de curvas" por mínimos cuadrados en los inicios del siglo veinte, hasta un poderoso arreglo de herramientas estadísticas para modelar todo tipo de datos, desde las tradicionales series de tiempo a las secciones cruzadas, datos transversales y los datos de panel." (Spanos, 2006, p. 5)
+
+### ¿Qué es la ciencia de datos? {-}
+
+La ciencia de datos es un campo emergente extremadamente transdisciplinario -puente entre diversas áreas teóricas, con fundamentos matemáticos, computacionales, experimentales y sociales-. En este contexto, la ciencia de datos trata con enormes volúmenes de datos complejos, incongruentes y dinámicos de múltiples fuentes, con el objetivo de desarrollar algoritmos, métodos, herramientas y servicios capaces de ingerir dichos conjuntos de datos y generar sistemas semiautomatizados de apoyo a la toma de decisiones. 
+
+Las recientes investigaciones económicas emplean la ciencia de datos para extraer información en busca de patrones o mecanismos que coadyuven a predecir posibles resultados esperados, así como sugerir la agrupación o etiquetado de observaciones retrospectivas y prospectivas, calcular firmas de datos, extraer información valiosa y ofrecer conocimiento procesable basado en evidencia. 
+
+Las técnicas de ciencia de datos comúnmente empleadas por los economistas a menudo implican manipulación (**wrangling**), armonización y agregación de datos, para en etapas posteriores emplear análisis exploratorios o confirmatorios de datos, análisis predictivo, validación y ajuste fino.
+
+### ¿Qué es la econoalgoritmia? {-}
+
+La *econoalgoritmia* es un término acuñado por el economista Jeshua Romero Guadarrama en el presente curso para definir la creación e implementación de algoritmos computacionales en el campo de estudio de la economía aplicada, haciendo uso de un conjunto de herramientas y métodos propios de la econometría y ciencia de datos.
+
+## Colofón {#Colofón}
+
+Este curso fue construido con:
+
+```{r, 10, echo = F}
+sessioninfo::session_info("itewrpkg")
+```
+
+Puede instalar los paquetes ejecutando las siguientes líneas de código:
+
+```{r, 11, echo = T, eval = F}
+install.packages("abind")
+install.packages("AER")
+install.packages("askpass") 
+install.packages("assertthat") 
+install.packages("backports") 
+install.packages("base64enc") 
+install.packages("bdsmatrix") 
+install.packages("BH") 
+install.packages("bibtex") 
+install.packages("bitops") 
+install.packages("blob") 
+install.packages("bookdown") 
+install.packages("boot") 
+install.packages("broom") 
+install.packages("callr") 
+install.packages("car")
+install.packages("carData") 
+install.packages("cellranger") 
+install.packages("cli") 
+install.packages("clipr")
+install.packages("colorspace") 
+install.packages("conquer") 
+install.packages("crayon") 
+install.packages("crayon")
+install.packages("cubature")
+install.packages("curl")
+install.packages("data.table")
+install.packages("DBI")
+install.packages("dbplyr")
+install.packages("desc")
+install.packages("digest")
+install.packages("dplyr")
+install.packages("dynlm")
+install.packages("ellipsis")
+install.packages("evaluate")
+install.packages("fansi")
+install.packages("farver")
+install.packages("fastICA")
+install.packages("fBasics")
+install.packages("fGarch")
+install.packages("forcats")
+install.packages("foreign")
+install.packages("Formula")
+install.packages("fs")
+install.packages("gbRd")
+install.packages("generics")
+install.packages("ggplot2")
+install.packages("glue")
+install.packages("gss")
+install.packages("gtable")
+install.packages("haven")
+install.packages("highr")
+install.packages("hms")
+install.packages("htmltools")
+install.packages("httr")
+install.packages("isoband")
+install.packages("itewrpkg")
+install.packages("jsonlite")
+install.packages("KernSmooth")
+install.packages("knitr")
+install.packages("labeling")
+install.packages("lattice")
+install.packages("lifecycle")
+install.packages("lme4")
+install.packages("lmtest") 
+install.packages("locpol") 
+install.packages("lubridate") 
+install.packages("magrittr") 
+install.packages("maptools") 
+install.packages("markdown") 
+install.packages("MASS") 
+install.packages("Matrix") 
+install.packages("MatrixModels") 
+install.packages("matrixStats") 
+install.packages("maxLik") 
+install.packages("mgcv") 
+install.packages("mime") 
+install.packages("minqa")
+install.packages("miscTools") 
+install.packages("modelr") 
+install.packages("munsell") 
+install.packages("mvtnorm") 
+install.packages("nlme") 
+install.packages("nloptr") 
+install.packages("nnet") 
+install.packages("np") 
+install.packages("openssl") 
+install.packages("openxlsx") 
+install.packages("orcutt") 
+install.packages("pbkrtest") 
+install.packages("pillar") 
+install.packages("pkgbuild") 
+install.packages("pkgconfig") 
+install.packages("pkgload") 
+install.packages("plm") 
+install.packages("praise") 
+install.packages("prettyunits") 
+install.packages("processx") 
+install.packages("progress") 
+install.packages("ps") 
+install.packages("purrr") 
+install.packages("quadprog") 
+install.packages("quantmod") 
+install.packages("quantreg") 
+install.packages("R6")
+install.packages("RColorBrewer") 
+install.packages("Rcpp")
+install.packages("RcppArmadillo") 
+install.packages("RcppEigen")
+install.packages("RCurl")
+install.packages("rdd")
+install.packages("rddtools")
+install.packages("Rdpack")
+install.packages("rdrobust")
+install.packages("readr")
+install.packages("readxl")
+install.packages("rematch")
+install.packages("reprex")
+install.packages("rio")
+install.packages("rlang")
+install.packages("rmarkdown")
+install.packages("rprojroot")
+install.packages("rstudioapi")
+install.packages("rvest")
+install.packages("sandwich")
+install.packages("scales")
+install.packages("selectr")
+install.packages("sp")
+install.packages("SparseM")
+install.packages("spatial")
+install.packages("stabledist")
+install.packages("stargazer")
+install.packages("statmod")
+install.packages("stringi")
+install.packages("stringr")
+install.packages("strucchange")
+install.packages("survival")
+install.packages("sys")
+install.packages("testthat")
+install.packages("tibble")
+install.packages("tidyr")
+install.packages("tidyselect")
+install.packages("tidyverse")
+install.packages("timeDate")
+install.packages("timeSeries")
+install.packages("tinytex")
+install.packages("TTR")
+install.packages("urca")
+install.packages("utf8")
+install.packages("vars")
+install.packages("vctrs")
+install.packages("viridisLite")
+install.packages("whisker")
+install.packages("withr")
+install.packages("xfun")
+install.packages("xml2")
+install.packages("xts")
+install.packages("yaml")
+install.packages("zip")
+install.packages("zoo")
+```
+
+```{r, 12, echo = F, eval = F, message = F, warning = F} 
+library("abind")
+library("AER")
+library("askpass") 
+library("assertthat") 
+library("backports") 
+library("base64enc") 
+library("bdsmatrix") 
+library("BH") 
+library("bibtex") 
+library("bitops") 
+library("blob") 
+library("bookdown") 
+library("boot") 
+library("broom") 
+library("callr") 
+library("car")
+library("carData") 
+library("cellranger") 
+library("cli") 
+library("clipr")
+library("colorspace") 
+library("conquer") 
+library("crayon") 
+library("crayon")
+library("cubature")
+library("curl")
+library("data.table")
+library("DBI")
+library("dbplyr")
+library("desc")
+library("digest")
+library("dplyr")
+library("dynlm")
+library("ellipsis")
+library("evaluate")
+library("fansi")
+library("farver")
+library("fastICA")
+library("fBasics")
+library("fGarch")
+library("forcats")
+library("foreign")
+library("Formula")
+library("fs")
+library("gbRd")
+library("generics")
+library("ggplot2")
+library("glue")
+library("gss")
+library("gtable")
+library("haven")
+library("highr")
+library("hms")
+library("htmltools")
+library("httr")
+library("isoband")
+library("itewrpkg")
+library("jsonlite")
+library("KernSmooth")
+library("knitr")
+library("labeling")
+library("lattice")
+library("lifecycle")
+library("lme4")
+library("lmtest") 
+library("locpol") 
+library("lubridate") 
+library("magrittr") 
+library("maptools") 
+library("markdown") 
+library("MASS") 
+library("Matrix") 
+library("MatrixModels") 
+library("matrixStats") 
+library("maxLik") 
+library("mgcv") 
+library("mime") 
+library("minqa")
+library("miscTools") 
+library("modelr") 
+library("munsell") 
+library("mvtnorm") 
+library("nlme") 
+library("nloptr") 
+library("nnet") 
+library("np") 
+library("openssl") 
+library("openxlsx") 
+library("orcutt") 
+library("pbkrtest") 
+library("pillar") 
+library("pkgbuild") 
+library("pkgconfig") 
+library("pkgload") 
+library("plm") 
+library("praise") 
+library("prettyunits") 
+library("processx") 
+library("progress") 
+library("ps") 
+library("purrr") 
+library("quadprog") 
+library("quantmod") 
+library("quantreg") 
+library("R6")
+library("RColorBrewer") 
+library("Rcpp")
+library("RcppArmadillo") 
+library("RcppEigen")
+library("RCurl")
+library("rdd")
+library("rddtools")
+library("Rdpack")
+library("rdrobust")
+library("readr")
+library("readxl")
+library("rematch")
+library("reprex")
+library("rio")
+library("rlang")
+library("rmarkdown")
+library("rprojroot")
+library("rstudioapi")
+library("rvest")
+library("sandwich")
+library("scales")
+library("selectr")
+library("sp")
+library("SparseM")
+library("spatial")
+library("stabledist")
+library("stargazer")
+library("statmod")
+library("stringi")
+library("stringr")
+library("strucchange")
+library("survival")
+library("sys")
+library("testthat")
+library("tibble")
+library("tidyr")
+library("tidyselect")
+library("tidyverse")
+library("timeDate")
+library("timeSeries")
+library("tinytex")
+library("TTR")
+library("urca")
+library("utf8")
+library("vars")
+library("vctrs")
+library("viridisLite")
+library("whisker")
+library("withr")
+library("xfun")
+library("xml2")
+library("xts")
+library("yaml")
+library("zip")
+library("zoo")
+```
+
+## Una breve introducción a *R* y *RStudio* {#BIRR}
+
+```{r, 13, fig.align='center', echo=FALSE, fig.cap="RStudio: Los cuatro paneles"}
+knitr::include_graphics('images/rstudio.jpg')
+```
+
+### Primeros pasos en R {-}
+
+El sistema de computación estadístico y gráfico **R** (R Development Core Team 2021b, [http://www.R-project.org/](https://www.r-project.org/)) es un proyecto de software de código abierto, publicado bajo los términos de la GNU General Public License (GPL), Versión 2.^[Los lectores que no estén familiarizados con el software de código abierto pueden visitar [http://www.gnu.org/](https://cran.r-project.org/mirrors.html).] 
+
+El código fuente, así como varias versiones binarias de **R** se pueden obtener, sin costo, mediante el Comprehensive R Archive Network (CRAN;ver [http://CRAN.R-project.org/mirrors.html](http://CRAN.R-project.org/mirrors.html) para encontrar su espejo más cercano). Se proporcionan versiones binarias para versiones de 64 bits de Microsoft Windows, varias plataformas de Linux (incluidos Debian, Red Hat, SUSE y Ubuntu) y Mac OS X.
+
+#### Instalación {-}
+
+La instalación de versiones binarias es bastante sencilla: 
+
+- Simplemente vaya a CRAN. 
+- Elija la versión correspondiente a su sistema operativo.
+- Siga las instrucciones provistas en el archivo *readme* correspondiente. 
+
+Para Microsoft Windows, esto equivale a descargar y ejecutar el archivo ejecutable de instalación (archivo *.exe*), que lleva al usuario a través de un administrador de configuración estándar. Para Mac OS X, *imagen de disco separada* o los archivos *.dmg* están disponibles para el sistema base, así como para una GUI desarrollada para esta plataforma. Para varios plataformas de Linux, existen binarios preempaquetados (como los archivos *.rpm* o *.deb*) que se pueden instalar con las herramientas de empaquetado habituales en las respectivas plataformas. Además, las versiones de **R** también se distribuyen en muchos de los repositorios estándar de Linux, aunque no necesariamente se actualizan de forma rápida las nuevas versiones de **R** como CRAN.
+
+Para todos los sistemas, en particular aquellos para los que no existe un paquete binario, también existe, por supuesto, la opción de compilar **R** a partir de la fuente. En algunas plataformas, en particular Microsoft Windows, esto puede resultar un poco engorroso porque los compiladores necesarios normalmente no forman parte de una instalación estándar. En otras plataformas, como Unix o Linux, esto a menudo equivale a los pasos habituales de configure/make/install. Finalmente, se recomienda visitar [R Development Core Team (2021d)](https://www.r-project.org/) para obtener información detallada sobre la instalación y administración del software y paquetería de **R**.
+
+#### Paquetes {-}
+
+Como se discutirá con mayor detalle a continuación, la base del software **R** puede ampliarse mediante paquetes, algunos de los cuales forman parte de la instalación predeterminada. Los paquetes se almacenan en una o más bibliotecas (esto es, colecciones de paquetes) en el sistema y pueden cargarse usando el comando **library()**. Mecanografiar **library()** sin argumentos devuelve una lista de todos los paquetes instalados actualmente en todas las bibliotecas. En el mundo de **R**, los paquetes que se encuentran instalados de forma predeterminada se conocen como paquetes "*base*" (contenidos en el código fuente de **R**). De igual forma, los son paquetes incuidos en cada distribución binaria se conocen como paquetes "*recomendados*". Actualmente existen una gran cantidad de paquetes adicionales ([más de 1400](https://cran.r-project.org/web/packages/available_packages_by_date.html)), conocidos como paquetes "*contribuidos*". 
+
+Resulta importante mencionar que todos los paquetes están disponibles en los servidores de CRAN (se recomienda visitar [http://CRAN.R-project.org/web/packages/](https://cran.r-project.org/web/packages/)), y algunos de estos serán necesario a medida que se avance. En particular, el paquete necesario que acompaña a este curso es llamado **AER**. En una computadora conectada a Internet, la instalación del paquete es tan simple como escribir el siguiente código en el área de codificado: 
+
+```{r, 14, echo = T, eval = F, message = F, warning = F} 
+install.packages("AER")
+```
+
+Este proceso de instalación funciona en todos los sistemas operativos. Además, los usuarios de Windows pueden instalar paquetes usando "Install packages from CRAN". Los usuarios de Mac pueden instalar paquetes usando la opción de menú "Package installer" y luego eligiendo los paquetes a instalar de una lista. Dependiendo de la instalación, en particular de la configuración de las rutas de la biblioteca, se puede usar la función **install.packages()** de forma predeterminada para instalar paquetes. Si se intenta instalar un paquete en un directorio donde el usuario no tiene permisos de escritura. En tal caso, es necesario especificar el argumento **lib** o establecer las rutas de la biblioteca de forma adecuada (se puede consultar **R Development Core Team 2021d** o **?library** para más información). Por cierto, instalar **AER** descargará varios paquetes más de los que depende el buen funcionamiento del **AER**. No es raro que los paquetes dependan de otros paquetes; si este es el caso, el paquete lo “sabe” y asegura que todas las funciones de las que depende estarán disponibles durante el proceso de instalación.
+
+Para usar funciones o conjuntos de datos de un paquete, el paquete debe estar cargado. El comando para cargar paquetes es **library()**, para el paquete **AER**:
+
+```{r, 15, echo = T, eval = T, message = F, warning = F} 
+library("AER")
+```
+
+De ahora en adelante, se asume que **AER** siempre está cargado. Será necesario instalar y cargar más paquetes en capítulos posteriores, y siempre se indicará cuáles son.
+
+En vista del número cada vez mayor de paquetes contribuidos, se ha demostrado que es útil mantener una serie de "vistas de tareas CRAN" que proporcionan una descripción general de los paquetes para determinadas tareas. Las vistas de tareas actuales incluyen econometría, finanzas, ciencias sociales y estadísticas bayesianas (ver [http://CRAN.R-project.org/web/views/](http://CRAN.R-project.org/web/views/) para mas detalles.
+
+### Trabajar con R {-}
+
+Existe una diferencia importante entre la filosofía de **R** y la mayoría de los otros paquetes de econometría. Con muchos paquetes, un análisis conducirá a una gran cantidad de resultados que contienen información sobre estimaciones, diagnósticos de modelos, pruebas de especificación, entre otros. En **R**, un análisis normalmente se divide en una serie de pasos. Los resultados intermedios se almacenan en objetos, con un resultado mínimo en cada paso (a menudo ninguno). En cambio, los objetos se manipulan aún más para obtener la información requerida (programación orientada a objetos).
+
+De hecho, el principio de diseño fundamental subyacente a **R** (antes **S**) es “todo es un objeto”. Por lo tanto, no solo los vectores y las matrices son objetos que pueden ser pasados y devueltos por funciones, sino también las funciones mismas e incluso las *llamadas a funciones*. Esto permite realizar cálculos sobre el lenguaje y puede facilitar considerablemente las tareas de programación, como se ilustrará más adelante:
+
+#### Manipulación sencilla de objetos {-}
+
+Para ver qué objetos están definidos actualmente, la función **objects()** (o la equivalente **ls()**) puede ser usado. De forma predeterminada, la función enumera todos los objetos en el entorno global (es decir, el espacio de trabajo del usuario):
+
+```{r, 16, echo = T, eval = T, message = F, warning = F} 
+objects()
+```
+
+que devuelve un vector de caracteres de longitud 9, lo que indica que actualmente existen nueve objetos, como resultado de la sesión introductoria.
+
+Sin embargo, esta no puede ser la lista completa de objetos disponibles, dado que algunos objetos ya deben existir antes de la ejecución de cualquier comando, entre ellos la función **objects()**, que se acaba de llamar. La razón es que la lista de búsqueda, que puede ser consultada mediante la función **search()**, comprende no sólo el medio ambiente global "*.GlobalEnv*" ( siempre en la primera posición) sino también varios paquetes adjuntos, incluido el paquete **base** al final.
+
+```{r, 17, echo = T, eval = T, message = F, warning = F} 
+search()
+```
+
+Lamando a la función **objects("package:base")** se pueden mostrar los nombres de más de mil objetos definidos en la **base**, incluyendo la función **objects()** en sí misma.
+
+Los objetos se pueden crear fácilmente asignando un valor a un nombre usando el operador de asignación **<-**. Por ejemplo, se crea un vector **x** en que el numero $2$ esté almacenado:
+
+```{r, 18, echo = T, eval = T, message = F, warning = F} 
+x <- 2
+
+objects()
+```
+
+En este punto, **x** ahora está disponible en el entorno global y se puede eliminar utilizando la función **remove()** ( o equivalente **rm()**):
+
+```{r, 19, echo = T, eval = T, message = F, warning = F} 
+remove(x)
+
+objects()
+```
+
+#### Llamada de funciones {-}
+
+Si se escribe el nombre de un objeto en el área de **prompt**, éste se imprimirá. En este contexto, el resultado de escribir los nombres de las funciones cambia dependiendo de la sintaxis:
+
+1. Si únicamente se escribe el nombre de la función, suponiendo **foo**, esto significa que se quiere imrpimir el correspondiente código fuente de la función en **R** (intente, por ejemplo, **objects**).
+2. Si se escibre el nombre de la función seguido de paréntesis, suponinedo **foo()**, esto implica que se quiere ejecutar una *llamada de función* (intente, por ejemplo, **objects()**).
+
+Los argumentos dentro de una función son válidos:
+
+1. Si se especifican los valores de los argumentos que la función requiere dentro de los paréntesis (**log(base = 2, x = 16)** es una *llamada de función válida*).
+2. Si no se especifican los valores de los argumentos porque la función ya posee valores predeterminados (**foo()** por sí solo es una *llamada de función válida*). 
+
+Por lo tanto, a lo largo de este curso se emplean un par de paréntesis después del nombre del objeto para indicar que el objeto discutido es una llamada de función.
+
+Las funciones a menudo tienen más de un argumento (de hecho, no existe un límite para el número de argumentos en las funciones de **R**). Una llamada de función puede usar los argumentos en cualquier orden, siempre que se proporcione el nombre del argumento. Si no se dan los nombres de los argumentos, **R** asume que aparecen en el orden en que se define la función. Si un argumento tiene un valor predeterminado, puede omitirse en una llamada de función. Por ejemplo, la función **log()** tiene dos argumentos, **x** y **base**: 
+
+1. El primero (**x**) puede ser un escalar (aunque en realidad también puede ser un vector), cuyo logaritmo debe tomarse.
+2. El segundo (**base**) es la base respecto a la cual se calculan los logaritmos. 
+
+Por lo tanto, las siguientes cuatro llamadas son todas equivalentes:
+
+```{r, 20, echo = T, eval = T, message = F, warning = F} 
+log(16, 2)
+
+log(x = 16, 2)
+
+log(16, base = 2)
+
+log(base = 2, x = 16)
+```
+
+#### Clases y funciones genéricas {-}
+
+Cada objeto tiene una clase que se puede consultar llamando a la función **class()**. Las clases que se usarán comúnmente en el presente curso incluyen:
+
+- "**data.frame**" (una lista o matriz con una determinada estructura, el formato preferido en el que se deben guardar los datos).
+- "**lm**" para objetos de modelo lineal (devuelto cuando se ajusta un modelo de regresión lineal por mínimos cuadrados ordinarios).
+- "**matrix**” (que es lo que sugiere el nombre: matrices). 
+
+Para cada clase, se encuentran disponibles métodos específico que se pueden consultar mediante llamadas a las funciones. Sin embargo, existen funciones genéricas (se pueden usar para todos los tipos de clases), los ejemplos típicos de dichas funciones incluyen **summary()** y **plot()**. El resultado de estas funciones depende de la clase del objeto: 
+
+- Cuando se le proporciona un vector numérico, **summary()** devuelve resúmenes básicos de una distribución empírica, como la media, la mediana y la moda.
+- Cuando se le proporciona un vector de datos categóricos, **summary()** devuelve una tabla de frecuencias.
+- Cuando se le proporciona un objeto de modelo lineal, **summary()** devuelve el resultado de una regresión estándar. 
+- Cuando se le proporciona un vector, una matriz o un marco de datos numérico, **plot()** devuelve pares de diagramas de dispersión.
+- Cuando se le proporciona un objeto de modelo lineal, **plot()** devuelve pares de diagramas de diagnóstico básicos.
+
+#### Salir de R {-}
+
+Se puede salir de **R** usando la función **q()**:
+
+```{r, 21, echo = T, eval = F, message = F, warning = F} 
+q()
+```
+ 
+A continuación, **R** pregunta si se desea guardar la imagen del espacio de trabajo. Respondiendo **n** (no) saldrá de **R** sin guardar nada, mientras que respondiendo **y** (yes) guardará todos los objetos actualmente definidos en un archivo **.RData** y el historial de comandos en un archivo **.Rhistory**, ambos en el directorio de trabajo.
+
+#### Gestión de archivos {-}
+
+Si la sesión se **R** inicia en un directorio que tiene archivos **.RData** y/o **.Rhistory**, estos se cargarán automáticamente. En cuanto al directorio de trabajo:
+
+- Para consultar el directorio de trabajo se debe usar **getwd()**. 
+- Para cambiar el directorio de trabajo se debe usar **setwd()**. 
+- Para consultar los archivos en un directorio se debe usar la función **dir()**.
+
+Los espacios de trabajo guardados de otros directorios se pueden cargar usando la función **load()**. Análogamente, los objetos de **R** se pueden guardar (en formato binario) usando **save()**. 
+
+#### Obtención de ayuda {-}
+
+**R** es un software bien documentado. Se puede acceder a la ayuda sobre cualquier función utilizando el símbolo **?** o la función **help()**. Por lo tanto:
+
+```{r, 22, echo = T, eval = F, message = F, warning = F} 
+?options
+
+help("options")
+```
+
+Ambos abren la página de ayuda para el comando **options()**. En la parte inferior de una página de ayuda, normalmente se muestran ejemplos prácticos de cómo utilizar dicha función. Estos se pueden ejecutar fácilmente con la función **example()**; por ejemplo, si no se conoce el nombre exacto de un comando, como suele ser el caso de los principiantes, las funciones a utilizar son **help.search()** y **apropos()**:
+
+**help.search()** devuelve archivos de ayuda con alias, conceptos o títulos que coinciden con un "patrón" mediante la coincidencia aproximada. Por lo tanto, si se desea ayuda sobre la configuración de las opciones, pero no se conoce el nombre exacto del comando (es decir, se deconoce la función **options()**), una búsqueda de objetos que contenga el patrón "options" puede ser útil. En otras palabras, **help.search("option")** devolverá una lista (larga) de comandos, marcos de datos, entre otros, que contienen el patrón "options", incluida la entrada que proporciona el resultado deseado:
+
+`options(base)  Options Settings`
+
+El resultado anterior dice que existe una función llamada **options()** el paquete base de **R** que proporciona una capa de configuración de opciones. 
+
+Alternativamente, la función a **apropos()** enumera todas las funciones cuyos nombres incluyen el patrón introducido. Como lo ilustra:
+
+```{r, 23, echo = T, eval = F, message = F, warning = F}
+apropos("help")
+```
+
+El comando anterior proporciona una lista con solo tres entradas, incluida la función deseada **help()**. Se debe tener en cuenta que **help.search()** busca en todos los paquetes instalados, mientras que a **apropos()** simplemente examina los objetos que se encuentran actualmente en la lista de búsqueda.
+
+#### Viñetas {-}
+
+En un nivel más avanzado, existen las llamadas *viñetas*. Son *archivos PDF* generados a partir de *archivos integrados* que contienen código **R** y documentación (en formato LATEX). Por lo tanto, las viñetas suelen contener comandos que se pueden ejecutar directamente y que reproducen el análisis descrito. El presente curso fue escrito usando las herramientas en las que se basan las viñetas. La función **vignette()** proporciona una lista de viñetas en todos los paquetes adjuntos (el significado de "adjunto" se explicará más adelante). Un ejemplo es el siguiente código **vignette("strucchange-intro", package = "strucchange")**, que abre la viñeta que acompaña al paquete **strucchange**. El paquete trata temas relacionados con las pruebas, el seguimiento y la datación de los cambios estructurales en las regresiones de series de tiempo. Se recomienda consultar el Capítulo \@ref(TP) para obtener más información sobre los detalles de las viñetas e infraestructura relacionada.
+
+#### Demos {-}
+
+También existen "demos" para determinadas tareas. Una *demo* es una interfaz para ejecutar algunas demostraciones de **R** scripts (conocidos como guiones con comandos). Se puede escribir **demo()** para obtener una lista de los temas disponibles. Estos incluyen "**graphics**" y "**lm.glm**", este último proporciona ilustraciones sobre modelos lineales y lineales generalizados. Para los principiantes, correr **demo("graphics")** es muy recomendable.
+
+#### Manuales, preguntas frecuentes y publicaciones {-}
+
+**R** también viene con varios manuales:
+
+- Una introducción a **R**.
+- Importación / Exportación de datos en **R**.
+- Definición del lenguaje **R**.
+- Escritura de extensiones en **R**.
+- Instalación y administración en **R**.
+- Internos en **R**
+
+Además, existen varias colecciones de preguntas frecuentes ([Frequently Asked Questions](http://CRAN.R-project.org/faqs.html) o [FAQs](http://CRAN.R-project.org/faqs.html)), las cuales consisten en preguntas generales sobre **R** y también sobre problemas específicos de la plataforma en Microsoft Windows y Mac OS X. 
+
+Adicionalmente, existe un boletín en línea llamado *R News*, lanzado en 2001. Actualmente se publica unas tres veces al año y presenta, entre otras cosas, desarrollos recientes en **R** (como cambios en el idioma o nuevos paquetes de complementos), un "nicho de programador" y ejemplos que analizan datos con **R**. Se recomienda visitar [http://CRAN.R-project.org/doc/Rnews/](http://CRAN.R-project.org/doc/Rnews/) para más información.
+
+Para un número creciente de paquetes en **R**, existen publicaciones correspondientes en el *Journal of Statistical Software* (Revista de Software Estadístico que se puede consultar mediante el siguiente vínculo [http://www.jstatsoft.org/](http://www.jstatsoft.org/). Se trata de una revista de acceso abierto que publica artículos y fragmentos de código (así como reseñas de libros y software) sobre temas relacionados con algoritmos y software estadístico. Un volumen especial de Econometría en **R** se puede encontrar actualmente en preparación.
+
+Por último, existe una lista de libros en rápido crecimiento sobre **R**, así como en estadística aplicada usando **R** en todos los niveles, quizás el más completo sea Venables y Ripley (2002). Además, se remite al lector interesado a Dalgaard (2002) para una introducción a la estadística, a Murrell (2005) para gráficos en **R** y Faraway (2005) para comprender a profundidad las implicaciones de la regresión lineal.
+
+### El modelo de desarrollo {-}
+
+Una de las fortalezas de **R** y una característica clave de su éxito es que resulta ser altamente extensible a través de paquetes que proporcionan extensiones a todo lo disponible en el sistema base. Esto incluye no solo el código **R**, sino también código en lenguajes compilados (como *C*, *C++* o *FORTRAN*), conjuntos de datos, archivos de demostración, conjuntos de pruebas, vignettes o documentación adicional. Por lo tanto, cada usuario de **R** puede convertirse fácilmente en un desarrollador de **R** enviando sus paquetes a **CRAN** para compartirlos con la comunidad de **R**. Por lo tanto, los paquetes pueden influir activamente en la dirección en que (partes de) **R** irá en el futuro.
+
+A diferencia de los paquetes **CRAN**, los paquetes base del sistema **R** son mantenidos y desarrollados solo por el equipo central de **R**, que lanza actualizaciones de las principales versiones (es decir, versiones x.y.0) cada dos años (actualmente alrededor del 1 de abril y el 1 de octubre). Sin embargo, como **R** es un sistema de código abierto, todos los usuarios tienen acceso de lectura al repositorio principal o maestro de *SVN* (*SVN* significa Subversion), que funciona como un sistema de control de versiones (se recomienda visitar [http://subversion.tigris.org/](http://subversion.tigris.org/). En consecuencia, cualquiera puede consultar el código fuente completo de la versión de desarrollo de R.
+
+Asimismo, existen varios medios de comunicación dentro de la comunidad de usuarios y desarrolladores en **R**, así como entre los usuarios y el equipo de desarrollo central. Los dos más importantes en **R** son las extensas listas de correo y, como se describió anteriormente, los paquetes CRAN. El proyecto **R** alberga varias listas de correo, incluidas **R-help** y **R-devel**: 
+
+- El primero se utiliza para pedir ayuda sobre el uso de **R**.
+- El segundo se utiliza para discutir temas relacionados con el desarrollo de **R** o los paquetes de **R**. 
+
+Además, se pueden informar errores y realizar solicitudes de funciones. La publicación de la guía en [http://www.R-project.org/posting-guide.html](http://www.R-project.org/posting-guide.html) es una buena estrategia para hacer esto de manera efectiva. En adición a estas listas de correo generales, existen listas para *Grupos de Interés Especial* o *Special Interest Groups (SIGs)*, entre ellas almenos una lista podría ser de interés para el lector: La cual se llama *R-SIG-Finance*, que se encuentra dedicada a las finanzas y la econometría (financiera).
+
+#### Conceptos básicos en R {-}
+
+Como se mencionó anteriormente, este curso no pretende ser una introducción a **R**, sino una guía sobre cómo usar sus capacidades para aplicaciones que se encuentran comúnmente en econometría de pregrado. Aquellos que tengan conocimientos básicos en programación en **R** se sentirán cómodos comenzando con el Capítulo \@ref(TP). Sin embargo, esta sección está destinada a quienes no hayan trabajado con **R** o *RStudio* antes. Si al menos sabe cómo crear objetos y llamar a funciones, puede omitirlo. Si desea actualizar sus habilidades o tener una idea de cómo trabajar con *RStudio*, siga leyendo.
+
+En primer lugar, inicie *RStudio* y abra un nuevo script **R** seleccionando *Archivo*, *Nuevo archivo*, *Script R*. En el panel del editor, escriba
+
+```{r, 24, echo = T, eval = T, message = F, warning = F}
+1 + 1
+```
+
+y hacer clic en el botón etiquetado como *Ejecutar* en la esquina superior derecha del editor. Al hacerlo, su línea de código se envía a la consola y el resultado de esta operación debe mostrarse justo debajo. Como puede ver, **R** funciona como una calculadora. Puede hacer todos los cálculos aritméticos utilizando el operador correspondiente (**+**, **-**, $\textbf{*}$, **/** o **^**). Si no está seguro de lo que hizo el último operador, pruébelo y compruebe los resultados.
+
+#### Vectores {-}
+
+**R** es, por supuesto, más sofisticado que eso. Se puede trabajar con variables o, más generalmente, con objetos. Los objetos se definen mediante el operador de asignación **<-**. Para crear una variable llamada **x** que contenga el valor **10**, se necesita escribir `x <- 10` y hacer clic en el botón *Ejecutar* una vez más. La nueva variable debería haber aparecido en el panel de entorno en la parte superior derecha. Sin embargo, la consola no mostró ningún resultado porque la línea de código no contiene ningúna llamada que creara salida. Cuando ahora se escribe `x` en la consola y se presiona retorno, le pide a **R** que muestre el valor de **x** y el valor correspondiente debe imprimirse en la consola.
+
+**x** es un escalar, un vector de longitud $1$. Se pueden crear fácilmente vectores más largos usando la función **c()** (*c* es para "concatenar" o "combinar"). Para crear un vector **y** que contenga los números $1$ a $5$ e imprimirlo, se debe hacer lo siguiente.
+
+```{r, 25, echo = T, eval = T, message = F, warning = F}
+y <- c(1, 2, 3, 4, 5)
+
+y
+```
+
+También se puede crear un vector de letras o palabras. Por ahora, solo se necesita recordar que los caracteres deben estar entre comillas; de lo contrario, se analizarán como nombres de objeto.
+
+```{r, 26, echo = T, eval = T, message = F, warning = F}
+hello <- c("Hola", "Mundo")
+
+hello
+```
+
+Aquí se ha creado un vector de longitud 2 que contiene las palabras **Hola** y **Mundo**.
+
+¡No olvidar guardar el script! Para hacerlo, seleccionar *Archivo* y *Guardar*.
+
+#### Funciones {-}
+
+Se ha visto la función **c()** que se puede usar para combinar objetos. En general, todas las llamadas a funciones tienen el mismo aspecto: el nombre de una función siempre va seguido de paréntesis. A veces, los paréntesis incluyen argumentos.
+
+A continuación, se muestran dos ejemplos sencillos.
+
+```{r, 27, echo = T, eval = T, message = F, warning = F}
+# generar el vector `z`
+z <- seq(from = 1, to = 5, by = 1)
+
+# calcular la media de las entradas en `z`
+mean(z)
+```
+
+En la primera línea se usó una función llamada **seq()** para crear exactamente el mismo vector que se hizo en la sección anterior, llamándolo **z**. La función toma los argumentos **from**, **to** y **by** que deberían ser autoexplicativos.
+
+La función **mean()** calcula la media aritmética de su argumento **x**. Como se pasa el vector **z** como argumento **x**, ¡el resultado es **3**!
+
+Si no se está seguro de qué argumentos se espera en una función, se puede consultar la documentación de la función. Digamos que no se está seguro de cómo funcionan los argumentos requeridos para **seq()**. Luego se escribe `?Seq` en la consola. Al presionar regresar, la página de documentación para esa función aparece en el panel inferior derecho de *RStudio*. Allí, la sección *Argumentos* contiene la información que se busca. En la parte inferior de casi todas las páginas de ayuda se encontrará ejemplos sobre cómo utilizar las funciones correspondientes. Esto es muy útil para los principiantes y se recomenda siempre buscar.
+
+Por supuesto, todos los comandos presentados anteriormente también funcionan en el widgets interactivo, que se puede probar a continuación y a lo largo del curso al finalizar los apartados.
+
+```{r, 28, echo = F, results = 'asis'}
+write_html(playground = T)
+```
+
+## Ejemplos introductorios a sesiones típicas en R {#EISTP}
+
+Esta breve sección, además de proporcionar dos ejemplos introductorios sobre el ajuste de modelos de regresión, describe algunas características básicas de **R**, incluyendo las facilidades y el modelo de desarrollo de software que contribuyen a programar de forma eficiente. Para los más interesados, la parte final de la presente sección describe brevemente la historia de **R**.
+
+Para una primera impresión del software estadístico **R**, resulta necesario: "mirar y sentir". En consecuencia, se ofrecen ejemplos introductorios a sesiones típicas en **R**, en la que se analizarán brevemente dos conjuntos de datos. Lo anterior debería servir como una ilustración de cómo se pueden realizar las tareas básicas y cómo las operaciones empleadas se generalizan, modifican y amplían para tareas más avanzadas. Se sabe que no todos los detalles serán completamente expuestos de manera transparente en esta etapa, pero estos ejemplos deberían coadyuvar a dar una primera impresión de la funcionalidad y sintaxis de **R**. Las explicaciones sobre todos los detalles técnicos se posponen para los capítulos siguientes, donde se proporcionan análisis más completos.
+
+### Ejemplo 1: La demanda de revistas de economía {-}
+
+Se comienza con un pequeño conjunto de datos tomados de @stock2015 y Watson (2007) que proporciona información sobre el número de suscripciones de bibliotecas a revistas económicas en los Estados Unidos de América en el año 2000. El conjunto de datos, originalmente recopilado por Bergstrom (2001), está disponible en el paquete [@R-AER] con el nombre Journals. Se puede cargar via:
+
+```{r, 29, echo = T, eval = T, message = F, warning = F} 
+# paquete
+data("Journals", package = "AER")
+```
+
+Los comandos necesarios para explorar el conjunto de datos son:
+
+```{r, 30, echo = T, eval = T, message = F, warning = F} 
+# comando
+dim(Journals)
+
+# comando
+names(Journals)
+```
+
+Los comandos revelan que **Journals** es un conjunto de datos con $180$ observaciones (las revistas) sobre $10$ variables, incluido el número de suscripciones a la bibliotecas (**subs**), el precio (**price**), el número de citas (**citations**) y una variable cualitativa que indica si la revista es publicada por una sociedad o no (**society**).
+
+Aquí, interesa investigar la relación entre la demanda de revistas de economía y su precio. Una medida adecuada del precio de las revistas científicas es el precio por cita. Una gráfica de dispersión (en logaritmos) se puede obtener via:
+
+```{r, 31, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfica de dispersión de la suscripción a la biblioteca 
+# a partir del precio por cita (ambos en logaritmos) 
+plot(log(subs) ~ log(price/citations), data = Journals)
+```
+
+La gráfica muestra claramente que el número de suscripciones disminuye con el precio.
+
+El modelo de regresión lineal correspondiente se puede ajustar fácilmente mediante mínimos cuadrados ordinarios (MCO) utilizando la función **lm()** (para un modelo lineal) y la misma sintaxis:
+
+```{r, 32, echo = T, eval = T, message = F, warning = F} 
+# modelo de regresión lineal correspondiente a la suscripción a la biblioteca 
+# a partir del precio por cita (ambos en logaritmos)
+j_lm <- lm(log(subs) ~ log(price/citations), data = Journals)
+
+# agregar línea de mínimos cuadrados
+plot(log(subs) ~ log(price/citations), data = Journals)
+abline(j_lm)
+```
+
+El comando **abline()** agrega la línea de mínimos cuadrados a la gráfica de dispersión construida anteriormente. Un resumen detallado del modelo ajustado **j_lm** se puede obtener via:
+
+```{r, 33, echo = T, eval = T, message = F, warning = F} 
+summary(j_lm)
+```
+
+Específicamente, el comando anterior proporciona el resumen habitual de los coeficientes (con estimaciones, errores estándar, estadísticos de prueba y valores p) así como la $R^2$ asociada, junto con otra información. Para la regresión de las revistas, la elasticidad estimada de la demanda respecto al precio por cita es de $-0.5331$, que es significativamente diferente de $0$ en todos los niveles convencionales. La $R^2 = 0.557$ del modelo es bastante satisfactorio para una regresión de corte transversal. 
+
+Un análisis más detallado con información adicional, emplenado comando mucho más complejos de **R**, se proporcionan en \@ref(RNFRECD).
+
+### Ejemplo 2: Determinantes de los salarios {-}
+
+En el ejemplo anterior, se mostró cómo ajustar un modelo de regresión lineal simple para obtener una primera impresión de la apariencia y sensación de **R**. Los comandos para llevar a cabo el análisis a menudo se escriben casi por completo en inglés, lo que facilita la forma en que se comunica con el sistema. Para realizar tareas más complejas, los comandos también se vuelven más técnicos; sin embargo, las ideas básicas siguen siendo las mismas. Por lo tanto, todos deberían poder seguir el análisis y reconocer muchas de las estructuras del ejemplo anterior, incluso si en el presente curso no se explican a detalle todos las funciones. Una vez más, el propósito es brindar un ejemplo motivador que ilustre la facilidad con la que se pueden realizar algunas tareas más avanzadas en R. En los capítulos siguientes se proporcionan más detalles, tanto sobre los comandos como sobre los datos.
+
+La aplicación considerada aquí es la estimación de una ecuación salarial en forma semilogarítmica basada en datos tomados de Berndt (1991). Representan una submuestra aleatoria de datos de corte transversal originados en la *Encuesta de Población Actual* de mayo de 1985, que comprende $533$ observaciones. Después de cargar el conjunto de datos **CPS1985** del paquete **AER**. En este caso, primero se necesita cambiar el nombre por alguno de conveniencia:
+
+```{r, 34, echo = T, eval = T, message = F, warning = F} 
+data("CPS1985", package = "AER")
+
+cps <- CPS1985
+```
+
+Para **cps**, se debe estimar una ecuación salarial con **log(wage)** como la variable dependiente y educación (**education**) y experiencia(**experience**), ambos en número de años, como regresores. Para experiencia (**experience**), también se incluye un término cuadrático. Primero, se estima un modelo de regresión lineal múltiple por MCO (nuevamente a través de **lm()**). Luego, las regresiones de cuantiles se ajustan usando la función **rq()** del paquete **quantreg**. En cierto sentido, la regresión por cuantiles es un perfeccionamiento del modelo de regresión lineal estándar en el sentido de que proporciona una visión más completa de toda la distribución condicional (mediante la elección de cuantiles seleccionados), no solo la media condicional. Sin embargo, la principal razón para seleccionar esta técnica es que ilustra que las funciones de ajuste de **R** para los modelos de regresión suelen poseer una sintaxis prácticamente idéntica. 
+
+De hecho, en el caso de los modelos de regresión por cuantiles, todo lo que se necesita especificar, además de la fórmula y los argumentos de datos ya familiares, es **tau** (el conjunto de cuantiles que se modelarán). En este contexto, el argumento **tau** se establecerá en $0.2$, $0.35$, $0.5$, $0.65$, $0.8$. 
+
+Después de cargar el paquete **quantreg**, ambos modelos se pueden procesar tan fácilmente como
+
+```{r, 35, echo = T, eval = T, message = F, warning = F} 
+# paquete
+library("survival")
+library("quantreg")
+
+# primer modelo
+cps_lm <- lm(log(wage) ~ experience + I(experience^2) + education, data = cps)
+
+# segundo modelo
+cps_rq <- rq(log(wage) ~ experience + I(experience^2) + education, data = cps, tau = seq(0.2, 0.8, by = 0.15))
+```
+
+Estos modelos ajustados ahora podrían evaluarse numéricamente mediante la función **summary()**, como punto de partida. Más adelante se abordarán la diferentes formas en que se puede diagnósticar una regresión a detalle, así como los métodos alternativos. No obstante, en este punto se necesitan evaluar gráficamente ambos modelos; en particular, lo que respecta a la relación entre salarios y años de experiencia. Por lo tanto, se calculan predicciones de ambos modelos para un nuevo conjunto de datos. En el nuevo conjunto **cps2**, la variable educación (**education**) se mantendrá constante en su media, mientras que la variable experiencia (**experience**) varía en el rango de la variable original:
+
+```{r, 36, echo = T, eval = T, message = F, warning = F} 
+cps2 <- data.frame(education = mean(cps$education),
+                   experience = min(cps$experience):max(cps$experience))
+
+cps2 <- cbind(cps2, 
+              predict(cps_lm, newdata = cps2, interval = "prediction"))
+
+cps2 <- cbind(cps2,
+              predict(cps_rq, newdata = cps2, type = ""))
+```
+
+Para ambos modelos, las predicciones se calculan utilizando el respectivo métodos **predict()** y enlazando los resultados como nuevas columnas a **cps2**. Primero, se visualizan los resultados de las regresiones de cuantiles en un gráfica de dispersión de **log(wage)** contra la experiencia, agregando las líneas de regresión para todos los cuantiles (en el nivel medio de educación):
+
+```{r, 37, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfica de dispersión del logaritmo del salario frente a la experiencia
+plot(log(wage) ~ experience, data = cps)
+
+# ajuste de regresión de cuantiles para cuantiles variables
+for(i in 6:10) lines(cps2[,i] ~ experience, data = cps2, col = "red")
+```
+
+Para mantener el código compacto, todas las líneas de regresión se agregan en un ciclo **for()**. El gráfico resultante muestra que los salarios son más altos para las personas con alrededor de 30 años de experiencia. La curvatura de las líneas de regresión es más marcada en los cuartiles inferiores, mientras que la relación es mucho más plana para los cuantiles superiores. La gráfica anterior también se puede ver en gráficas individuales, que se pueden obtener via:
+
+```{r, 38, eval = T, message = F, warning = F, fig.align='center'} 
+# coeficientes de regresión cuantílica para cuantiles variables 
+# bandas de confianza (gris) y estimación de mínimos cuadrados (rojo)
+plot(summary(cps_rq))
+```
+
+El gráfico describe los cambios en los coeficientes de regresión sobre cuantiles variables junto con las estimaciones de mínimos cuadrados (ambos junto con intervalos de confianza del $90\%$). Esto muestra que ambos coeficientes de experiencia (**experience**) eventualmente disminuyen en tamaño absoluto (se debe tomar en cuenta que el coeficiente del término cuadrático es negativo) al aumentar el cuantil y que, en consecuencia, la curva es más plana para los cuantiles más altos. El intercepto (la intersección) también aumenta, mientras que la influencia de educación (**education**) no varía tanto con el nivel de cuantiles.
+
+Aunque el tamaño de la muestra en esta ilustración es todavía bastante modesto para los estándares actuales, con $533$ observaciones, muchas observaciones están ocultas debido a la superposición de los diagramas de dispersión. Para evitar este problema y para ilustrar mejor algunas de las comodidades gráficas de **R**. 
+
+De igual forma, las estimaciones de densidad del kernel se puede utilizar: las regiones de alta densidad frente a las de baja densidad en la distribución bivariada pueden identificarse mediante una estimación de densidad de kernel bivariada y mostrarse gráficamente en un mapa de calor. En **R**, se puede obtener la estimación de densidad de kernel bivariada por **bkde2D()** en el paquete **KernSmooth**: 
+
+```{r, 39, eval = T, message = F, warning = F, fig.align='center'} 
+# paquete KernSmooth
+library("KernSmooth")
+
+# mapa de calor de densidad de kernel bivariado del logaritmo de salario por experiencia
+cps_bkde <- bkde2D(cbind(cps$experience, log(cps$wage)), 
+                   bandwidth = c(3.5, 0.5), 
+                   gridsize = c(200, 200))
+```
+
+Como **bkde2D()** no tiene una interfaz de fórmula (a diferencia de **lm()** o **rq()**), por tanto, se deben extraer las columnas relevantes del conjunto de datos **cps** y se seleccionan los anchos de banda y el tamaño de cuadrícula adecuados. Las $200 \times 200$ matrices resultantes de estimaciones de densidad se puede visualizar en un mapa de calor utilizando niveles de gris que codifican los valores de densidad. **R** proporciona la función **image()** ( o **contour()**) para producir tales pantallas, que se pueden aplicar a **cps_bkde** como sigue:
+
+```{r, 40, echo = T, eval = T, message = F, warning = F} 
+image(cps_bkde$x1, cps_bkde$x2, cps_bkde$fhat,
+      col = rev(gray.colors(10, gamma = 1)),
+      xlab = "experience", ylab = "log(wage)")
+
+box()
+
+# ajuste de mínimos cuadrados e intervalo de predicción
+lines(fit ~ experience, data = cps2)
+lines(lwr ~ experience, data = cps2, lty = 2)
+lines(upr ~ experience, data = cps2, lty = 2)
+```
+
+Después de dibujar el mapa de calor en sí, se agrega una la línea de regresión para el ajuste del modelo lineal junto con los intervalos de predicción. Comparado con el diagrama de dispersión, esto pone de manifiesto más claramente la relación empírica entre **log(wage)** y **experience**.
+
+Esto concluye los ejemplos introductorios a sesiones típicas en **R**. Más detalles sobre los conjuntos de datos, modelos y funciones de **R** se proporcionan en los siguientes capítulos.
+
+## Una breve historia de R {#UBHR}
+
+Como se señaló anteriormente, el sistema de computación estadística y gráficos **R** (*R Development Core Team 2021b*, [http://www.R-project.org/](http://www.R-project.org/)) es un proyecto de software de código abierto. La historia comienza en Bell Laboratories (de AT&T, ahora Alcatel-Lucent en Nueva Jersey), con el lenguaje *S*, un sistema de análisis de datos desarrollado por John Chambers, Rick Becker y colaboradores desde finales de la década de 1970. En este caso, *Landmarks of the development of S* (Hitos del desarrollo de S) son una serie de libros, a los que se hace referencia por color en la comunidad *S*:
+
+1. Se comienza con el "*libro marrón*" (Becker y Chambers 1984), que presenta "*Old S*”. 
+2. La referencia básica para "*New S*", o la versión 2 de *S*, es Becker, Chambers y Wilks (1988). Se conoce como el "*libro azul*".
+3. Para la versión 3 de *S* (programación orientada a objetos de primera generación y modelado estadístico), la referencia es Chambers y Hastie (1992). Se conoce como el “*libro blanco*”. 
+4. Para la versión 4 de *S* (Chambers 1998). Se conoce como el "libro verde".
+
+El "libro verde" está fundamentado en las distintas versiones de *S*, *Insightful Corporation* (anteriormente *MathSoft* y aún antes *Statistical Sciences*) ha proporcionado una versión comercialmente mejorada y respaldada de *S*, llamado *S-PLUS*, desde 1987. En esencia, esto incluye la original implementación de *S*, que fue licenciada exclusivamente por primera vez y finalmente comprada en 2004. El 23 de marzo de 1999, la Association for Computing Machinery (ACM) nombró a John Chambers como el destinatario de su premio 1998 Software System Award por desarrollar el sistema *S*, señalando que su trabajo: 
+
+"Alterará para siempre la forma en que las personas analizan, visualizan y manipulan los datos".
+
+**R** en sí mismo fue desarrollado inicialmente por Robert Gentleman y Ross Ihaka en la Universidad de Auckland, Nueva Zelanda. Sus inventores describen una versión temprana en un artículo (Ihaka y Gentleman 1996). Diseñaron el idioma para combinar las fortalezas de dos idiomas existentes, *S* y *Scheme* (Steel y Sussman 1975). En palabras de Ihaka y Gentleman (1996):
+
+“[El] lenguaje resultante es muy similar en apariencia a *S*, pero la implementación subyacente y la semántica se derivan de *Scheme*.” 
+
+El resultado fue bautizado como **R**: 
+
+“En parte para reconocer la influencia de *S* y en parte para celebrar [sus] propios esfuerzos.”
+
+El código fuente de **R** fue lanzado por primera vez bajo la Licencia Pública General (LPG) de GNU (General Public License (GPL) de GNU) en 1995. Desde mediados de 1997, ha existido el Equipo Central de Desarrollo R (R Development Core Team), que actualmente consta de 19 miembros y sus nombres están disponibles al escribir la función **contributors()** en una sesión normal de R. En 1998 se estableció la Red Completa de Archivos R ([Comprehensive R Archive Network](http://CRAN.R-project.org/) o [CRAN](http://CRAN.R-project.org/)), que es una familia de sitios espejo en todo el mundo que almacenan versiones idénticas y actualizadas de código y documentación para **R**. 
+
+El primer lanzamiento oficial fue la versión 1.0.0 de **R**, con fecha de 2000-02-29, que implementa el software *S3* según lo documentado por Chambers y Hastie (1992). La versión 2.0.0 de **R** se lanzó en 2004. La versión 2.7.0 del lenguaje **R**, puede verse como una implementación *S4* (Chambers 1998) con numerosos conceptos que van más allá de los diversos estándares de *S*.
+
+La primera publicación de **R** en la literatura de econometría parece haber sido por Cribari-Neto y Zarkos (1999), una revisión de software en el *Journal of Applied Econometrics* titulado "*R: Yet Another Econometric Programming Environment*" ("*R: Otro entorno más de programación econométrica*”). El artículo describe la versión 0.63.1 de **R**, en ese entonces todavía era una versión beta. Tres años más tarde, en una revisión de software adicional en la misma revista, Racine y Hyndman (2002) se centraron en el uso de **R** para enseñar econometría utilizando la versión 1.3.1 de **R**. Hasta donde se sabe, este curso es la primera introducción general a la *Econoalgoritmia* en **R**: Creación e implementación de algoritmos computacionales en economía aplicada haciendo uso de herramientas y métodos propios de la econometría y ciencia de datos.

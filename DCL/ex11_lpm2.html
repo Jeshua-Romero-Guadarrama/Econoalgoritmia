@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+     <body>     
+     <div data-datacamp-exercise data-lang="r" data-height="auto">
+     <code data-type="pre-exercise-code">
+     library(readr)
+     library(AER)
+     Titanic_2 <- read_csv("https://stanford.io/2O9RUCF")[,-3]
+     colnames(Titanic_2) = c("Survived", "Class", "Sex", "Age", "Siblings", "Parents", "Fare")    
+     Titanic_2$Class <- as.factor(Titanic_2$Class)
+     surv_mod <- lm(Survived ~ Class, data = Titanic_2)
+     </code>
+     
+     <code data-type="sample-code">
+     # calcular las estimaciones específicas de la clase   
+       
+     # ajuste el LMP aumentado y asígnelo a `LPM_mod`
+     
+     # obtener un resumen robusto de los coeficientes del modelo
+
+     </code>
+     
+     <code data-type="solution">
+     # calcular las estimaciones específicas de la clase  
+     surv_prob_c1 <- surv_mod$coefficients[1]  
+     surv_prob_c2 <- surv_prob_c1 + surv_mod$coefficients[2]  
+     surv_prob_c3 <- surv_prob_c1 + surv_mod$coefficients[3]  
+       
+     # ajuste el LMP aumentado y asígnelo a `LPM_mod`
+     LPM_mod <- lm(Survived ~ ., data = Titanic_2)
+     
+     # obtener un resumen robusto de los coeficientes del modelo
+     coeftest(LPM_mod, vcovHC)
+     </code>
+       
+     <code data-type="sct">
+     test_predefined_objects("Titanic_2")
+     test_predefined_objects("surv_mod")
+     test_object("surv_prob_c1")
+     test_object("surv_prob_c2")
+     test_object("surv_prob_c3")
+     test_function("coeftest", args = c("x", "vcov."))
+     success_msg("Lindo. El LMP aumentado predice que la probabilidad de supervivencia aumenta con la clase de pasajeros. Los coeficientes estimados en las variables ficticias de la clase de pasajeros cambiaron solo marginalmente y siguen siendo muy significativos. Se concluye que no hay un OVB sustancial en el LPM simple del Ejercicio 5.")
+     </code>
+     </div>
+     </body>
+</html>

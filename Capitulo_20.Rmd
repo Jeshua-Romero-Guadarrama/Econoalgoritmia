@@ -1,0 +1,8 @@
+# Ciencia de datos
+
+```{r, child="_setup.Rmd"}
+```
+
+```{r, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```

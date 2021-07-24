@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+      <body>
+      <div data-datacamp-exercise data-lang='r' data-height =320>
+      <code data-type="pre-exercise-code">
+      library(AER)
+      library(MASS)
+      mod <- lm(medv ~ lstat + crim + age, data = Boston)
+      </code>
+      
+      <code data-type="sample-code">
+      # construir un intervalo de confianza del 99% para todos los coeficientes
+      
+      </code>
+      
+      <code data-type="solution">
+      # construir un intervalo de confianza del 99% para todos los coeficientes
+      confint(mod, level = 0.99)
+      </code>
+
+      <code data-type="sct">
+      test_function("confint", args = c("object", "level"))
+      success_msg("¡Bien hecho! De manera análoga al ejercicio anterior, se puede ver que 0 no es un elemento en ninguno de los intervalos de confianza, sino para el coeficiente de la tasa de criminalidad. Por lo tanto, como se esperaba, la decisión de la prueba sigue siendo la misma.")
+      </code>
+      </div>
+      </body>
+</html>

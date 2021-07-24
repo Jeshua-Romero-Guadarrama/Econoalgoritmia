@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>15.5 Predictores adicionales y el modelo ADL | Econoalgoritmia: Econometría avanzada y ciencia de datos con R</title>
+  <meta name="description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="15.5 Predictores adicionales y el modelo ADL | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  <meta property="og:type" content="book" />
+  <meta property="og:url" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia/" />
+  <meta property="og:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+  <meta property="og:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="github-repo" content="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="15.5 Predictores adicionales y el modelo ADL | Econoalgoritmia: Econometría avanzada y ciencia de datos con R" />
+  
+  <meta name="twitter:description" content="Los estudiantes con poca experiencia en estadística y econometría a menudo tienen dificultades para entender los beneficios de desarrollar habilidades de programación al momento de aplicar diversos métodos econométricos. ‘Econoalgoritmia: Econometría avanzada y ciencia de datos con R’ por Jeshua Romero Guadarrama (2021), ofrece una introducción interactiva a los aspectos esenciales de la programación por medio del lenguaje y software estadístico R, así como una guía para la aplicación de la teoría económica y econométrica en entornos específicos. En otras palabras, el objetivo es que los estudiantes se adentren al mundo de la economía aplicada mediante ejemplos empíricos presentados en la vida diaria y haciendo uso de las habilidades de programación recién adquiridas. Dicho objetivo se encuentra respaldado por ejercicios de programación interactivos generados con DataCamp Light y la incorporación de visualizaciones dinámicas de conceptos fundamentales mediante la flexibilidad de JavaScript, a través de la biblioteca D3.js." />
+  <meta name="twitter:image" content="https://jeshua-romero-guadarrama.github.io/Econoalgoritmia//images/cover.png" />
+
+<meta name="author" content="Jeshua Romero Guadarrama" />
+
+
+<meta name="date" content="2021-05-30" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="15-4-PGMPI.html"/>
+<link rel="next" href="15-6-SLRUCI.html"/>
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<!-- font families -->
+
+<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Source+Sans+Pro" rel="stylesheet">
+
+<script src="js/hideOutput.js"></script>
+
+<!-- Mathjax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/default.js"></script>
+
+ <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        jax: ["input/TeX","output/CommonHTML"]
+      });
+      MathJax.Hub.processSectionDelay = 0;
+  </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110299877-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110299877-1');
+</script>
+
+<!-- open review block -->
+
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link rel="stylesheet" href="toc.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><center><img src="images/logo.png" alt="logo" width="50%" height="50%"style="margin: 15px 0 0 0"></center></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Prefacio</a></li>
+<li class="chapter" data-level="1" data-path="1-Introducción.html"><a href="1-Introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="1-1-MT.html"><a href="1-1-MT.html"><i class="fa fa-check"></i><b>1.1</b> Marco teórico</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econometría"><i class="fa fa-check"></i>¿Qué es la econometría?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-ciencia-de-datos"><i class="fa fa-check"></i>¿Qué es la ciencia de datos?</a></li>
+<li class="chapter" data-level="" data-path="1-1-MT.html"><a href="1-1-MT.html#qué-es-la-econoalgoritmia"><i class="fa fa-check"></i>¿Qué es la econoalgoritmia?</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-Colofón.html"><a href="1-2-Colofón.html"><i class="fa fa-check"></i><b>1.2</b> Colofón</a></li>
+<li class="chapter" data-level="1.3" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html"><i class="fa fa-check"></i><b>1.3</b> Una breve introducción a <em>R</em> y <em>RStudio</em></a>
+<ul>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#primeros-pasos-en-r"><i class="fa fa-check"></i>Primeros pasos en R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#trabajar-con-r"><i class="fa fa-check"></i>Trabajar con R</a></li>
+<li class="chapter" data-level="" data-path="1-3-BIRR.html"><a href="1-3-BIRR.html#el-modelo-de-desarrollo"><i class="fa fa-check"></i>El modelo de desarrollo</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html"><i class="fa fa-check"></i><b>1.4</b> Ejemplos introductorios a sesiones típicas en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-1-la-demanda-de-revistas-de-economía"><i class="fa fa-check"></i>Ejemplo 1: La demanda de revistas de economía</a></li>
+<li class="chapter" data-level="" data-path="1-4-EISTP.html"><a href="1-4-EISTP.html#ejemplo-2-determinantes-de-los-salarios"><i class="fa fa-check"></i>Ejemplo 2: Determinantes de los salarios</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="1-5-UBHR.html"><a href="1-5-UBHR.html"><i class="fa fa-check"></i><b>1.5</b> Una breve historia de R</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-RNFRECD.html"><a href="2-RNFRECD.html"><i class="fa fa-check"></i><b>2</b> Repaso de las nociones fundamentales de R para la econometría y ciencia de datos</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="2-1-RCC.html"><a href="2-1-RCC.html"><i class="fa fa-check"></i><b>2.1</b> <strong>R</strong> como calculadora</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#aritmética-vectorial"><i class="fa fa-check"></i>Aritmética vectorial</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#vectores-de-subconjuntos"><i class="fa fa-check"></i>Vectores de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-1-RCC.html"><a href="2-1-RCC.html#modelado-de-vectores"><i class="fa fa-check"></i>Modelado de vectores</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-OCM.html"><a href="2-2-OCM.html"><i class="fa fa-check"></i><b>2.2</b> Operaciones con matrices</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#álgebra-básica-matricial"><i class="fa fa-check"></i>Álgebra básica matricial</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#modelado-de-matrices"><i class="fa fa-check"></i>Modelado de matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#combinando-matrices"><i class="fa fa-check"></i>Combinando matrices</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#r-como-lenguaje-de-programación"><i class="fa fa-check"></i>R como lenguaje de programación</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#la-moda-de-un-vector"><i class="fa fa-check"></i>La moda de un vector</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#vectores-lógicos-y-de-caracteres"><i class="fa fa-check"></i>Vectores lógicos y de caracteres</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#más-sobre-subconjuntos"><i class="fa fa-check"></i>Más sobre subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#listas"><i class="fa fa-check"></i>Listas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#comparaciones-lógicas"><i class="fa fa-check"></i>Comparaciones lógicas</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#coerción"><i class="fa fa-check"></i>Coerción</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#generación-de-números-aleatorios"><i class="fa fa-check"></i>Generación de números aleatorios</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#control-de-flujo"><i class="fa fa-check"></i>Control de flujo</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#escritura-de-funciones"><i class="fa fa-check"></i>Escritura de funciones</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#cálculos-vectorizados"><i class="fa fa-check"></i>Cálculos vectorizados</a></li>
+<li class="chapter" data-level="" data-path="2-2-OCM.html"><a href="2-2-OCM.html#palabras-reservadas"><i class="fa fa-check"></i>Palabras reservadas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-Fórmulas.html"><a href="2-3-Fórmulas.html"><i class="fa fa-check"></i><b>2.3</b> Fórmulas</a></li>
+<li class="chapter" data-level="2.4" data-path="2-4-GDR.html"><a href="2-4-GDR.html"><i class="fa fa-check"></i><b>2.4</b> Gestión de datos en R</a>
+<ul>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#creación-desde-cero"><i class="fa fa-check"></i>Creación desde cero</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#selección-de-subconjuntos"><i class="fa fa-check"></i>Selección de subconjuntos</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#importar-y-exportar"><i class="fa fa-check"></i>Importar y exportar</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#leer-y-escribir-formatos-binarios-extranjeros"><i class="fa fa-check"></i>Leer y escribir formatos binarios extranjeros</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#interacción-con-el-sistema-de-archivos-y-manipulaciones-de-cadenas"><i class="fa fa-check"></i>Interacción con el sistema de archivos y manipulaciones de cadenas</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#factores"><i class="fa fa-check"></i>Factores</a></li>
+<li class="chapter" data-level="" data-path="2-4-GDR.html"><a href="2-4-GDR.html#valores-faltantes"><i class="fa fa-check"></i>Valores faltantes</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="2-5-OO.html"><a href="2-5-OO.html"><i class="fa fa-check"></i><b>2.5</b> Orientación a objetos</a></li>
+<li class="chapter" data-level="2.6" data-path="2-6-GR.html"><a href="2-6-GR.html"><i class="fa fa-check"></i><b>2.6</b> Gráficos en <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#la-función-plot"><i class="fa fa-check"></i>La función plot()</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#parámetros-gráficos"><i class="fa fa-check"></i>Parámetros gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#exportación-de-gráficos"><i class="fa fa-check"></i>Exportación de gráficos</a></li>
+<li class="chapter" data-level="" data-path="2-6-GR.html"><a href="2-6-GR.html#anotación-matemática-de-parcelas"><i class="fa fa-check"></i>Anotación matemática de parcelas</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html"><i class="fa fa-check"></i><b>2.7</b> Análisis exploratorio de datos con <strong>R</strong></a>
+<ul>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica"><i class="fa fa-check"></i>Una variable numérica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-categórica"><i class="fa fa-check"></i>Una variable categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-categóricas"><i class="fa fa-check"></i>Dos variables categóricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#dos-variables-numéricas"><i class="fa fa-check"></i>Dos variables numéricas</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#una-variable-numérica-y-una-categórica"><i class="fa fa-check"></i>Una variable numérica y una categórica</a></li>
+<li class="chapter" data-level="" data-path="2-7-AEDR.html"><a href="2-7-AEDR.html#ejercicios"><i class="fa fa-check"></i>Ejercicios</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-TP.html"><a href="3-TP.html"><i class="fa fa-check"></i><b>3</b> Teoría de la probabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><i class="fa fa-check"></i><b>3.1</b> Variables aleatorias y distribuciones de probabilidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-discretas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias discretas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#ensayos-de-bernoulli"><i class="fa fa-check"></i>Ensayos de Bernoulli</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#valor-esperado-media-y-varianza"><i class="fa fa-check"></i>Valor esperado, media y varianza</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#distribuciones-de-probabilidad-de-variables-aleatorias-continuas"><i class="fa fa-check"></i>Distribuciones de probabilidad de variables aleatorias continuas</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-normal"><i class="fa fa-check"></i>La distribución normal</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-chi-cuadrado"><i class="fa fa-check"></i>La distribución chi-cuadrado</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#thetdist"><i class="fa fa-check"></i>La distribución t de Student</a></li>
+<li class="chapter" data-level="" data-path="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html"><a href="3-1-variables-aleatorias-y-distribuciones-de-probabilidad.html#la-distribución-f"><i class="fa fa-check"></i>La distribución F</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html"><i class="fa fa-check"></i><b>3.2</b> Muestreo aleatorio y distribución de promedios muestrales</a>
+<ul>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#media-y-varianza-de-la-media-muestral"><i class="fa fa-check"></i>Media y varianza de la media muestral</a></li>
+<li class="chapter" data-level="" data-path="3-2-MADPM.html"><a href="3-2-MADPM.html#aproximaciones-de-muestras-grandes-para-distribuciones-de-muestreo"><i class="fa fa-check"></i>Aproximaciones de muestras grandes para distribuciones de muestreo</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-Ejercicios-2.html"><a href="3-3-Ejercicios-2.html"><i class="fa fa-check"></i><b>3.3</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-RER.html"><a href="4-RER.html"><i class="fa fa-check"></i><b>4</b> Revisión de estadística con R</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="4-1-estimación-de-la-media-poblacional.html"><a href="4-1-estimación-de-la-media-poblacional.html"><i class="fa fa-check"></i><b>4.1</b> Estimación de la media poblacional</a></li>
+<li class="chapter" data-level="4.2" data-path="4-2-PMM.html"><a href="4-2-PMM.html"><i class="fa fa-check"></i><b>4.2</b> Propiedades de la media muestral</a></li>
+<li class="chapter" data-level="4.3" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.3</b> Pruebas de hipótesis relativas a la media de la población</a>
+<ul>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#el-valor-p-p-value"><i class="fa fa-check"></i>El valor p (p-Value)</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-se-conoce-la-desviación-estándar"><i class="fa fa-check"></i>Cálculo del valor p cuando se conoce la desviación estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#varianza-de-muestra-desviación-estándar-de-muestra-y-error-estándar"><i class="fa fa-check"></i>Varianza de muestra, desviación estándar de muestra y error estándar</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#cálculo-del-valor-p-cuando-la-desviación-estándar-es-desconocida"><i class="fa fa-check"></i>Cálculo del valor p cuando la desviación estándar es desconocida</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#la-estadística-t"><i class="fa fa-check"></i>La estadística t</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#prueba-de-hipótesis-con-un-nivel-de-significancia-preespecificado"><i class="fa fa-check"></i>Prueba de hipótesis con un nivel de significancia preespecificado</a></li>
+<li class="chapter" data-level="" data-path="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html"><a href="4-3-pruebas-de-hipótesis-relativas-a-la-media-de-la-población.html#alternativas-unilaterales"><i class="fa fa-check"></i>Alternativas unilaterales</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><a href="4-4-intervalos-de-confianza-para-la-media-de-la-población.html"><i class="fa fa-check"></i><b>4.4</b> Intervalos de confianza para la media de la población</a></li>
+<li class="chapter" data-level="4.5" data-path="4-5-CMDP.html"><a href="4-5-CMDP.html"><i class="fa fa-check"></i><b>4.5</b> Comparación de medias de diferentes poblaciones</a></li>
+<li class="chapter" data-level="4.6" data-path="4-6-UABGI.html"><a href="4-6-UABGI.html"><i class="fa fa-check"></i><b>4.6</b> Una aplicación a la brecha de género en los ingresos</a></li>
+<li class="chapter" data-level="4.7" data-path="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><a href="4-7-diagramas-de-dispersión-covarianza-de-muestra-y-correlación-de-muestra.html"><i class="fa fa-check"></i><b>4.7</b> Diagramas de dispersión, covarianza de muestra y correlación de muestra</a></li>
+<li class="chapter" data-level="4.8" data-path="4-8-Ejercicios-3.html"><a href="4-8-Ejercicios-3.html"><i class="fa fa-check"></i><b>4.8</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-RLR.html"><a href="5-RLR.html"><i class="fa fa-check"></i><b>5</b> Regresión lineal con un regresor</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="5-1-regresión-lineal-simple.html"><a href="5-1-regresión-lineal-simple.html"><i class="fa fa-check"></i><b>5.1</b> Regresión lineal simple</a></li>
+<li class="chapter" data-level="5.2" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><i class="fa fa-check"></i><b>5.2</b> Estimación de los coeficientes del modelo de regresión lineal</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html"><a href="5-2-estimación-de-los-coeficientes-del-modelo-de-regresión-lineal.html#el-estimador-de-mínimos-cuadrados-ordinarios"><i class="fa fa-check"></i>El estimador de mínimos cuadrados ordinarios</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html"><i class="fa fa-check"></i><b>5.3</b> Medidas de ajuste</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-coeficiente-de-determinación"><i class="fa fa-check"></i>El coeficiente de determinación</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#el-error-estándar-de-la-regresión"><i class="fa fa-check"></i>El error estándar de la regresión</a></li>
+<li class="chapter" data-level="" data-path="5-3-medidas-de-ajuste.html"><a href="5-3-medidas-de-ajuste.html#aplicación-a-los-datos-de-la-prueba-de-puntuación"><i class="fa fa-check"></i>Aplicación a los datos de la prueba de puntuación</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="5-4-SMC.html"><a href="5-4-SMC.html"><i class="fa fa-check"></i><b>5.4</b> Supuestos de mínimos cuadrados</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-1-el-término-de-error-tiene-una-media-condicional-de-cero"><i class="fa fa-check"></i>Supuesto 1: El término de error tiene una media condicional de cero</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-2-datos-independientes-e-idénticamente-distribuidos"><i class="fa fa-check"></i>Supuesto 2: Datos independientes e idénticamente distribuidos</a></li>
+<li class="chapter" data-level="" data-path="5-4-SMC.html"><a href="5-4-SMC.html#supuesto-3-los-valores-atípicos-grandes-son-poco-probables"><i class="fa fa-check"></i>Supuesto 3: Los valores atípicos grandes son poco probables</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html"><i class="fa fa-check"></i><b>5.5</b> La distribución muestral del estimador de MCO</a>
+<ul>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-1"><i class="fa fa-check"></i>Estudio de simulación 1</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-2"><i class="fa fa-check"></i>Estudio de simulación 2</a></li>
+<li class="chapter" data-level="" data-path="5-5-DMEMCO.html"><a href="5-5-DMEMCO.html#estudio-de-simulación-3"><i class="fa fa-check"></i>Estudio de simulación 3</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="5-6-Ejercicios-4.html"><a href="5-6-Ejercicios-4.html"><i class="fa fa-check"></i><b>5.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-PHICMRLS.html"><a href="6-PHICMRLS.html"><i class="fa fa-check"></i><b>6</b> Pruebas de hipótesis e intervalos de confianza en el modelo de regresión lineal simple</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><a href="6-1-prueba-de-hipótesis-de-dos-lados-respecto-al-coeficiente-de-la-pendiente.html"><i class="fa fa-check"></i><b>6.1</b> Prueba de hipótesis de dos lados respecto al coeficiente de la pendiente</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html"><i class="fa fa-check"></i><b>6.2</b> Intervalos de confianza para coeficientes de regresión</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-2-ICCR.html"><a href="6-2-ICCR.html#estudio-de-simulación-intervalos-de-confianza"><i class="fa fa-check"></i>Estudio de simulación: Intervalos de confianza</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-RCXVB.html"><a href="6-3-RCXVB.html"><i class="fa fa-check"></i><b>6.3</b> Regresión cuando X es una variable binaria</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-HH.html"><a href="6-4-HH.html"><i class="fa fa-check"></i><b>6.4</b> Heteroscedasticidad y homocedasticidad</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#un-ejemplo-del-mundo-real-de-heterocedasticidad"><i class="fa fa-check"></i>Un ejemplo del mundo real de heterocedasticidad</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#los-economistas-deberían-preocuparse-por-la-heterocedasticidad"><i class="fa fa-check"></i>¿Los economistas deberían preocuparse por la heterocedasticidad?</a></li>
+<li class="chapter" data-level="" data-path="6-4-HH.html"><a href="6-4-HH.html#cálculo-de-errores-estándar-robustos-de-heterocedasticidad"><i class="fa fa-check"></i>Cálculo de errores estándar robustos de heterocedasticidad</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html"><i class="fa fa-check"></i><b>6.5</b> El teorema de Gauss-Markov</a>
+<ul>
+<li class="chapter" data-level="" data-path="6-5-el-teorema-de-gauss-markov.html"><a href="6-5-el-teorema-de-gauss-markov.html#estudio-de-simulación-estimador-azul"><i class="fa fa-check"></i>Estudio de simulación: Estimador AZUL</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><a href="6-6-uso-del-estadístico-t-en-regresión-cuando-el-tamaño-de-la-muestra-es-pequeño.html"><i class="fa fa-check"></i><b>6.6</b> Uso del estadístico t en regresión cuando el tamaño de la muestra es pequeño</a></li>
+<li class="chapter" data-level="6.7" data-path="6-7-Ejercicios-5.html"><a href="6-7-Ejercicios-5.html"><i class="fa fa-check"></i><b>6.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-MRVR.html"><a href="7-MRVR.html"><i class="fa fa-check"></i><b>7</b> Modelos de regresión con varios regresores</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="7-1-sesgo-variable-omitido.html"><a href="7-1-sesgo-variable-omitido.html"><i class="fa fa-check"></i><b>7.1</b> Sesgo variable omitido</a></li>
+<li class="chapter" data-level="7.2" data-path="7-2-MRM.html"><a href="7-2-MRM.html"><i class="fa fa-check"></i><b>7.2</b> El modelo de regresión múltiple</a></li>
+<li class="chapter" data-level="7.3" data-path="7-3-MARM.html"><a href="7-3-MARM.html"><i class="fa fa-check"></i><b>7.3</b> Medidas de ajuste en regresión múltiple</a></li>
+<li class="chapter" data-level="7.4" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.4</b> Supuestos de MCO en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#multicolinealidad"><i class="fa fa-check"></i>Multicolinealidad</a></li>
+<li class="chapter" data-level="" data-path="7-4-supuestos-de-mco-en-regresión-múltiple.html"><a href="7-4-supuestos-de-mco-en-regresión-múltiple.html#estudio-de-simulación-multicolinealidad-imperfecta"><i class="fa fa-check"></i>Estudio de simulación: Multicolinealidad imperfecta</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><a href="7-5-la-distribución-de-los-estimadores-de-mco-en-regresión-múltiple.html"><i class="fa fa-check"></i><b>7.5</b> La distribución de los estimadores de MCO en regresión múltiple</a></li>
+<li class="chapter" data-level="7.6" data-path="7-6-Ejercicios-6.html"><a href="7-6-Ejercicios-6.html"><i class="fa fa-check"></i><b>7.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="8-PHICRM.html"><a href="8-PHICRM.html"><i class="fa fa-check"></i><b>8</b> Pruebas de hipótesis e intervalos de confianza en regresiones múltiples</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><a href="8-1-pruebas-de-hipótesis-e-intervalos-de-confianza-para-un-coeficiente-único.html"><i class="fa fa-check"></i><b>8.1</b> Pruebas de hipótesis e intervalos de confianza para un coeficiente único</a></li>
+<li class="chapter" data-level="8.2" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><i class="fa fa-check"></i><b>8.2</b> Una aplicación para evaluar los puntajes y la proporción de alumnos por maestro</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html"><a href="8-2-una-aplicación-para-evaluar-los-puntajes-y-la-proporción-de-alumnos-por-maestro.html#otro-aumento-del-modelo"><i class="fa fa-check"></i>Otro aumento del modelo</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><a href="8-3-prueba-de-hipótesis-conjunta-utilizando-el-estadístico-f.html"><i class="fa fa-check"></i><b>8.3</b> Prueba de hipótesis conjunta utilizando el estadístico F</a></li>
+<li class="chapter" data-level="8.4" data-path="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><a href="8-4-conjuntos-de-confianza-para-múltiples-coeficientes.html"><i class="fa fa-check"></i><b>8.4</b> Conjuntos de confianza para múltiples coeficientes</a></li>
+<li class="chapter" data-level="8.5" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html"><i class="fa fa-check"></i><b>8.5</b> Especificación de modelo para regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="" data-path="8-5-especificación-de-modelo-para-regresión-múltiple.html"><a href="8-5-especificación-de-modelo-para-regresión-múltiple.html#especificación-del-modelo-en-teoría-y-en-la-práctica"><i class="fa fa-check"></i>Especificación del modelo en teoría y en la práctica</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><a href="8-6-análisis-del-conjunto-de-datos-de-puntuación-de-la-prueba.html"><i class="fa fa-check"></i><b>8.6</b> Análisis del conjunto de datos de puntuación de la prueba</a></li>
+<li class="chapter" data-level="8.7" data-path="8-7-Ejercicios-7.html"><a href="8-7-Ejercicios-7.html"><i class="fa fa-check"></i><b>8.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="9-FRNL.html"><a href="9-FRNL.html"><i class="fa fa-check"></i><b>9</b> Funciones de regresión no lineal</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><a href="9-1-una-estrategia-general-para-modelar-funciones-de-regresión-no-lineal.html"><i class="fa fa-check"></i><b>9.1</b> Una estrategia general para modelar funciones de regresión no lineal</a></li>
+<li class="chapter" data-level="9.2" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html"><i class="fa fa-check"></i><b>9.2</b> Funciones no lineales de una única variable independiente</a>
+<ul>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#polinomios"><i class="fa fa-check"></i>Polinomios</a></li>
+<li class="chapter" data-level="" data-path="9-2-FNLUVI.html"><a href="9-2-FNLUVI.html#logaritmos"><i class="fa fa-check"></i>Logaritmos</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="9-3-interacciones-entre-variables-independientes.html"><a href="9-3-interacciones-entre-variables-independientes.html"><i class="fa fa-check"></i><b>9.3</b> Interacciones entre variables independientes</a></li>
+<li class="chapter" data-level="9.4" data-path="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><a href="9-4-efectos-no-lineales-en-los-puntajes-de-las-pruebas-de-la-proporción-alumno-maestro.html"><i class="fa fa-check"></i><b>9.4</b> Efectos no lineales en los puntajes de las pruebas de la proporción alumno-maestro</a></li>
+<li class="chapter" data-level="9.5" data-path="9-5-Ejercicios-8.html"><a href="9-5-Ejercicios-8.html"><i class="fa fa-check"></i><b>9.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="10-EEBRM.html"><a href="10-EEBRM.html"><i class="fa fa-check"></i><b>10</b> Evaluación de estudios basados en regresión múltiple</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="10-1-validez-interna-y-externa.html"><a href="10-1-validez-interna-y-externa.html"><i class="fa fa-check"></i><b>10.1</b> Validez interna y externa</a></li>
+<li class="chapter" data-level="10.2" data-path="10-2-AVIARM.html"><a href="10-2-AVIARM.html"><i class="fa fa-check"></i><b>10.2</b> Amenazas a la validez interna del análisis de regresión múltiple</a></li>
+<li class="chapter" data-level="10.3" data-path="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><a href="10-3-validez-interna-y-externa-cuando-la-regresión-se-usa-para-pronosticar.html"><i class="fa fa-check"></i><b>10.3</b> Validez interna y externa cuando la regresión se usa para pronosticar</a></li>
+<li class="chapter" data-level="10.4" data-path="10-4-EPETC.html"><a href="10-4-EPETC.html"><i class="fa fa-check"></i><b>10.4</b> Ejemplo: Puntajes de exámenes y tamaño de la clase</a></li>
+<li class="chapter" data-level="10.5" data-path="10-5-Ejercicios-9.html"><a href="10-5-Ejercicios-9.html"><i class="fa fa-check"></i><b>10.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="11-RDP.html"><a href="11-RDP.html"><i class="fa fa-check"></i><b>11</b> Regresión con datos de panel</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="11-1-datos-de-panel.html"><a href="11-1-datos-de-panel.html"><i class="fa fa-check"></i><b>11.1</b> Datos de panel</a></li>
+<li class="chapter" data-level="11.2" data-path="11-2-DPDPTCAD.html"><a href="11-2-DPDPTCAD.html"><i class="fa fa-check"></i><b>11.2</b> Datos de panel con dos períodos de tiempo: Comparaciones “antes y después”</a></li>
+<li class="chapter" data-level="11.3" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html"><i class="fa fa-check"></i><b>11.3</b> Regresión de efectos fijos</a>
+<ul>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#estimación-e-inferencia"><i class="fa fa-check"></i>Estimación e inferencia</a></li>
+<li class="chapter" data-level="" data-path="11-3-regresión-de-efectos-fijos.html"><a href="11-3-regresión-de-efectos-fijos.html#aplicación-a-muertes-por-accidentes-de-tráfico"><i class="fa fa-check"></i>Aplicación a muertes por accidentes de tráfico</a></li>
+</ul></li>
+<li class="chapter" data-level="11.4" data-path="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><a href="11-4-regresión-con-efectos-fijos-en-el-tiempo.html"><i class="fa fa-check"></i><b>11.4</b> Regresión con efectos fijos en el tiempo</a></li>
+<li class="chapter" data-level="11.5" data-path="11-5-SREFEEREF.html"><a href="11-5-SREFEEREF.html"><i class="fa fa-check"></i><b>11.5</b> Los supuestos de regresión de efectos fijos y los errores estándar para la regresión de efectos fijos</a></li>
+<li class="chapter" data-level="11.6" data-path="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><a href="11-6-leyes-de-conducción-en-estado-de-ebriedad-y-muertes-por-accidentes-de-tráfico.html"><i class="fa fa-check"></i><b>11.6</b> Leyes de conducción en estado de ebriedad y muertes por accidentes de tráfico</a></li>
+<li class="chapter" data-level="11.7" data-path="11-7-Ejercicios-10.html"><a href="11-7-Ejercicios-10.html"><i class="fa fa-check"></i><b>11.7</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="12-RVDB.html"><a href="12-RVDB.html"><i class="fa fa-check"></i><b>12</b> Regresión con una variable dependiente binaria</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><a href="12-1-variables-dependientes-binarias-y-el-modelo-de-probabilidad-lineal.html"><i class="fa fa-check"></i><b>12.1</b> Variables dependientes binarias y el modelo de probabilidad lineal</a></li>
+<li class="chapter" data-level="12.2" data-path="12-2-RPL.html"><a href="12-2-RPL.html"><i class="fa fa-check"></i><b>12.2</b> Regresión Probit y Logit</a>
+<ul>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-probit"><i class="fa fa-check"></i>Regresión Probit</a></li>
+<li class="chapter" data-level="" data-path="12-2-RPL.html"><a href="12-2-RPL.html#regresión-logit"><i class="fa fa-check"></i>Regresión Logit</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><a href="12-3-estimación-e-inferencia-en-los-modelos-logit-y-probit.html"><i class="fa fa-check"></i><b>12.3</b> Estimación e inferencia en los modelos logit y probit</a></li>
+<li class="chapter" data-level="12.4" data-path="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><a href="12-4-aplicación-a-los-datos-de-la-hmda-de-boston.html"><i class="fa fa-check"></i><b>12.4</b> Aplicación a los datos de la HMDA de Boston</a></li>
+<li class="chapter" data-level="12.5" data-path="12-5-Ejercicios-11.html"><a href="12-5-Ejercicios-11.html"><i class="fa fa-check"></i><b>12.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="13-RVI.html"><a href="13-RVI.html"><i class="fa fa-check"></i><b>13</b> Regresión de variables instrumentales</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="13-1-EVIURUI.html"><a href="13-1-EVIURUI.html"><i class="fa fa-check"></i><b>13.1</b> El estimador de VI con un solo regresor y un solo instrumento</a></li>
+<li class="chapter" data-level="13.2" data-path="13-2-MRVIG.html"><a href="13-2-MRVIG.html"><i class="fa fa-check"></i><b>13.2</b> El modelo de regresión VI general</a></li>
+<li class="chapter" data-level="13.3" data-path="13-3-CVI.html"><a href="13-3-CVI.html"><i class="fa fa-check"></i><b>13.3</b> Comprobación de la validez del instrumento</a></li>
+<li class="chapter" data-level="13.4" data-path="13-4-ADC.html"><a href="13-4-ADC.html"><i class="fa fa-check"></i><b>13.4</b> Aplicación a la demanda de cigarrillos</a></li>
+<li class="chapter" data-level="13.5" data-path="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><a href="13-5-de-dónde-provienen-los-instrumentos-válidos.html"><i class="fa fa-check"></i><b>13.5</b> ¿De dónde provienen los instrumentos válidos?</a></li>
+<li class="chapter" data-level="13.6" data-path="13-6-Ejercicios-12.html"><a href="13-6-Ejercicios-12.html"><i class="fa fa-check"></i><b>13.6</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="14-EC.html"><a href="14-EC.html"><i class="fa fa-check"></i><b>14</b> Experimentos y cuasiexperimentos</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="14-1-RPECEI.html"><a href="14-1-RPECEI.html"><i class="fa fa-check"></i><b>14.1</b> Resultados potenciales, efectos causales y experimentos idealizados</a></li>
+<li class="chapter" data-level="14.2" data-path="14-2-amenazas-a-la-validez-de-los-experimentos.html"><a href="14-2-amenazas-a-la-validez-de-los-experimentos.html"><i class="fa fa-check"></i><b>14.2</b> Amenazas a la validez de los experimentos</a></li>
+<li class="chapter" data-level="14.3" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><i class="fa fa-check"></i><b>14.3</b> Estimaciones experimentales del efecto de las reducciones del tamaño de las clases</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#diseño-experimental-y-conjunto-de-datos"><i class="fa fa-check"></i>Diseño experimental y conjunto de datos</a></li>
+<li class="chapter" data-level="" data-path="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html"><a href="14-3-estimaciones-experimentales-del-efecto-de-las-reducciones-del-tamaño-de-las-clases.html#análisis-de-los-datos-star"><i class="fa fa-check"></i>Análisis de los datos STAR</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="14-4-CE.html"><a href="14-4-CE.html"><i class="fa fa-check"></i><b>14.4</b> Cuasi experimentos</a>
+<ul>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#el-estimador-de-diferencias-en-diferencias"><i class="fa fa-check"></i>El Estimador de diferencias en diferencias</a></li>
+<li class="chapter" data-level="" data-path="14-4-CE.html"><a href="14-4-CE.html#estimadores-de-discontinuidad-de-regresión"><i class="fa fa-check"></i>Estimadores de discontinuidad de regresión</a></li>
+</ul></li>
+<li class="chapter" data-level="14.5" data-path="14-5-Ejercicios-13.html"><a href="14-5-Ejercicios-13.html"><i class="fa fa-check"></i><b>14.5</b> Ejercicios</a></li>
+</ul></li>
+<li class="chapter" data-level="15" data-path="15-IRSTP.html"><a href="15-IRSTP.html"><i class="fa fa-check"></i><b>15</b> Introducción a la regresión de series de tiempo y pronóstico</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><a href="15-1-uso-de-modelos-de-regresión-para-la-previsión.html"><i class="fa fa-check"></i><b>15.1</b> Uso de modelos de regresión para la previsión</a></li>
+<li class="chapter" data-level="15.2" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html"><i class="fa fa-check"></i><b>15.2</b> Datos de series de tiempo y correlación serial</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-2-DSTCS.html"><a href="15-2-DSTCS.html#notación-retrasos-diferencias-logaritmos-y-tasas-de-crecimiento"><i class="fa fa-check"></i>Notación, retrasos, diferencias, logaritmos y tasas de crecimiento</a></li>
+</ul></li>
+<li class="chapter" data-level="15.3" data-path="15-3-autoregresiones.html"><a href="15-3-autoregresiones.html"><i class="fa fa-check"></i><b>15.3</b> Autoregresiones</a>
+<ul>
+<li><a href="15-3-autoregresiones.html#modelos-autorregresivos-de-orden-p">Modelos autorregresivos de orden <span class="math inline">\(p\)</span></a></li>
+</ul></li>
+<li class="chapter" data-level="15.4" data-path="15-4-PGMPI.html"><a href="15-4-PGMPI.html"><i class="fa fa-check"></i><b>15.4</b> ¿Puede ganarle al mercado? (Parte I)</a></li>
+<li class="chapter" data-level="15.5" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html"><i class="fa fa-check"></i><b>15.5</b> Predictores adicionales y el modelo ADL</a>
+<ul>
+<li class="chapter" data-level="" data-path="15-5-PAMADL.html"><a href="15-5-PAMADL.html#incertidumbre-de-pronóstico-e-intervalos-de-pronóstico"><i class="fa fa-check"></i>Incertidumbre de pronóstico e intervalos de pronóstico</a></li>
+</ul></li>
+<li class="chapter" data-level="15.6" data-path="15-6-SLRUCI.html"><a href="15-6-SLRUCI.html"><i class="fa fa-check"></i><b>15.6</b> Selección de la longitud de retraso utilizando criterios de información</a></li>
+<li class="chapter" data-level="15.7" data-path="15-7-NEIT.html"><a href="15-7-NEIT.html"><i class="fa fa-check"></i><b>15.7</b> No estacionariedad I: Tendencias</a></li>
+<li class="chapter" data-level="15.8" data-path="15-8-NEIIP.html"><a href="15-8-NEIIP.html"><i class="fa fa-check"></i><b>15.8</b> No estacionariedad II: Pausas</a></li>
+<li class="chapter" data-level="15.9" data-path="15-9-puedes-ganarle-al-mercado-parte-ii.html"><a href="15-9-puedes-ganarle-al-mercado-parte-ii.html"><i class="fa fa-check"></i><b>15.9</b> ¿Puedes ganarle al mercado? (Parte II)</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="16-EECD.html"><a href="16-EECD.html"><i class="fa fa-check"></i><b>16</b> Estimación de efectos causales dinámicos</a>
+<ul>
+<li class="chapter" data-level="16.1" data-path="16-1-los-datos-del-jugo-de-naranja.html"><a href="16-1-los-datos-del-jugo-de-naranja.html"><i class="fa fa-check"></i><b>16.1</b> Los datos del jugo de naranja</a></li>
+<li class="chapter" data-level="16.2" data-path="16-2-efectos-causales-dinámicos.html"><a href="16-2-efectos-causales-dinámicos.html"><i class="fa fa-check"></i><b>16.2</b> Efectos causales dinámicos</a></li>
+<li class="chapter" data-level="16.3" data-path="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><a href="16-3-multiplicadores-dinámicos-y-multiplicadores-dinámicos-acumulativos.html"><i class="fa fa-check"></i><b>16.3</b> Multiplicadores dinámicos y multiplicadores dinámicos acumulativos</a></li>
+<li class="chapter" data-level="16.4" data-path="16-4-errores-estándar-de-hac.html"><a href="16-4-errores-estándar-de-hac.html"><i class="fa fa-check"></i><b>16.4</b> Errores estándar de HAC</a></li>
+<li class="chapter" data-level="16.5" data-path="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><a href="16-5-estimación-de-efectos-causales-dinámicos-con-regresores-estrictamente-exógenos.html"><i class="fa fa-check"></i><b>16.5</b> Estimación de efectos causales dinámicos con regresores estrictamente exógenos</a></li>
+<li class="chapter" data-level="16.6" data-path="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><a href="16-6-precios-del-jugo-de-naranja-y-clima-frío.html"><i class="fa fa-check"></i><b>16.6</b> Precios del jugo de naranja y clima frío</a></li>
+</ul></li>
+<li class="chapter" data-level="17" data-path="17-TARST.html"><a href="17-TARST.html"><i class="fa fa-check"></i><b>17</b> Temas adicionales en la regresión de series temporales</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="17-1-autorregresiones-vectoriales.html"><a href="17-1-autorregresiones-vectoriales.html"><i class="fa fa-check"></i><b>17.1</b> Autorregresiones vectoriales</a></li>
+<li class="chapter" data-level="17.2" data-path="17-2-OIPRUDFGLS.html"><a href="17-2-OIPRUDFGLS.html"><i class="fa fa-check"></i><b>17.2</b> Órdenes de integración y prueba de raíz unitaria DF-GLS</a></li>
+<li class="chapter" data-level="17.3" data-path="17-3-cointegración.html"><a href="17-3-cointegración.html"><i class="fa fa-check"></i><b>17.3</b> Cointegración</a></li>
+<li class="chapter" data-level="17.4" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><i class="fa fa-check"></i><b>17.4</b> Agrupación de volatilidad y heterocedasticidad condicional autorregresiva</a>
+<ul>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#modelos-arch-y-garch"><i class="fa fa-check"></i>Modelos ARCH y GARCH</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#aplicación-a-la-volatilidad-del-precio-de-las-acciones"><i class="fa fa-check"></i>Aplicación a la volatilidad del precio de las acciones</a></li>
+<li class="chapter" data-level="" data-path="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html"><a href="17-4-agrupación-de-volatilidad-y-heterocedasticidad-condicional-autorregresiva.html#resumen-8"><i class="fa fa-check"></i>Resumen</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="18-ciencia-de-datos.html"><a href="18-ciencia-de-datos.html"><i class="fa fa-check"></i><b>18</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="19" data-path="19-ciencia-de-datos-1.html"><a href="19-ciencia-de-datos-1.html"><i class="fa fa-check"></i><b>19</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="20" data-path="20-ciencia-de-datos-2.html"><a href="20-ciencia-de-datos-2.html"><i class="fa fa-check"></i><b>20</b> Ciencia de datos</a></li>
+<li class="chapter" data-level="" data-path="referencias-bibliográficas.html"><a href="referencias-bibliográficas.html"><i class="fa fa-check"></i>Referencias bibliográficas</a></li>
+<li class="divider"></li>
+<li><a href="https://www.jeshuanomics.com/" target="blank">Publicado por JeshuaNomics</a></li>
+<li><a href="https://github.com/JeshuaNomics" class="fa fa-github"><span class="label">  Git Hub</span></a></li>	
+<li><a href="https://www.facebook.com/JeshuaNomics/" class="fa fa-facebook"><span class="label">  Facebook</span></a></li>
+<li><a href="https://twitter.com/JeshuaNomics" class="fa fa-twitter"><span class="label">  Twitter</span></a></li>
+<li><a href="https://www.linkedin.com/in/jeshua-romero-guadarrama/" class="fa fa-linkedin"><span class="label">  Linkedin</span></a></li>
+<li><a href="https://vk.com/jeshuanomics" class="fa fa-vk"><span class="label">  Vkontakte</span></a></li>
+<li><a href="https://jeshuanomics.tumblr.com/" class="fa fa-tumblr"><span class="label">  Tumblr</span></a></li>
+<li><a href="https://www.youtube.com/channel/UCY7f84mJGvMN7TF7XI4-Jgg?view_as=subscriber/" class="fa fa-youtube-play"><span class="label">  YouTube</span></a></li>	
+<li><a href="https://www.instagram.com/JeshuaNomics/" class="fa fa-instagram"><span class="label">  Instagram</span></a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Econoalgoritmia: Econometría avanzada y ciencia de datos con R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="PAMADL" class="section level2" number="15.5">
+<h2><span class="header-section-number">15.5</span> Predictores adicionales y el modelo ADL</h2>
+<p>En lugar de utilizar únicamente los rezagos de la variable dependiente como predictores, un modelo de retraso distribuido autorregresivo (ADL) también utiliza rezagos de otras variables para el pronóstico. El modelo general de ADL se resume en el Concepto clave 14.4:</p>
+<div id="KC14.4" class="keyconcept">
+<h3 class="right">
+Concepto clave 14.4
+</h3>
+<h3 class="left">
+El modelo de retardo distribuido autorregresivo
+</h3>
+<p>
+<p>Un modelo ADL(<span class="math inline">\(p\)</span>, <span class="math inline">\(q\)</span>) asume que una serie de tiempo <span class="math inline">\(Y_t\)</span> puede ser representada por una función lineal de <span class="math inline">\(p\)</span> de sus valores rezagados y <span class="math inline">\(q\)</span> rezagos de otra serie de tiempo <span class="math inline">\(X_t\)</span>:</p>
+<p><span class="math display">\[\begin{align*}
+  Y_t =&amp; \, \beta_0 + \beta_1 Y_{t-1} + \beta_2 Y_{t-2} + \dots + \beta_p Y_{t-p} \\ 
+      &amp;+ \, \delta_1 X_{t-1} + \delta_2 X_{t-2} + \dots + \delta_q X_{t-q} X_{t-q} + u_t.
+\end{align*}\]</span></p>
+<p>es un <em>modelo de retraso distribuido autorregresivo</em> con <span class="math inline">\(p\)</span> retrasos de <span class="math inline">\(Y_t\)</span> y <span class="math inline">\(q\)</span> retrasos de <span class="math inline">\(X_t\)</span> donde <span class="math display">\[E(u_t\vert Y_{t-1}, Y_{t-2}, \dots, X_{t-1}, X_{t-2}, \dots)=0.\]</span></p>
+</p>
+</div>
+<div id="pronóstico-del-crecimiento-del-pib-mediante-el-diferencial-de-plazos" class="section level4 unnumbered">
+<h4>Pronóstico del crecimiento del PIB mediante el diferencial de plazos</h4>
+<p>Los tipos de interés de los bonos del tesoro a corto y largo plazo están estrechamente vinculados a las condiciones macroeconómicas. Si bien las tasas de interés de ambos tipos de bonos tienen las mismas tendencias a largo plazo, se comportan de manera bastante diferente a corto plazo.</p>
+<p>La diferencia en las tasas de interés de dos bonos con vencimiento distinto se denomina <em>margen de plazo</em>.</p>
+<p>Los siguientes fragmentos de código muestran las tasas de interés de los bonos del Tesoro de EE. UU. a 10 años y las letras del Tesoro de EE. UU. a 3 meses de 1960 a 2012.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="15-5-PAMADL.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tasa de interés de las letras del Tesoro a 3 meses</span></span>
+<span id="cb30-2"><a href="15-5-PAMADL.html#cb30-2" aria-hidden="true" tabindex="-1"></a>TB3MS <span class="ot">&lt;-</span> <span class="fu">xts</span>(USMacroSWQ<span class="sc">$</span>TB3MS, USMacroSWQ<span class="sc">$</span>Date)[<span class="st">&quot;1960::2012&quot;</span>]</span>
+<span id="cb30-3"><a href="15-5-PAMADL.html#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="15-5-PAMADL.html#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># tasa de interés de los bonos del Tesoro a 10 años</span></span>
+<span id="cb30-5"><a href="15-5-PAMADL.html#cb30-5" aria-hidden="true" tabindex="-1"></a>TB10YS <span class="ot">&lt;-</span> <span class="fu">xts</span>(USMacroSWQ<span class="sc">$</span>GS10, USMacroSWQ<span class="sc">$</span>Date)[<span class="st">&quot;1960::2012&quot;</span>]</span>
+<span id="cb30-6"><a href="15-5-PAMADL.html#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="15-5-PAMADL.html#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># diferencial de plazo</span></span>
+<span id="cb30-8"><a href="15-5-PAMADL.html#cb30-8" aria-hidden="true" tabindex="-1"></a>TSpread <span class="ot">&lt;-</span> TB10YS <span class="sc">-</span> TB3MS</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="15-5-PAMADL.html#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico (a)</span></span>
+<span id="cb31-2"><a href="15-5-PAMADL.html#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">merge</span>(<span class="fu">as.zoo</span>(TB3MS), <span class="fu">as.zoo</span>(TB10YS)), </span>
+<span id="cb31-3"><a href="15-5-PAMADL.html#cb31-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">plot.type =</span> <span class="st">&quot;single&quot;</span>, </span>
+<span id="cb31-4"><a href="15-5-PAMADL.html#cb31-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkred&quot;</span>, <span class="st">&quot;steelblue&quot;</span>),</span>
+<span id="cb31-5"><a href="15-5-PAMADL.html#cb31-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb31-6"><a href="15-5-PAMADL.html#cb31-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Fecha&quot;</span>,</span>
+<span id="cb31-7"><a href="15-5-PAMADL.html#cb31-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Porcentaje por año&quot;</span>,</span>
+<span id="cb31-8"><a href="15-5-PAMADL.html#cb31-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Tasas de interés&quot;</span>)</span>
+<span id="cb31-9"><a href="15-5-PAMADL.html#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="15-5-PAMADL.html#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="co"># definir la función que transforma años en la clase &#39;yearqtr&#39;</span></span>
+<span id="cb31-11"><a href="15-5-PAMADL.html#cb31-11" aria-hidden="true" tabindex="-1"></a>YToYQTR <span class="ot">&lt;-</span> <span class="cf">function</span>(years) {</span>
+<span id="cb31-12"><a href="15-5-PAMADL.html#cb31-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(</span>
+<span id="cb31-13"><a href="15-5-PAMADL.html#cb31-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sort</span>(<span class="fu">as.yearqtr</span>(<span class="fu">sapply</span>(years, paste, <span class="fu">c</span>(<span class="st">&quot;Q1&quot;</span>, <span class="st">&quot;Q2&quot;</span>, <span class="st">&quot;Q3&quot;</span>, <span class="st">&quot;Q4&quot;</span>))))</span>
+<span id="cb31-14"><a href="15-5-PAMADL.html#cb31-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb31-15"><a href="15-5-PAMADL.html#cb31-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-16"><a href="15-5-PAMADL.html#cb31-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-17"><a href="15-5-PAMADL.html#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="co"># recesiones</span></span>
+<span id="cb31-18"><a href="15-5-PAMADL.html#cb31-18" aria-hidden="true" tabindex="-1"></a>recessions <span class="ot">&lt;-</span> <span class="fu">YToYQTR</span>(<span class="fu">c</span>(<span class="dv">1961</span><span class="sc">:</span><span class="dv">1962</span>, <span class="dv">1970</span>, <span class="dv">1974</span><span class="sc">:</span><span class="dv">1975</span>, <span class="dv">1980</span><span class="sc">:</span><span class="dv">1982</span>, <span class="dv">1990</span><span class="sc">:</span><span class="dv">1991</span>, <span class="dv">2001</span>, <span class="dv">2007</span><span class="sc">:</span><span class="dv">2008</span>))</span>
+<span id="cb31-19"><a href="15-5-PAMADL.html#cb31-19" aria-hidden="true" tabindex="-1"></a>          </span>
+<span id="cb31-20"><a href="15-5-PAMADL.html#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar sombreado de color para recesiones</span></span>
+<span id="cb31-21"><a href="15-5-PAMADL.html#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="fu">xblocks</span>(<span class="fu">time</span>(<span class="fu">as.zoo</span>(TB3MS)), </span>
+<span id="cb31-22"><a href="15-5-PAMADL.html#cb31-22" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="fu">time</span>(TB3MS) <span class="sc">%in%</span> recessions), </span>
+<span id="cb31-23"><a href="15-5-PAMADL.html#cb31-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="fu">alpha</span>(<span class="st">&quot;steelblue&quot;</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>))</span>
+<span id="cb31-24"><a href="15-5-PAMADL.html#cb31-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-25"><a href="15-5-PAMADL.html#cb31-25" aria-hidden="true" tabindex="-1"></a><span class="co"># agrega una leyenda</span></span>
+<span id="cb31-26"><a href="15-5-PAMADL.html#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, </span>
+<span id="cb31-27"><a href="15-5-PAMADL.html#cb31-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;TB3MS&quot;</span>, <span class="st">&quot;TB10YS&quot;</span>),</span>
+<span id="cb31-28"><a href="15-5-PAMADL.html#cb31-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;darkred&quot;</span>, <span class="st">&quot;steelblue&quot;</span>),</span>
+<span id="cb31-29"><a href="15-5-PAMADL.html#cb31-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/783-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="15-5-PAMADL.html#cb32-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-2"><a href="15-5-PAMADL.html#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># gráfico (b)</span></span>
+<span id="cb32-3"><a href="15-5-PAMADL.html#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.zoo</span>(TSpread), </span>
+<span id="cb32-4"><a href="15-5-PAMADL.html#cb32-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb32-5"><a href="15-5-PAMADL.html#cb32-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb32-6"><a href="15-5-PAMADL.html#cb32-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;Fecha&quot;</span>,</span>
+<span id="cb32-7"><a href="15-5-PAMADL.html#cb32-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">&quot;Porcentaje por año&quot;</span>,</span>
+<span id="cb32-8"><a href="15-5-PAMADL.html#cb32-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Diferencial de plazo&quot;</span>)</span>
+<span id="cb32-9"><a href="15-5-PAMADL.html#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-10"><a href="15-5-PAMADL.html#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="co"># agregar sombreado de color para recesiones</span></span>
+<span id="cb32-11"><a href="15-5-PAMADL.html#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="fu">xblocks</span>(<span class="fu">time</span>(<span class="fu">as.zoo</span>(TB3MS)), </span>
+<span id="cb32-12"><a href="15-5-PAMADL.html#cb32-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="fu">time</span>(TB3MS) <span class="sc">%in%</span> recessions), </span>
+<span id="cb32-13"><a href="15-5-PAMADL.html#cb32-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="fu">alpha</span>(<span class="st">&quot;steelblue&quot;</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>))</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/783-2.png" width="80%" style="display: block; margin: auto;" /></p>
+<p>Antes de las recesiones, la brecha entre las tasas de interés de los bonos a largo plazo y las letras a corto plazo se reduce y, en consecuencia, el diferencial de plazo se reduce drásticamente hacia cero o incluso se vuelve negativo en tiempos de tensión económica. Esta información podría utilizarse para mejorar las previsiones de crecimiento del PIB en el futuro.</p>
+<p>Se verifica esto estimando un modelo ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(1\)</span>) y un modelo ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(2\)</span>) de la tasa de crecimiento del PIB utilizando rezagos del crecimiento del PIB y rezagos del diferencial de plazo como regresores. Luego se usan ambos modelos para pronosticar el crecimiento del PIB en 2013:Q1.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="15-5-PAMADL.html#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convertir series de crecimiento y plazo en objetos ts</span></span>
+<span id="cb33-2"><a href="15-5-PAMADL.html#cb33-2" aria-hidden="true" tabindex="-1"></a>GDPGrowth_ts <span class="ot">&lt;-</span> <span class="fu">ts</span>(GDPGrowth, </span>
+<span id="cb33-3"><a href="15-5-PAMADL.html#cb33-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">1960</span>, <span class="dv">1</span>), </span>
+<span id="cb33-4"><a href="15-5-PAMADL.html#cb33-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">4</span>), </span>
+<span id="cb33-5"><a href="15-5-PAMADL.html#cb33-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">frequency =</span> <span class="dv">4</span>)</span>
+<span id="cb33-6"><a href="15-5-PAMADL.html#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="15-5-PAMADL.html#cb33-7" aria-hidden="true" tabindex="-1"></a>TSpread_ts <span class="ot">&lt;-</span> <span class="fu">ts</span>(TSpread, </span>
+<span id="cb33-8"><a href="15-5-PAMADL.html#cb33-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">1960</span>, <span class="dv">1</span>), </span>
+<span id="cb33-9"><a href="15-5-PAMADL.html#cb33-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2012</span>, <span class="dv">4</span>), </span>
+<span id="cb33-10"><a href="15-5-PAMADL.html#cb33-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">frequency =</span> <span class="dv">4</span>)</span>
+<span id="cb33-11"><a href="15-5-PAMADL.html#cb33-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="15-5-PAMADL.html#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="co"># unir ambos objetos ts</span></span>
+<span id="cb33-13"><a href="15-5-PAMADL.html#cb33-13" aria-hidden="true" tabindex="-1"></a>ADLdata <span class="ot">&lt;-</span> <span class="fu">ts.union</span>(GDPGrowth_ts, TSpread_ts)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="15-5-PAMADL.html#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo ADL(2,1) de crecimiento del PIB</span></span>
+<span id="cb34-2"><a href="15-5-PAMADL.html#cb34-2" aria-hidden="true" tabindex="-1"></a>GDPGR_ADL21 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(GDPGrowth_ts <span class="sc">~</span> <span class="fu">L</span>(GDPGrowth_ts) <span class="sc">+</span> <span class="fu">L</span>(GDPGrowth_ts, <span class="dv">2</span>) <span class="sc">+</span> <span class="fu">L</span>(TSpread_ts), </span>
+<span id="cb34-3"><a href="15-5-PAMADL.html#cb34-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">1962</span>, <span class="dv">1</span>), <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2012</span>, <span class="dv">4</span>))</span>
+<span id="cb34-4"><a href="15-5-PAMADL.html#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="15-5-PAMADL.html#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(GDPGR_ADL21, <span class="at">vcov. =</span> sandwich)</span>
+<span id="cb34-6"><a href="15-5-PAMADL.html#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb34-7"><a href="15-5-PAMADL.html#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; t test of coefficients:</span></span>
+<span id="cb34-8"><a href="15-5-PAMADL.html#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb34-9"><a href="15-5-PAMADL.html#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Estimate Std. Error t value Pr(&gt;|t|)   </span></span>
+<span id="cb34-10"><a href="15-5-PAMADL.html#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)        0.954990   0.486976  1.9611 0.051260 . </span></span>
+<span id="cb34-11"><a href="15-5-PAMADL.html#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(GDPGrowth_ts)    0.267729   0.082562  3.2428 0.001387 **</span></span>
+<span id="cb34-12"><a href="15-5-PAMADL.html#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(GDPGrowth_ts, 2) 0.192370   0.077683  2.4763 0.014104 * </span></span>
+<span id="cb34-13"><a href="15-5-PAMADL.html#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(TSpread_ts)      0.444047   0.182637  2.4313 0.015925 * </span></span>
+<span id="cb34-14"><a href="15-5-PAMADL.html#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb34-15"><a href="15-5-PAMADL.html#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+<p>La ecuación estimada del modelo ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(1\)</span>) es:</p>
+<p><span class="math display" id="eq:gdpgradl21">\[\begin{align}
+  \widehat{GDPGR}_t = \underset{(0.49)}{0.96} + \underset{(0.08)}{0.26} GDPGR_{t-1} + \underset{(0.08)}{0.19} GDPGR_{t-2} + \underset{(0.18)}{0.44} TSpread_{t-1} \tag{15.4}
+\end{align}\]</span></p>
+<p>Todos los coeficientes son significativos al nivel de <span class="math inline">\(5\%\)</span>.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="15-5-PAMADL.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2012:Q3 / 2012:Q4 datos sobre el crecimiento del PIB y el diferencial de plazo</span></span>
+<span id="cb35-2"><a href="15-5-PAMADL.html#cb35-2" aria-hidden="true" tabindex="-1"></a>subset <span class="ot">&lt;-</span> <span class="fu">window</span>(ADLdata, <span class="fu">c</span>(<span class="dv">2012</span>, <span class="dv">3</span>), <span class="fu">c</span>(<span class="dv">2012</span>, <span class="dv">4</span>))</span>
+<span id="cb35-3"><a href="15-5-PAMADL.html#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="15-5-PAMADL.html#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ADL(2,1) previsión de crecimiento del PIB para 2013:Q1</span></span>
+<span id="cb35-5"><a href="15-5-PAMADL.html#cb35-5" aria-hidden="true" tabindex="-1"></a>ADL21_forecast <span class="ot">&lt;-</span> <span class="fu">coef</span>(GDPGR_ADL21) <span class="sc">%*%</span> <span class="fu">c</span>(<span class="dv">1</span>, subset[<span class="dv">2</span>, <span class="dv">1</span>], subset[<span class="dv">1</span>, <span class="dv">1</span>], subset[<span class="dv">2</span>, <span class="dv">2</span>])</span>
+<span id="cb35-6"><a href="15-5-PAMADL.html#cb35-6" aria-hidden="true" tabindex="-1"></a>ADL21_forecast</span>
+<span id="cb35-7"><a href="15-5-PAMADL.html#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          [,1]</span></span>
+<span id="cb35-8"><a href="15-5-PAMADL.html#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 2.241689</span></span>
+<span id="cb35-9"><a href="15-5-PAMADL.html#cb35-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="15-5-PAMADL.html#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular el error de pronóstico</span></span>
+<span id="cb35-11"><a href="15-5-PAMADL.html#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="fu">window</span>(GDPGrowth_ts, <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">1</span>)) <span class="sc">-</span> ADL21_forecast</span>
+<span id="cb35-12"><a href="15-5-PAMADL.html#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           Qtr1</span></span>
+<span id="cb35-13"><a href="15-5-PAMADL.html#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2013 -1.102487</span></span></code></pre></div>
+<p>El modelo <a href="15-5-PAMADL.html#eq:gdpgradl21">(15.4)</a> predice el crecimiento del PIB en 2013:Q1 será de <span class="math inline">\(2.24\%\)</span>, lo que genera un error de pronóstico de <span class="math inline">\(-1.10\%\)</span>.</p>
+<p>Se estima la especificación de ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(2\)</span>) para ver si agregar información adicional sobre el diferencial de plazos anteriores mejora el pronóstico.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="15-5-PAMADL.html#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar el modelo ADL(2,2) de crecimiento del PIB</span></span>
+<span id="cb36-2"><a href="15-5-PAMADL.html#cb36-2" aria-hidden="true" tabindex="-1"></a>GDPGR_ADL22 <span class="ot">&lt;-</span> <span class="fu">dynlm</span>(GDPGrowth_ts <span class="sc">~</span> <span class="fu">L</span>(GDPGrowth_ts) <span class="sc">+</span> <span class="fu">L</span>(GDPGrowth_ts, <span class="dv">2</span>) </span>
+<span id="cb36-3"><a href="15-5-PAMADL.html#cb36-3" aria-hidden="true" tabindex="-1"></a>                     <span class="sc">+</span> <span class="fu">L</span>(TSpread_ts) <span class="sc">+</span> <span class="fu">L</span>(TSpread_ts, <span class="dv">2</span>), </span>
+<span id="cb36-4"><a href="15-5-PAMADL.html#cb36-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">1962</span>, <span class="dv">1</span>), <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2012</span>, <span class="dv">4</span>))</span>
+<span id="cb36-5"><a href="15-5-PAMADL.html#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="15-5-PAMADL.html#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(GDPGR_ADL22, <span class="at">vcov. =</span> sandwich)</span>
+<span id="cb36-7"><a href="15-5-PAMADL.html#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb36-8"><a href="15-5-PAMADL.html#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; t test of coefficients:</span></span>
+<span id="cb36-9"><a href="15-5-PAMADL.html#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb36-10"><a href="15-5-PAMADL.html#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                     Estimate Std. Error t value Pr(&gt;|t|)   </span></span>
+<span id="cb36-11"><a href="15-5-PAMADL.html#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)         0.967967   0.472470  2.0487 0.041800 * </span></span>
+<span id="cb36-12"><a href="15-5-PAMADL.html#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(GDPGrowth_ts)     0.243175   0.077836  3.1242 0.002049 **</span></span>
+<span id="cb36-13"><a href="15-5-PAMADL.html#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(GDPGrowth_ts, 2)  0.177070   0.077027  2.2988 0.022555 * </span></span>
+<span id="cb36-14"><a href="15-5-PAMADL.html#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(TSpread_ts)      -0.139554   0.422162 -0.3306 0.741317   </span></span>
+<span id="cb36-15"><a href="15-5-PAMADL.html#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(TSpread_ts, 2)    0.656347   0.429802  1.5271 0.128326   </span></span>
+<span id="cb36-16"><a href="15-5-PAMADL.html#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb36-17"><a href="15-5-PAMADL.html#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+<p>Se obtiene</p>
+<p><span class="math display" id="eq:gdpgradl22">\[\begin{align}
+  \begin{split}
+    \widehat{GDPGR}_t =&amp; \underset{(0.47)}{0.98} + \underset{(0.08)}{0.24} GDPGR_{t-1} \\
+    &amp; + \underset{(0.08)}{0.18} GDPGR_{t-2} -\underset{(0.42)}{0.14} TSpread_{t-1} + \underset{(0.43)}{0.66} TSpread_{t-2}.
+  \end{split} \tag{15.5}
+\end{align}\]</span></p>
+<p>Los coeficientes en ambos rezagos del diferencial de plazo no son significativos al nivel de <span class="math inline">\(10\%\)</span>.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="15-5-PAMADL.html#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pronóstico de crecimiento del PIB ADL(2,2) para 2013:Q1</span></span>
+<span id="cb37-2"><a href="15-5-PAMADL.html#cb37-2" aria-hidden="true" tabindex="-1"></a>ADL22_forecast <span class="ot">&lt;-</span> <span class="fu">coef</span>(GDPGR_ADL22) <span class="sc">%*%</span> <span class="fu">c</span>(<span class="dv">1</span>, subset[<span class="dv">2</span>, <span class="dv">1</span>], subset[<span class="dv">1</span>, <span class="dv">1</span>], subset[<span class="dv">2</span>, <span class="dv">2</span>], subset[<span class="dv">1</span>, <span class="dv">2</span>])</span>
+<span id="cb37-3"><a href="15-5-PAMADL.html#cb37-3" aria-hidden="true" tabindex="-1"></a>ADL22_forecast</span>
+<span id="cb37-4"><a href="15-5-PAMADL.html#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          [,1]</span></span>
+<span id="cb37-5"><a href="15-5-PAMADL.html#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 2.274407</span></span>
+<span id="cb37-6"><a href="15-5-PAMADL.html#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="15-5-PAMADL.html#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular el error de pronóstico</span></span>
+<span id="cb37-8"><a href="15-5-PAMADL.html#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="fu">window</span>(GDPGrowth_ts, <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">1</span>)) <span class="sc">-</span> ADL22_forecast</span>
+<span id="cb37-9"><a href="15-5-PAMADL.html#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           Qtr1</span></span>
+<span id="cb37-10"><a href="15-5-PAMADL.html#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2013 -1.135206</span></span></code></pre></div>
+<p>El pronóstico de ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(2\)</span>) de crecimiento del PIB en 2013:Q1 es <span class="math inline">\(2.27\%\)</span>, lo que implica un error de pronóstico de <span class="math inline">\(1.14\%\)</span>.</p>
+<p>¿Los modelos ADL <a href="15-5-PAMADL.html#eq:gdpgradl21">(15.4)</a> y <a href="15-5-PAMADL.html#eq:gdpgradl22">(15.5)</a> mejoran el modelo AR(<span class="math inline">\(2\)</span>) simple <a href="15-3-autoregresiones.html#eq:GDPGRAR2">(15.3)</a>? La respuesta es sí. No obstante, <span class="math inline">\(SER\)</span> y <span class="math inline">\(\bar{R}^2\)</span> solo mejoran ligeramente, una prueba <span class="math inline">\(F\)</span> sobre los coeficientes de diferenciación de términos en <a href="15-5-PAMADL.html#eq:gdpgradl22">(15.5)</a> proporciona evidencia de que el modelo funciona mejor al explicar el crecimiento del PIB que el modelo AR(<span class="math inline">\(2\)</span>), ya que la hipótesis de que ambos coeficientes son cero no puede rechazarse al nivel de <span class="math inline">\(5\%\)</span>.</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="15-5-PAMADL.html#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># comparar R2 ajustada</span></span>
+<span id="cb38-2"><a href="15-5-PAMADL.html#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">&quot;Adj.R2 AR(2)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_AR2)<span class="sc">$</span>r.squared,</span>
+<span id="cb38-3"><a href="15-5-PAMADL.html#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Adj.R2 ADL(2,1)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_ADL21)<span class="sc">$</span>r.squared,</span>
+<span id="cb38-4"><a href="15-5-PAMADL.html#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Adj.R2 ADL(2,2)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_ADL22)<span class="sc">$</span>r.squared)</span>
+<span id="cb38-5"><a href="15-5-PAMADL.html#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Adj.R2 AR(2) Adj.R2 ADL(2,1) Adj.R2 ADL(2,2) </span></span>
+<span id="cb38-6"><a href="15-5-PAMADL.html#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       0.1425484       0.1743996       0.1855245</span></span>
+<span id="cb38-7"><a href="15-5-PAMADL.html#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="15-5-PAMADL.html#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="co"># comparar SER</span></span>
+<span id="cb38-9"><a href="15-5-PAMADL.html#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">&quot;SER AR(2)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_AR2)<span class="sc">$</span>sigma,</span>
+<span id="cb38-10"><a href="15-5-PAMADL.html#cb38-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SER ADL(2,1)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_ADL21)<span class="sc">$</span>sigma,</span>
+<span id="cb38-11"><a href="15-5-PAMADL.html#cb38-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SER ADL(2,2)&quot;</span> <span class="ot">=</span> <span class="fu">summary</span>(GDPGR_ADL22)<span class="sc">$</span>sigma)</span>
+<span id="cb38-12"><a href="15-5-PAMADL.html#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    SER AR(2) SER ADL(2,1) SER ADL(2,2) </span></span>
+<span id="cb38-13"><a href="15-5-PAMADL.html#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     3.132122     3.070760     3.057655</span></span>
+<span id="cb38-14"><a href="15-5-PAMADL.html#cb38-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-15"><a href="15-5-PAMADL.html#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="co"># prueba F sobre coeficientes de diferencias de plazos</span></span>
+<span id="cb38-16"><a href="15-5-PAMADL.html#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="fu">linearHypothesis</span>(GDPGR_ADL22, </span>
+<span id="cb38-17"><a href="15-5-PAMADL.html#cb38-17" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">c</span>(<span class="st">&quot;L(TSpread_ts)=0&quot;</span>, <span class="st">&quot;L(TSpread_ts, 2)=0&quot;</span>),</span>
+<span id="cb38-18"><a href="15-5-PAMADL.html#cb38-18" aria-hidden="true" tabindex="-1"></a>                 <span class="at">vcov. =</span> sandwich)</span>
+<span id="cb38-19"><a href="15-5-PAMADL.html#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Linear hypothesis test</span></span>
+<span id="cb38-20"><a href="15-5-PAMADL.html#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb38-21"><a href="15-5-PAMADL.html#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Hypothesis:</span></span>
+<span id="cb38-22"><a href="15-5-PAMADL.html#cb38-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(TSpread_ts) = 0</span></span>
+<span id="cb38-23"><a href="15-5-PAMADL.html#cb38-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; L(TSpread_ts, 2) = 0</span></span>
+<span id="cb38-24"><a href="15-5-PAMADL.html#cb38-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb38-25"><a href="15-5-PAMADL.html#cb38-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Model 1: restricted model</span></span>
+<span id="cb38-26"><a href="15-5-PAMADL.html#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Model 2: GDPGrowth_ts ~ L(GDPGrowth_ts) + L(GDPGrowth_ts, 2) + L(TSpread_ts) + </span></span>
+<span id="cb38-27"><a href="15-5-PAMADL.html#cb38-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     L(TSpread_ts, 2)</span></span>
+<span id="cb38-28"><a href="15-5-PAMADL.html#cb38-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb38-29"><a href="15-5-PAMADL.html#cb38-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Note: Coefficient covariance matrix supplied.</span></span>
+<span id="cb38-30"><a href="15-5-PAMADL.html#cb38-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb38-31"><a href="15-5-PAMADL.html#cb38-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Res.Df Df      F  Pr(&gt;F)  </span></span>
+<span id="cb38-32"><a href="15-5-PAMADL.html#cb38-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    201                    </span></span>
+<span id="cb38-33"><a href="15-5-PAMADL.html#cb38-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2    199  2 4.4344 0.01306 *</span></span>
+<span id="cb38-34"><a href="15-5-PAMADL.html#cb38-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb38-35"><a href="15-5-PAMADL.html#cb38-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
+</div>
+<div id="estacionariedad" class="section level4 unnumbered">
+<h4>Estacionariedad</h4>
+<p>En general, los pronósticos se pueden mejorar mediante el uso de múltiples predictores, al igual que en la regresión transversal. Al construir modelos de series de tiempo, se debe tener en cuenta si las variables son <em>estacionarias</em> o <em>no estacionarias</em>. El Concepto clave 14.5 explica qué es la estacionariedad.</p>
+<div id="KC14.5" class="keyconcept">
+<h3 class="right">
+Concepto clave 14.5
+</h3>
+<h3 class="left">
+Estacionariedad
+</h3>
+<p>Una serie de tiempo <span class="math inline">\(Y_t\)</span> es estacionaria si su distribución de probabilidad es independiente del tiempo; es decir, la distribución conjunta de <span class="math inline">\(Y_{s+1}, Y_{s+2},\dots,Y_{s+T}\)</span> no cambia a medida que varía <span class="math inline">\(s\)</span>, independientemente de <span class="math inline">\(T\)</span>.</p>
+<p>De manera similar, dos series de tiempo <span class="math inline">\(X_t\)</span> y <span class="math inline">\(Y_t\)</span> son <em>conjuntamente estacionarias</em> si la distribución conjunta de <span class="math inline">\((X_{s+1},Y_{s+1}, X_{s+2},Y_{s+2} \dots, X_{s+T},Y_{s+T})\)</span> no depende de <span class="math inline">\(s\)</span>, independientemente de <span class="math inline">\(T\)</span>.</p>
+<p>En un sentido probabilístico, estacionariedad significa que la información sobre cómo evoluciona una serie de tiempo en el futuro es inherente a su pasado. Si este no es el caso, no se puede usar el pasado de una serie como una guía confiable para su futuro.</p>
+<p>La estacionariedad facilita el aprendizaje de las características de los datos pasados.</p>
+</div>
+</div>
+<div id="regresión-de-series-temporales-con-varios-predictores" class="section level4 unnumbered">
+<h4>Regresión de series temporales con varios predictores</h4>
+<p>El concepto de estacionariedad es un supuesto clave en el modelo de regresión de series de tiempo general con múltiples predictores. El Concepto clave 14.6 establece este modelo y sus supuestos.</p>
+<div id="KC14.6" class="keyconcept">
+<h3 class="right">
+Concepto clave 14.6
+</h3>
+<h3 class="left">
+Regresión de series de tiempo con múltiples predictores
+</h3>
+<p>El modelo general de regresión de series de tiempo amplía el modelo ADL de manera que se incluyen múltiples regresores y sus rezagos. Utiliza <span class="math inline">\(p\)</span> retrasos de la variable dependiente y <span class="math inline">\(q_l\)</span> retrasos de <span class="math inline">\(l\)</span> predictores adicionales donde <span class="math inline">\(l=1,\dots,k\)</span>:</p>
+<p><span class="math display">\[\begin{equation}
+  \begin{aligned}
+  Y_t =&amp;  \beta_0 + \beta_1 Y_{t-1} + \beta_2 Y_{t-2} + \dots + \beta_{p} Y_{t-p} \\
+      &amp;+  \delta_{11} X_{1,t-1} + \delta_{12} X_{1,t-2} + \dots + \delta_{1q} X_{1,t-q} \\
+      &amp;+  \dots \\
+      &amp;+  \delta_{k1} X_{k,t-1} + \delta_{k2} X_{k,t-2} + \dots + \delta_{kq} X_{k,t-q} \\
+      &amp;+  u_t 
+  \end{aligned}
+\end{equation}\]</span></p>
+<p>Para la estimación se hacen las siguientes suposiciones:</p>
+<ol style="list-style-type: decimal">
+<li><p>El término de error <span class="math inline">\(u_t\)</span> tiene una media condicional cero dados todos los regresores y sus retrasos: <span class="math display">\[E(u_t\vert Y_{t-1}, Y_{t-2}, \dots, X_{1,t-1}, X_{1,t-2} \dots, X_{k,t-1}, X_{k,t-2}, \dots)\]</span> Esta suposición es una extensión de la suposición de cero media condicional utilizada para los modelos AR y ADL. En este sentido, garantiza que el modelo de regresión de series de tiempo general indicado anteriormente da el mejor pronóstico de <span class="math inline">\(Y_t\)</span> dados sus rezagos, los regresores adicionales <span class="math inline">\(X_{1,t},\dots,X_{k,t}\)</span> y sus rezagos.</p></li>
+<li><p>La suposición de i.i.d. para los datos transversales no es (completamente) significativa para los datos de series de tiempo. Se reemplaza por el siguiente supuesto que consta de dos partes:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Los <span class="math inline">\((Y_{t}, X_{1,t}, \dots, X_{k,t})\)</span> tienen una distribución estacionaria (la parte “idénticamente distribuida” del supuesto i.i.d. para datos transversales). Si esto no se cumple, los pronósticos <em>pueden</em> estar sesgados y la inferencia <em>puede</em> ser muy engañosa.</p></li>
+<li><p><span class="math inline">\((Y_{t}, X_{1,t}, \dots, X_{k,t})\)</span> y <span class="math inline">\((Y_{t-j}, X_{1,t-j}, \dots, X_{k,t-j})\)</span> se vuelven independientes a medida que <span class="math inline">\(j\)</span> crece (la parte distribuida de forma “independiente” del supuesto i.i.d para datos transversales). Esta suposición también se llama <em>dependencia débil</em>. Garantiza que WLLN y CLT se mantengan en muestras grandes.</p></li>
+</ol></li>
+<li><p>Es poco probable que existan valores atípicos grandes: <span class="math inline">\(E(X_{1,t}^4), E(X_{2,t}^4), \dots, E(X_{k,t}^4)\)</span> y <span class="math inline">\(E(Y_t^4)\)</span> tienen cuartos momentos finitos distintos de cero.</p></li>
+<li><p>Sin multicolinealidad perfecta.</p></li>
+</ol>
+</div>
+<p>Dado que muchas series de tiempo económicas parecen no ser estacionarias, el supuesto dos del Concepto clave 14.6 es crucial en macroeconomía y finanzas aplicadas, razón por la cual se han desarrollado pruebas estadísticas de estacionariedad o no estacionariedad. Los capítulos <a href="15-6-SLRUCI.html#SLRUCI">15.6</a> y <a href="15-7-NEIT.html#NEIT">15.7</a> están dedicados a este tema.</p>
+</div>
+<div id="inferencia-estadística-y-prueba-de-causalidad-de-granger" class="section level4 unnumbered">
+<h4>Inferencia estadística y prueba de causalidad de Granger</h4>
+<p>Si un <span class="math inline">\(X\)</span> es un predictor útil para <span class="math inline">\(Y\)</span>, en una regresión de <span class="math inline">\(Y_t\)</span> con rezagos propios y rezagos de <span class="math inline">\(X_t\)</span>, no todos los coeficientes de los rezagos en <span class="math inline">\(X_t\)</span> son cero. Este concepto se llama <em>causalidad de Granger</em> y es una hipótesis interesante para probar. El Concepto clave 14.7 resume la idea.</p>
+<div id="KC14.7" class="keyconcept">
+<h3 class="right">
+Concepto clave 14.7
+</h3>
+<h3 class="left">
+Pruebas de causalidad de Granger
+</h3>
+<p>La prueba de causalidad de Granger <span class="citation"><a href="#ref-granger1969" role="doc-biblioref">Granger</a> (<a href="#ref-granger1969" role="doc-biblioref">1969</a>)</span> es una prueba <span class="math inline">\(F\)</span> de la hipótesis nula de que <em>todos</em> los rezagos de una variable <span class="math inline">\(X\)</span> incluida en un modelo de regresión de series de tiempo no tienen poder predictivo para <span class="math inline">\(Y_t\)</span>. La prueba de causalidad de Granger no prueba si <span class="math inline">\(X\)</span> realmente <em>causa</em> <span class="math inline">\(Y\)</span>, sino si los retrasos incluidos son informativos en términos de predicción de <span class="math inline">\(Y\)</span>.</p>
+</div>
+<p>Ya se ha realizado una prueba de causalidad de Granger sobre los coeficientes de diferencial de plazo en <a href="15-5-PAMADL.html#eq:gdpgradl22">(15.5)</a>, el modelo ADL(<span class="math inline">\(2\)</span>, <span class="math inline">\(2\)</span>) de crecimiento del PIB y se concluye que al menos uno de los dos primeros rezagos del diferencial de plazo tiene poder predictivo para el crecimiento del PIB.</p>
+</div>
+<div id="incertidumbre-de-pronóstico-e-intervalos-de-pronóstico" class="section level3 unnumbered">
+<h3>Incertidumbre de pronóstico e intervalos de pronóstico</h3>
+<p>En general, es una buena práctica informar una medida de la incertidumbre al presentar los resultados que se ven afectados por este último. La incertidumbre es particularmente interesante cuando se pronostica una serie de tiempo. Por ejemplo, considere un modelo ADL<span class="math inline">\((1,1)\)</span> simple</p>
+<p><span class="math display">\[\begin{align*}
+  Y_t = \beta_0 + \beta_1 Y_{t-1} + \delta_1 X_{t-1} + u_t
+\end{align*}\]</span></p>
+<p>donde <span class="math inline">\(u_t\)</span> es un término de error homocedástico. El error de previsión es</p>
+<p><span class="math display">\[\begin{align*}
+  Y_{T+1} - \widehat{Y}_{T+1\vert T} = u_{T+1} - \left[(\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right].
+\end{align*}\]</span></p>
+<p>El error de pronóstico cuadrático medio (EPCM) y el RMFSE son</p>
+<p><span class="math display">\[\begin{align*}
+  MFSE =&amp; \, E\left[(Y_{T+1} - \widehat{Y}_{T+1\vert T})^2 \right] \\
+       =&amp; \, \sigma_u^2 + Var\left[ (\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right], \\
+  RMFSE =&amp; \, \sqrt{\sigma_u^2 + Var\left[ (\widehat{\beta}_0 - \beta_0) + (\widehat{\beta}_1 - \beta_1) Y_T + (\widehat{\delta_1} - \delta_1) X_T \right]}.
+\end{align*}\]</span></p>
+<p>Un intervalo de pronóstico de <span class="math inline">\(95\%\)</span> es un intervalo que cubre el valor real de <span class="math inline">\(Y_{T+1}\)</span> en <span class="math inline">\(95\%\)</span> de aplicaciones repetidas. Existe una gran diferencia en el cálculo de un intervalo de confianza y un intervalo de pronóstico: Al calcular un intervalo de confianza de una estimación puntual, se utilizan grandes aproximaciones de muestra que están justificadas por el TLC y, por lo tanto, son válidas para una amplia gama de distribuciones de términos de error. Sin embargo, para calcular un intervalo de pronóstico de <span class="math inline">\(Y_{T+1}\)</span>, se debe hacer una suposición adicional sobre la distribución de <span class="math inline">\(u_{T+1}\)</span>, el término de error en el período <span class="math inline">\(T+1\)</span>. Suponiendo que <span class="math inline">\(u_{T+1}\)</span> se distribuye normalmente, se puede construir un <em>intervalo de pronóstico</em> de <span class="math inline">\(95\%\)</span> para <span class="math inline">\(Y_{T+1}\)</span> usando <span class="math inline">\(SE(Y_{T+1} - \widehat{Y}_{T+1\vert T})\)</span>, una estimación del EPRCM:</p>
+<p><span class="math display">\[\begin{align*}
+  \widehat{Y}_{T+1\vert T} \pm 1.96 \cdot SE(Y_{T+1} - \widehat{Y}_{T+1\vert T})
+\end{align*}\]</span></p>
+<p>Por supuesto, el cálculo se vuelve más complicado cuando el término de error es heterocedástico o si se está interesado en calcular un intervalo de pronóstico para <span class="math inline">\(T+s, s&gt;1\)</span>.</p>
+<p>En algunas aplicaciones, es útil informar múltiples intervalos de pronóstico para períodos posteriores. Estos se pueden visualizar en un llamado diagrama de abanico. No se replicará el diagrama de abanico porque el modelo subyacente es mucho más complejo que los modelos AR y ADL simples que se tratan aquí. En su lugar, en el siguiente ejemplo se usan datos de series de tiempo simuladas y se estima un modelo AR (<span class="math inline">\(2\)</span>) que luego se utiliza para pronosticar los subsiguientes <span class="math inline">\(25\)</span> resultados futuros de la serie.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="15-5-PAMADL.html#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sembrar semilla</span></span>
+<span id="cb39-2"><a href="15-5-PAMADL.html#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb39-3"><a href="15-5-PAMADL.html#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="15-5-PAMADL.html#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simular la serie temporal</span></span>
+<span id="cb39-5"><a href="15-5-PAMADL.html#cb39-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">arima.sim</span>(<span class="fu">list</span>(<span class="at">order =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="at">ar =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.2</span>)),  <span class="at">n =</span> <span class="dv">200</span>)</span>
+<span id="cb39-6"><a href="15-5-PAMADL.html#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="15-5-PAMADL.html#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="co"># estimar un modelo AR(2) usando &#39;arima()&#39;, ver `?arima`</span></span>
+<span id="cb39-8"><a href="15-5-PAMADL.html#cb39-8" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">arima</span>(Y, <span class="at">order =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>))</span>
+<span id="cb39-9"><a href="15-5-PAMADL.html#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-10"><a href="15-5-PAMADL.html#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular pronósticos de puntos e intervalos de predicción para los próximos 25 períodos</span></span>
+<span id="cb39-11"><a href="15-5-PAMADL.html#cb39-11" aria-hidden="true" tabindex="-1"></a>fc <span class="ot">&lt;-</span> <span class="fu">forecast</span>(model, <span class="at">h =</span> <span class="dv">25</span>, <span class="at">level =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">99</span>, <span class="dv">10</span>))</span>
+<span id="cb39-12"><a href="15-5-PAMADL.html#cb39-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-13"><a href="15-5-PAMADL.html#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar un diagrama de abanico</span></span>
+<span id="cb39-14"><a href="15-5-PAMADL.html#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fc, </span>
+<span id="cb39-15"><a href="15-5-PAMADL.html#cb39-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Fan Chart de pronóstico para el modelo AR(2) de datos simulados&quot;</span>, </span>
+<span id="cb39-16"><a href="15-5-PAMADL.html#cb39-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">showgap =</span> F, </span>
+<span id="cb39-17"><a href="15-5-PAMADL.html#cb39-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">fcol =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb39-18"><a href="15-5-PAMADL.html#cb39-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">flty =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="Econoalgoritmia_files/figure-html/796-1.png" width="80%" style="display: block; margin: auto;" /></p>
+<p><strong>arima.sim()</strong> simula modelos de media móvil integrada autorregresiva (ARIMA). Los modelos AR pertenecen a esta clase de modelos. Se usa <strong>list(order = c(2, 0, 0), ar = c(0.2, 0.2))</strong>, por lo que el DGP (Data Generating Process) es <span class="math display">\[Y_t = 0.2 Y_{t-1} + 0.2 Y_{t-2} + u_t.\]</span></p>
+<p>Se elige <strong>level = seq(5, 99, 10)</strong> en la llamada de <strong>forecast()</strong>, de modo que se calculen los intervalos de pronóstico con niveles <span class="math inline">\(5\%, 15\%, \dots, 95\%\)</span> para cada pronóstico puntual de la serie.</p>
+<p>La línea roja discontinua muestra los pronósticos puntuales de la serie para los próximos 25 períodos basados en un modelo <span class="math inline">\(ADL(1,1)\)</span> y las áreas sombreadas representan los intervalos de predicción. El grado de sombreado indica el nivel del intervalo de predicción. La más oscura de las bandas azules muestra los intervalos de pronóstico de <span class="math inline">\(5\%\)</span> y el color se desvanece hacia el gris a medida que aumenta el nivel de los intervalos.</p>
+</div>
+</div>
+<h3>Referencias bibliográficas</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-granger1969" class="csl-entry">
+Granger, C. W. J. 1969. <span>“<span>I</span>nvestigating <span>C</span>ausal <span>R</span>elations by <span>E</span>conometric <span>M</span>odels and <span>C</span>ross-<span>S</span>pectral <span>M</span>ethods.”</span> <em><span>E</span>conometrica</em> 37: 424–38.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="15-4-PGMPI.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="15-6-SLRUCI.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": true,
+"weibo": false,
+"instapaper": false,
+"vk": true,
+"whatsapp": false,
+"all": ["vk", "linkedin", "twitter", "facebook"],
+"tumblr": false,
+"youtube": false,
+"instagram": false
+},
+"fontsettings": {
+"theme": "white",
+"family": "serif",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/edit/master/Capitulo_15.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"search": true
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

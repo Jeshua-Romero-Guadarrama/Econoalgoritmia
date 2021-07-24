@@ -1,0 +1,853 @@
+# Estimación de efectos causales dinámicos {#EECD}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 839, child="_setup.Rmd"}
+```
+
+```{r, 840, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+A veces es interesante conocer el tamaño de la reacción actual y futura de $Y$ a un cambio en $X$. Esto se denomina *efecto causal dinámico* en $Y$ de un cambio en $X$. En este capítulo se analiza cómo estimar los efectos causales dinámicos en aplicaciones **R**, donde se investiga el efecto dinámico del clima frío en Florida sobre el precio del concentrado de jugo de naranja.
+
+La discusión cubre:
+
++ Estimación de modelos de rezagos distribuidos.
++ Errores estándar consistentes con heterocedasticidad y autocorrelación (HAC).
++ Estimación de mínimos cuadrados generalizados (MCG) de modelos ADL.
+
+Para reproducir ejemplos de código, se necesitan instalar los paquetes **R** que se enumeran a continuación:
+
++ **AER** [@R-AER]
++ **dynlm** [@R-dynlm]
++ **nlme** [@R-nlme]
++ **orcutt** [@R-orcutt]
++ **quantmod** [@R-quantmod]
++ **stargazer** [@R-stargazer]
+
+Debe asegurarse de que el fragmento de código subsiguiente se ejecute sin errores:
+
+```{r, 841, warning=FALSE, message=FALSE}
+library(AER)
+library(quantmod)
+library(dynlm)
+library(orcutt)
+library(nlme)
+library(stargazer)
+```
+
+## Los datos del jugo de naranja
+
+La región de cultivo de naranjas más grande de los EE. UU. se encuentra en Florida, que generalmente tiene un clima ideal para el crecimiento de la fruta. Por lo tanto, es la fuente de casi todo el concentrado de jugo congelado que se produce en el país. Sin embargo, de vez en cuando y dependiendo de su severidad, las olas de frío provocan una pérdida de cosechas de tal manera que la oferta de naranjas disminuye y en consecuencia sube el precio del concentrado de jugo. El momento de los aumentos de precios es complicado: Un recorte en el suministro actual de concentrado influye no solo en el precio actual, sino también en los precios futuros porque el suministro en períodos futuros también disminuirá. Claramente, la magnitud de los aumentos de precios actuales y futuros debido a la congelación es una pregunta empírica que puede investigarse utilizando un modelo de retardo distribuido, un modelo de series de tiempo que relaciona los cambios de precios con las condiciones climáticas.
+
+Para comenzar con el análisis, se genera una gráfica que muestra el índice de precios del jugo de naranja concentrado congelado, cambios porcentuales en el precio y grados-día de congelación mensuales en Orlando, el centro de la región productora de naranjas de Florida.
+
+```{r, 842}
+# cargar el conjunto de datos de jugo de naranja concentrado congelado
+data("FrozenJuice")
+
+# calcular el índice de precios del jugo de naranja concentrado congelado
+FOJCPI <- FrozenJuice[, "price"]/FrozenJuice[, "ppi"]
+FOJC_pctc <- 100 * diff(log(FOJCPI))
+FDD <- FrozenJuice[, "fdd"]
+```
+
+```{r, 843, fig.align='center'}
+# convertir series a objetos xts
+FOJCPI_xts <- as.xts(FOJCPI)
+FDD_xts <- as.xts(FrozenJuice[, 3])
+
+# graficar el índice de precios del jugo de naranja
+plot(as.zoo(FOJCPI),
+     col = "steelblue", 
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "Índice de precio", 
+     main = "Jugo de naranja concentrado congelado")
+```
+
+```{r, 844, fig.align='center', fig.height=7}
+# dividir el área de graficado
+par(mfrow = c(2, 1))
+
+# graficar los cambios porcentuales en los precios
+plot(as.zoo(FOJC_pctc),
+     col = "steelblue", 
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "Porcentaje",
+     main = "Cambios mensuales en el precio del jugo de naranja concentrado congelado")
+
+# graficar grados días de congelación
+plot(as.zoo(FDD),
+     col = "steelblue", 
+     lwd = 2,
+     xlab = "Fecha",
+     ylab = "Grados días de congelación",
+     main = "Días de grado de congelación mensuales en Orlando, FL")
+```
+
+Los períodos con una gran cantidad de grados día de congelación son seguidos por grandes cambios de precios de mes a mes. Estos movimientos coincidentes motivan una regresión simple de los cambios de precio ($\%ChgOJC_t$) en grados día de congelación ($FDD_t$) para estimar el efecto de un día de grado de congelación adicional en el precio en el mes actual. Para ello, como para todas las demás regresiones de este capítulo, se usa $T = 611$ observaciones (de enero de 1950 a diciembre de 2000).
+
+```{r, 845}
+# regresión simple de cambios porcentuales en grados día de congelación
+orange_SR <- dynlm(FOJC_pctc ~ FDD)
+coeftest(orange_SR, vcov. = vcovHAC)
+```
+
+Observe que los errores estándar se calculan utilizando un estimador "HAC" de la matriz de varianza-covarianza; consulte el Capítulo \@ref(PAMADL) para una discusión de este estimador.
+
+\begin{align*}
+  \widehat{\%ChgOJC_t} = -\underset{(0.19)}{0.42} + \underset{(0.13)}{0.47} FDD_t
+\end{align*}
+
+El coeficiente estimado en $FDD_t$ tiene la siguiente interpretación: Un día de grado de congelación adicional en el mes $t$ conduce a un aumento de precio de $0.47$ puntos porcentuales en el mismo mes.
+
+Para considerar los efectos de las olas de frío en el precio del jugo de naranja durante los períodos subsiguientes, se incluyen valores rezagados de $FDD_t$ en el modelo, lo que conduce a un *modelo de regresión de rezagos distribuidos*. Se estima una especificación utilizando un valor contemporáneo y seis valores rezagados de $FDD_t$ como regresores.
+
+```{r, 846}
+# modelo de retraso distribuido con 6 retrasos de grados día de congelación
+orange_DLM <- dynlm(FOJC_pctc ~ FDD + L(FDD, 1:6))
+coeftest(orange_DLM, vcov. = vcovHAC)
+```
+
+Como resultado se obtiene:
+
+\begin{align}
+  \begin{split}
+  \widehat{\%ChgOJC_t} =& -\underset{(0.21)}{0.69} + \underset{(0.14)}{0.47} FDD_t + \underset{(0.08)}{0.15} FDD_{t-1} + \underset{(0.06)}{0.06} FDD_{t-2} + \underset{(0.05)}{0.07} FDD_{t-3} \\ &+ \underset{(0.03)}{0.04} FDD_{t-4} + \underset{(0.03)}{0.05} FDD_{t-5} + \underset{(0.05)}{0.05} FDD_{t-6},
+  \end{split}
+  (\#eq:orangemod1)
+\end{align}
+
+donde el coeficiente de $FDD_{t-1}$ estima el aumento de precio en el período $t$ causado por un día de grado de congelación adicional en el mes anterior, el coeficiente de $FDD_{t-2}$ estima el efecto de un día de grado de congelación hace dos meses y así sucesivamente. En consecuencia, los coeficientes en \@ref(eq:orangemod1) pueden interpretarse como cambios de precio en períodos actuales y futuros debido a un aumento unitario en los grados día de congelación del mes actual.
+
+## Efectos causales dinámicos
+
+Esta sección del libro describe la idea general de un efecto causal dinámico y cómo el concepto de un experimento controlado aleatorio se puede traducir a aplicaciones de series de tiempo, usando varios ejemplos.
+
+En general, para los intentos empíricos de medir un efecto causal dinámico, los supuestos de estacionariedad (ver Concepto clave 14.5) y exogeneidad deben ser válidos. En aplicaciones de series de tiempo hasta aquí, se ha asumido que el término de error del modelo tiene una media condicional cero dados los valores actuales y pasados de los regresores. Para la estimación de un efecto causal dinámico utilizando un modelo de rezago distribuido, puede ser útil asumir una forma más fuerte denominada *exogeneidad estricta*. La exogeneidad estricta establece que el término de error tiene una media cero condicionada a los valores pasados, presentes *y futuros* de las variables independientes.
+
+Los dos conceptos de exogeneidad y el modelo de rezago distribuido se resumen en el Concepto clave 15.1.
+
+```{r, 847, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC15.1">
+<h3 class = "right"> Concepto clave 15.1 </h3>
+<h3 class = "left"> El modelo de rezago distribuido y la exogeneidad </h3>
+<p>
+
+El modelo de rezago distribuido general es:
+
+\\begin{align}
+  Y_t = \\beta_0 + \\beta_1 X_t + \\beta_2 X_{t-1} + \\beta_3 X_{t-2} + \\dots + \\beta_{r+1} X_{t-r} + u_t, (\\#eq:dlm)
+\\end{align}
+
+donde se supone que:
+
+1. $X$ es una variable exógena, $$E(u_t\\vert X_t, X_{t-1}, X_{t-2},\\dots) = 0.$$
+
+2.
+     + a $X_t,Y_t$ tienen una distribución estacionaria.
+     + b $(Y_t,X_t)$ y $(Y_{t-j},X_{t-j})$ se distribuyen de forma independiente a medida que $j$ crece.
+
+3. Es poco probable que existan valores atípicos grandes. En particular, se necesita que todas las variables tengan más de ocho momentos distintos de cero y finitos, una suposición más sólida que antes (cuatro momentos finitos distintos de cero) que se requiere para el cálculo del estimador de matriz de covarianza HAC.
+
+4. No existe una multicolinealidad perfecta.
+
+El modelo de retardo distribuido puede ampliarse para incluir valores pasados y contemporáneos de regresores adicionales.
+
+**Sobre el supuesto de exogeneidad**
+
++ Existe otra forma de exogeneidad denominada *exogeneidad estricta* que asume $$E(u_t\\vert \\dots, X_{t+2},X_{t+1},X_t,X_{t-1},X_{t-2},\\dots)=0,$$ ese es el término de error que tiene una media cero condicionada a valores pasados, presentes y futuros de $X$. La exogeneidad estricta implica exogeneidad (como se define en 1. arriba), pero no al revés. Por tanto, a partir de este punto se distingue entre exogeneidad y exogeneidad estricta. 
+
++ La exogeneidad como en 1. es suficiente para que los estimadores MCO del coeficiente en los modelos de rezagos distribuidos sean consistentes. Sin embargo, si el supuesto de exogeneidad estricta es válido, se pueden aplicar estimadores más eficientes.
+
+</p>
+</div>
+')
+```
+
+```{r, 848, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El modelo de rezago distribuido y la exogeneidad]{15.1}
+
+El modelo de rezago distribuido general es:
+
+\\begin{align}
+  Y_t = \\beta_0 + \\beta_1 X_t + \\beta_2 X_{t-1} + \\beta_3 X_{t-2} + \\dots + \\beta_{r+1} X_{t-r} + u_t, \\label{eq:dlm}
+\\end{align}
+
+donde se supone que:\\newline
+
+\\begin{enumerate}
+\\item $X$ es una variable exógena, $$E(u_t\\vert X_t, X_{t-1}, X_{t-2},\\dots) = 0.$$
+\\item \\vspace{0.5cm}
+\\begin{itemize}
+\\item[(a)] $X_t,Y_t$ tienen una distribución estacionaria.
+\\item[(b)] $(Y_t,X_t)$ y $(Y_{t-j},X_{t-j})$ se distribuyen de forma independiente a medida que $j$ crece.
+\\end{itemize}\\vspace{0.5cm}
+\\item Es poco probable que existan valores atípicos grandes. En particular, se necesita que todas las variables tengan más de ocho momentos distintos de cero y finitos, una suposición más sólida que antes (cuatro momentos finitos distintos de cero) que se requiere para el cálculo del estimador de matriz de covarianza HAC.
+\\item No existe una multicolinealidad perfecta.\\vspace{0.5cm}
+\\end{enumerate}\\vspace{0.5cm}
+
+El modelo de retardo distribuido puede ampliarse para incluir valores pasados y contemporáneos de regresores adicionales.\\vspace{0.5cm}
+
+\\textbf{Sobre el supuesto de exogeneidad}\\vspace{0.5cm}
+
+\\begin{itemize}
+\\item Existe otra forma de exogeneidad denominada \\textit{exogeneidad estricta} que asume $$E(u_t\\vert \\dots, X_{t+2},X_{t+1},X_t,X_{t-1},X_{t-2},\\dots)=0,$$ ese es el término de error que tiene una media cero condicionada a valores pasados, presentes y futuros de $X$. La exogeneidad estricta implica exogeneidad (como se define en 1. arriba), pero no al revés. Por tanto, a partir de este punto se distingue entre exogeneidad y exogeneidad estricta.\\vspace{0.5cm}  
+\\item La exogeneidad como en 1. es suficiente para que los estimadores MCO del coeficiente en los modelos de rezagos distribuidos sean consistentes. Sin embargo, si el supuesto de exogeneidad estricta es válido, se pueden aplicar estimadores más eficientes.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+## Multiplicadores dinámicos y multiplicadores dinámicos acumulativos
+
+La siguiente terminología respecto a los coeficientes en el modelo de retardo distribuido \@ref(eq:dlm) es útil para las próximas aplicaciones:
+
+  + El efecto causal dinámico también se denomina *multiplicador dinámico*. $\beta_{h+1}$ en \@ref(eq:dlm) es el multiplicador dinámico del periodo $h$.
+
+  + El efecto contemporáneo de $X$ sobre $Y$, $\beta_1$, se denomina *efecto de impacto*.
+
+  + El multiplicador dinámico acumulativo *del período $h$* de un cambio de unidad en $X$ y $Y$ se define como la suma acumulativa de los multiplicadores dinámicos. En particular, $\beta_1$ es el multiplicador dinámico acumulativo de período cero, $\beta_1 + \beta_2$ es el multiplicador dinámico acumulativo de un período y así sucesivamente.
+
+     Los multiplicadores dinámicos acumulativos del modelo de retardo distribuido \@ref(eq:dlm) son los coeficientes $\delta_1,\delta_2,\dots,\delta_r,\delta_{r+1}$ en la regresión modificada
+\begin{align}
+  Y_t =& \, \delta_0 + \delta_1 \Delta X_t + \delta_2 \Delta X_{t-1} + \dots + \delta_r \Delta X_{t-r+1} + \delta_{r+1} X_{t-r} + u_t (\#eq:DCMreg)
+\end{align} y, por lo tanto, se pueden estimar directamente utilizando MCO, lo que hace que sea conveniente calcular sus errores estándar de HAC. $\delta_{r+1}$ se denomina *multiplicador dinámico acumulativo de largo plazo*.
+
+Es sencillo calcular los multiplicadores dinámicos acumulativos para \@ref(eq:orangemod1), la regresión de retardo distribuida estimada de los cambios en los precios del concentrado de jugo de naranja en grados-día de congelación, utilizando el objeto modelo correspondiente **orange_DLM** y la función **cumsum()**.
+
+```{r, 849}
+# calcular multiplicadores acumulativos
+cum_mult <-cumsum(orange_DLM$coefficients[-1])
+
+# cambiar el nombre de las entradas
+names(cum_mult) <- paste(0:6, sep = "-", "period CDM")
+
+cum_mult
+```
+
+Al traducir el modelo de rezago distribuido con seis rezagos de $FDD$ a \@ref(eq:DCMreg), se puede ver que las estimaciones del coeficiente de MCO en este modelo coinciden con los multiplicadores almacenados en **cum_mult**.
+
+```{r, 850}
+# estimar multiplicadores dinámicos acumulativos usando la regresión modificada
+cum_mult_reg <-dynlm(FOJC_pctc ~ d(FDD) + d(L(FDD,1:5)) + L(FDD,6))
+coef(cum_mult_reg)[-1]
+```
+
+Como se señaló anteriormente, el uso de una especificación de modelo como en \@ref(eq:DCMreg) permite obtener fácilmente errores estándar para los multiplicadores acumulativos dinámicos estimados.
+
+```{r, 851}
+# obtener un resumen de coeficientes que informe los errores estándar de HAC
+coeftest(cum_mult_reg, vcov. = vcovHAC)
+```
+
+## Errores estándar de HAC
+
+El término de error $u_t$ en el modelo de retardo distribuido \@ref(eq:dlm) puede estar correlacionado en serie debido a determinantes correlacionados en serie de $Y_t$ que no se incluyen como regresores. Cuando estos factores no están correlacionados con los regresores incluidos en el modelo, los errores correlacionados en serie no violan el supuesto de exogeneidad, de modo que el estimador de MCO permanece insesgado y consistente.
+
+Sin embargo, los errores estándar autocorrelacionados invalidan los errores estándar habituales de solo *homocedasticidad* y *heterocedasticidad* robustos y pueden causar inferencias engañosas. Los errores de HAC son una solución.
+
+```{r, 852, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC15.2">
+<h3 class = "right"> Concepto clave 15.2 </h3>
+<h3 class = "left"> Errores estándar de HAC </h3>
+<p>
+
+**Problema**:
+
+Si el término de error $u_t$ en el modelo de retardo distribuido (\\@ref(eq:dlm)) está correlacionado en serie, la inferencia estadística que se basa en errores estándar habituales (robustos a la heterocedasticidad) puede ser muy engañosa.
+
+**Solución**:
+
+Los estimadores consistentes con heterocedasticidad y autocorrelación (HAC) de la matriz de varianza-covarianza evitan este problema. Existen funciones <tt>R</tt> como <tt>vcovHAC()</tt> del paquete <tt>sandwich</tt> que son convenientes para el cálculo de tales estimadores.
+
+El paquete <tt>sandwich</tt> también contiene la función <tt>NeweyWest()</tt>, una implementación del estimador de varianza-covarianza HAC propuesto por @newey1987.
+
+</p>
+</div>
+')
+```
+
+```{r, 853, eval=my_output=="latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Errores estándar de HAC]{15.2}
+\\textbf{Problema}:\\newline
+
+Si el término de error $u_t$ en el modelo de retardo distribuido (\\@ref(eq:dlm)) está correlacionado en serie, la inferencia estadística que se basa en errores estándar habituales (robustos a la heterocedasticidad) puede ser muy engañosa.\\newline
+
+\\textbf{Solución}:\\newline
+
+Los estimadores consistentes con heterocedasticidad y autocorrelación (HAC) de la matriz de varianza-covarianza evitan este problema. Existen funciones \\texttt{R} como \\texttt{vcovHAC()} del paquete \\texttt{sandwich} que son convenientes para el cálculo de tales estimadores.\\newline
+
+El paquete \\texttt{sandwich} también contiene la función \\texttt{NeweyWest()}, una implementación del estimador de varianza-covarianza HAC propuesto por \\cite{newey1987}.
+
+\\end{keyconcepts}
+')
+```
+
+Considere el modelo de regresión de rezagos distribuidos sin rezagos y un solo regresor $X_t$:
+
+\begin{align*}
+  Y_t = \beta_0 + \beta_1 X_t + u_t.
+\end{align*}
+
+con errores autocorrelacionados. Una breve derivación de
+
+\begin{align}
+  \overset{\sim}{\sigma}^2_{\widehat{\beta}_1} = \widehat{\sigma}^2_{\widehat{\beta}_1} \widehat{f}_t (\#eq:nwhac)
+\end{align}
+
+el llamado *estimador de varianza de Newey-West* para la varianza del estimador de MCO de $\beta_1$. $\widehat{\sigma}^2_{\widehat{\beta}_1}$ en \@ref(eq:nwhac) es la estimación de la varianza robusta a la heterocedasticidad de $\widehat{\beta}_1$ y
+
+\begin{align}
+  \widehat{f}_t = 1 + 2 \sum_{j=1}^{m-1} \left(\frac{m-j}{m}\right) \overset{\sim}{\rho}_j (\#eq:nwhacf)
+\end{align}
+
+es un factor de corrección que se ajusta a los errores correlacionados en serie e involucra estimaciones de $m-1$ coeficientes de autocorrelación $\overset{\sim}{\rho}_j$. Como resultado, usar la autocorrelación de muestra implementada en **acf()** para estimar los coeficientes de autocorrelación hace que \@ref(eq:nwhac) sea inconsistente. Por tanto, se utiliza un estimador algo diferente. Para una serie de tiempo $X$ se tiene $$ \ \overset{\sim}{\rho}_j = \frac{\sum_{t=j+1}^T \hat v_t \hat v_{t-j}}{\sum_{t=1}^T \hat v_t^2}, \ \text{with} \ \hat v= (X_t-\overline{X}) \hat u_t. $$ Implementando este estimador en la función **acf_c()** a continuación:
+
+$m$ in \@ref(eq:nwhacf) is a truncation parameter to be chosen. A rule of thumb for choosing $m$ is
+\begin{align}
+  m = \left \lceil{0.75 \cdot T^{1/3}}\right\rceil. (\#eq:hactruncrot)
+\end{align}
+
+Se simula una serie de tiempo que, como se indicó anteriormente, sigue un modelo de retardo distribuido con errores autocorrelacionados y luego se muestra cómo calcular la estimación de Newey-West HAC de $SE(\widehat{\beta}_1)$ usando **R**. Esto se hace a través de dos enfoques separados pero, como se verá, idénticos: Al principio se sigue la derivación presentada paso a paso y se calcula la estimación "manualmente". Luego se muestra que el resultado es exactamente la estimación obtenida al usar la función **NeweyWest()**.
+
+```{r, 854}
+# función que calcula rho tilde
+acf_c <- function(x, j) {
+  return(
+    t(x[-c(1:j)]) %*% na.omit(Lag(x, j)) / t(x) %*% x
+  )
+}
+
+# simular series de tiempo con errores correlacionados en serie
+set.seed(1)
+
+N <- 100
+
+eps <- arima.sim(n = N, model = list(ma = 0.5))
+X <- runif(N, 1, 10)
+Y <- 0.5 * X + eps
+
+# calcular los residuos de MCO
+res <- lm(Y ~ X)$res
+
+# compute v
+v <- (X - mean(X)) * res
+
+# calcular una estimación sólida de la varianza beta_1
+var_beta_hat <- 1/N * (1/(N-2) * sum((X - mean(X))^2 * res^2) ) / 
+                        (1/N * sum((X - mean(X))^2))^2
+
+# parámetro de truncamiento de la regla general
+m <- floor(0.75 * N^(1/3))
+
+# calcular el factor de corrección
+f_hat_T <- 1 + 2 * sum(
+  (m - 1:(m-1))/m * sapply(1:(m - 1), function(i) acf_c(x = v, j = i))
+  ) 
+
+# calcular la estimación de Newey-West HAC del error estándar
+sqrt(var_beta_hat * f_hat_T)
+```
+
+Para que el código sea reutilizable en otras aplicaciones, se usa **sapply()** para estimar las $m-1$ autocorrelaciones $\overset{\sim}{\rho}_j$.
+
+```{r, 855}
+# usando NeweyWest():
+NW_VCOV <- NeweyWest(lm(Y ~ X), 
+              lag = m - 1, prewhite = F, 
+              adjust = T)
+
+# calcular el error estándar
+sqrt(diag(NW_VCOV))[2]
+```
+
+Al elegir **lag = m-1** se asegura que el orden máximo de autocorrelaciones utilizadas sea $m-1$ --- tal como en la ecuación \@ref(eq:nwhacf). Observe que se establecen los argumentos **prewhite = F** y **adjust = T** para asegurar que se usa la fórmula \@ref(eq:nwhac) y se realizan ajustes de muestra finitos.
+
+Se encontró que los errores estándar calculados coinciden. Por supuesto, una estimación de la matriz de varianza-covarianza calculada por **NeweyWest()** se puede proporcionar como el argumento **vcov** en **coeftest()**, tal que el estadístico $t$ de HAC y los valores $p$ son proporcionados por este último.
+
+```{r, 856}
+example_mod <- lm(Y ~ X)
+coeftest(example_mod, vcov = NW_VCOV)
+```
+
+## Estimación de efectos causales dinámicos con regresores estrictamente exógenos
+
+En general, los errores en un modelo de retardo distribuido están correlacionados, lo que requiere el uso de errores estándar de HAC para una inferencia válida. Sin embargo, si la suposición de exogeneidad (la primera suposición establecida en el Concepto clave 15.1) se reemplaza por exogeneidad estricta, es $$E(u_t\vert \dots, X_{t+1}, X_{t}, X_{t-1}, \dots) = 0,$$ se encuentran disponibles enfoques más eficientes que la estimación MCO de los coeficientes. Para un modelo de rezago distribuido general con $r$ rezagos y errores AR($p$), estos enfoques se resumen en el Concepto clave 15.4.
+
+```{r, 857, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC15.4">
+<h3 class = "right"> Concepto clave 15.4 </h3>
+<h3 class = "left"> Estimación de multiplicadores dinámicos bajo estricta exogeneidad </h3>
+<p>
+
+Considere el modelo de retraso distribuido general con $r$ retrasos y errores después de un proceso AR($p$),
+
+\\begin{align}
+  Y_t =& \\, \\beta_0 + \\beta_1 X_t + \\beta_2 X_{t-1} + \\dots + \\beta_{r+1} X_{t-r} + u_t (\\#eq:dlmar) \\\\
+  u_t =& \\, \\phi_1 u_{t-1} + \\phi u_{t-2} + \\dots + \\phi_p u_{t-p} + \\overset{\\sim}{u}_t. (\\#eq:dlmarerrors)
+\\end{align}
+
+Bajo exogeneidad estricta de $X_t$, se puede reescribir el modelo anterior en la especificación ADL
+
+\\begin{align*}
+  Y_t =& \\, \\alpha_0 + \\phi_1 Y_{t-1} + \\phi_2 Y_{t-2} + \\dots + \\phi_p Y_{t-p} \\\\
+      &+ \\, \\delta_0 X_t + \\delta_1 X_{t-1} + \\dots + \\delta_q X_{t-q} + \\overset{\\sim}{u}_t
+\\end{align*}
+
+donde $q=r+p$ y calcular estimaciones de los multiplicadores dinámicos $\\beta_1, \\beta_2, \\dots, \\beta_{r+1}$ utilizando estimaciones de MCO de $\\phi_1, \\phi_2, \\dots, \\phi_p, \\delta_0, \\delta_1, \\dots, \\delta_q$. 
+
+Una alternativa es estimar los multiplicadores dinámicos utilizando MCG factible; es decir, aplicar el estimador MCO a una especificación de cuasi-diferencia de \\@ref(eq:dlmar). Bajo exogeneidad estricta, el enfoque MCG factible es el estimador AZUL para los multiplicadores dinámicos en muestras grandes.
+
+Por un lado, la estimación por MCO de la representación de AVD puede ser beneficiosa para la estimación de los multiplicadores dinámicos en modelos de rezagos distribuidos grandes porque permite un modelo más parsimonioso que puede ser una buena aproximación al modelo grande. Por otro lado, el enfoque MCG es más eficiente que el estimador de AVD si el tamaño de la muestra es grande.
+
+</p>
+</div>
+')
+```
+
+```{r, 858, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Estimación de multiplicadores dinámicos bajo estricta exogeneidad]{15.4}
+
+Considere el modelo de retraso distribuido general con $r$ retrasos y errores después de un proceso AR($p$),
+
+\\begin{align}
+  Y_t =& \\, \\beta_0 + \\beta_1 X_t + \\beta_2 X_{t-1} + \\dots + \\beta_{r+1} X_{t-r} + u_t \\\\
+  u_t =& \\, \\phi_1 u_{t-1} + \\phi u_{t-2} + \\dots + \\phi_p u_{t-p} + \\overset{\\sim}{u}_t. (\\#eq:dlmarerrors)
+\\end{align}
+
+Bajo exogeneidad estricta de $X_t$, se puede reescribir el modelo anterior en la especificación ADL
+
+\\begin{align*}
+  Y_t =& \\, \\alpha_0 + \\phi_1 Y_{t-1} + \\phi_2 Y_{t-2} + \\dots + \\phi_p Y_{t-p} \\\\
+      &+ \\, \\delta_0 X_t + \\delta_1 X_{t-1} + \\dots + \\delta_q X_{t-q} + \\overset{\\sim}{u}_t
+\\end{align*}
+
+donde $q=r+p$ y calcular estimaciones de los multiplicadores dinámicos $\\beta_1, \\beta_2, \\dots, \\beta_{r+1}$ utilizando estimaciones de MCO de $\\phi_1, \\phi_2, \\dots, \\phi_p, \\delta_0, \\delta_1, \\dots, \\delta_q$.\\newline 
+
+Una alternativa es estimar los multiplicadores dinámicos utilizando MCG factible; es decir, aplicar el estimador MCO a una especificación de cuasi-diferencia de \\@ref(eq:dlmar). Bajo exogeneidad estricta, el enfoque MCG factible es el estimador AZUL para los multiplicadores dinámicos en muestras grandes.\\newline
+
+Por un lado, la estimación por MCO de la representación de AVD puede ser beneficiosa para la estimación de los multiplicadores dinámicos en modelos de rezagos distribuidos grandes porque permite un modelo más parsimonioso que puede ser una buena aproximación al modelo grande. Por otro lado, el enfoque MCG es más eficiente que el estimador de AVD si el tamaño de la muestra es grande.
+
+\\end{keyconcepts}
+')
+```
+
+En breve se revisa cómo se pueden obtener las diferentes representaciones de un modelo de retardo distribuido pequeño y se muestra cómo se puede estimar esta especificación mediante MCO y MCG usando **R**.
+
+El modelo es
+
+\begin{align}
+  Y_t = \beta_0 + \beta_1 X_t + \beta_2 X_{t-1} + u_t, (\#eq:dldynamic)
+\end{align}
+
+por lo que se modela un cambio en $X$ para que afecte a $Y$ simultáneamente ($\beta_1$) y en el siguiente período ($\beta_2$). Se supone que el término de error $u_t$ sigue un proceso AR($1$), $$u_t = \phi_1 u_{t-1} + \overset{\sim}{u_t},$$ donde $\overset{\sim}{u_t}$ no está correlacionado en serie.
+
+Se puede demostrar que la representación de ADL de este modelo es
+
+\begin{align}
+  Y_t = \alpha_0 + \phi_1 Y_{t-1} + \delta_0 X_t + \delta_1 X_{t-1} + \delta_2 X_{t-2} + \overset{\sim}{u}_t, (\#eq:adl21dynamic)
+\end{align}
+
+con las restricciones
+
+\begin{align*}
+  \beta_1 =& \, \delta_0, \\
+  \beta_2 =& \, \delta_1 + \phi_1 \delta_0,
+\end{align*}
+
+#### Cuasi-diferencias {-}
+
+Otra forma de escribir la representación de ADL($1$,$2$) \@ref(eq:adl21dynamic) es el *modelo de cuasi-diferencia*
+
+\begin{align}
+  \overset{\sim}{Y}_t = \alpha_0 + \beta_1 \overset{\sim}{X}_t + \beta_2   \overset{\sim}{X}_{t-1} + \overset{\sim}{u}_t, (\#eq:qdm)
+\end{align}
+
+donde $\overset{\sim}{Y}_t = Y_t - \phi_1 Y_{t-1}$ y $\overset{\sim}{X}_t = X_t - \phi_1 X_{t-1}$ Observe que el término de error $\overset{\sim}{u}_t$ no está correlacionado en ambos modelos y $$E(u_t\vert X_{t+1}, X_t, X_{t-1}, \dots) = 0,$$ que está implícito en el supuesto de exogeneidad estricta.
+
+Se continua simulando una serie de tiempo de observaciones de $500$ usando el modelo \@ref(eq:dldynamic) con $\beta_1 = 0.1$, $\beta_2 = 0.25$, $\phi = 0.5$ y $\overset{\sim}{u}_t \sim \mathcal{N}(0,1)$, así como estimar las diferentes representaciones, comenzando con el modelo de retardo distribuido \@ref(eq:dldynamic).
+
+```{r, 859}
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# simular una serie de tiempo con errores correlacionados en serie
+obs <- 501
+eps <- arima.sim(n = obs-1 , model = list(ar = 0.5))
+X <- arima.sim(n = obs, model = list(ar = 0.25))
+Y <- 0.1 * X[-1] + 0.25 * X[-obs] + eps
+X <- ts(X[-1])
+
+# estimar el modelo de rezago distribuido
+dlm <- dynlm(Y ~ X + L(X))
+```
+
+Comprobar que los residuos de este modelo exhiben autocorrelación usando **acf()**.
+
+```{r, 860, fig.align='center'}
+# comprobar que los residuales estén correlacionados en serie
+acf(residuals(dlm))
+```
+
+En particular, el patrón revela que los residuos siguen un proceso autorregresivo, ya que la función de autocorrelación de la muestra decae rápidamente durante los primeros rezagos y probablemente sea cero para los órdenes de rezago más altos. En cualquier caso, deben utilizarse errores estándar de HAC.
+
+```{r, 861}
+# resumen de coeficientes utilizando las estimaciones de errores estándar de Newey-West
+coeftest(dlm, vcov = NeweyWest, prewhite = F, adjust = T)
+```
+
+#### Estimación MCO del modelo ADL {-}
+
+A continuación, se estima el modelo ADL($1$,$2$) \@ref(eq:adl21dynamic) usando MCO. Los errores no están correlacionados en esta representación del modelo. Esta afirmación está respaldada por un gráfico de la función de autocorrelación muestral de la serie residual.
+
+```{r, 862, fig.align='center'}
+# estimar la representación de ADL(2,1) del modelo de rezago distribuido
+adl21_dynamic <- dynlm(Y ~ L(Y) + X + L(X, 1:2))
+
+# graficar las autocorrelaciones de muestra de residuos
+acf(adl21_dynamic$residuals)
+```
+
+Los coeficientes estimados de `adl21_dynamic$coefficients` *no son los multiplicadores dinámicos que interesan*, sino que pueden calcularse de acuerdo con las restricciones en \@ref(eq:adl21dynamic), donde los coeficientes verdaderos son reemplazados por las estimaciones de MCO.
+
+```{r, 863}
+# calcular efectos dinámicos estimados usando restricciones de coeficientes
+# en la representación de ADL(2,1)
+t <- adl21_dynamic$coefficients
+
+c("hat_beta_1" = t[3],
+  "hat_beta_2" = t[4] + t[3] * t[2])
+```
+
+#### Estimación de mínimos cuadrados generalizados (MCG) {-}
+
+La exogeneidad estricta permite la estimación por MCO del modelo de cuasi-diferencia \@ref(eq:qdm). La idea de aplicar el estimador MCO a un modelo donde las variables se transforman linealmente, de modo que los errores del modelo no están correlacionados y son homocedásticos, se denomina *mínimos cuadrados generalizados* (MCG).
+
+El estimador MCO en \@ref(eq:qdm) se llama estimador *MCG* inviable porque $\overset{\sim}{Y}$ y $\overset{\sim}{X}$ no se pueden calcular sin saber $\phi_1$, el coeficiente autorregresivo en el modelo de error AR($1$), que generalmente se desconoce en la práctica.
+
+Suponga que se sabe que $\phi = 0.5$. Entonces se pueden obtener las estimaciones MCG inviables de los multiplicadores dinámicos en \@ref(eq:dldynamic) aplicando MCO a los datos transformados.
+
+```{r, 864}
+# MCG: estimación de la especificación cuasi-diferenciada por MCO
+iGLS_dynamic <- dynlm(I(Y- 0.5 * L(Y)) ~ I(X - 0.5 * L(X)) + I(L(X) - 0.5 * L(X, 2)))
+
+summary(iGLS_dynamic)
+```
+
+El estimador *MCG factible* utiliza una estimación preliminar de los coeficientes en el modelo de término de presunto error, calcula los datos cuasidiferenciados y luego estima el modelo utilizando MCO. Esta idea fue introducida por @cochrane1949 y puede ampliarse continuando este proceso de forma iterativa. Dicho procedimiento se implementa en la función **cochrane.orcutt()** del paquete **orcutt**.
+
+```{r, 865}
+X_t <- c(X[-1])
+# crear primer retraso
+X_l1 <- c(X[-500])
+Y_t <- c(Y[-1])
+
+# procedimiento cochrane-orcutt iterado
+summary(cochrane.orcutt(lm(Y_t ~ X_t + X_l1)))
+```
+
+Algunos métodos más sofisticados para la estimación de MCG se proporcionan con el paquete **nlme**. La función **gls()** se puede utilizar para ajustar modelos lineales mediante algoritmos de estimación de máxima verosimilitud y permite especificar una estructura de correlación para el término de error.
+
+```{r, 866}
+# procedimiento factible de estimación de máxima verosimilitud de MCG
+summary(gls(Y_t ~ X_t + X_l1, correlation = corAR1()))
+```
+
+Observe que en este ejemplo, las estimaciones de coeficientes producidas por MCG están algo más cerca de sus valores verdaderos y que los errores estándar son los más pequeños para el estimador de MCG.
+
+## Precios del jugo de naranja y clima frío
+
+Esta sección investiga las dos preguntas siguientes utilizando los métodos de regresión de series de tiempo que se analizan aquí:
+
++ ¿Qué tan persistente es el efecto de una sola congelación en los precios del concentrado de jugo de naranja?
+
++ ¿El efecto se ha mantenido estable durante todo el período de tiempo?
+
+Se comienza estimando los efectos causales dinámicos con un modelo de rezagos distribuidos donde $\%ChgOJC_t$ se regresa en $FDD_t$ y 18 rezagos. Una segunda especificación del modelo considera una transformación del modelo de rezago distribuido que permite estimar los 19 multiplicadores dinámicos acumulativos utilizando MCO. El tercer modelo, agrega 11 variables binarias (una para cada uno de los meses de febrero a diciembre) para ajustar un posible sesgo de variable omitida que surge de la correlación de $FDD_t$ y temporadas agregando **season(FDD)** al lado derecho de la mano de la fórmula del segundo modelo.
+
+```{r, 867}
+# estimar modelos de retardo distribuido de cambios en el precio del jugo de naranja congelado
+FOJC_mod_DM <- dynlm(FOJC_pctc ~ L(FDD, 0:18))
+FOJC_mod_CM1 <- dynlm(FOJC_pctc ~ L(d(FDD), 0:17) + L(FDD, 18))
+FOJC_mod_CM2 <- dynlm(FOJC_pctc ~ L(d(FDD), 0:17) + L(FDD, 18) + season(FDD))
+```
+
+Los modelos anteriores incluyen una gran cantidad de retrasos con etiquetas predeterminadas que se corresponden con el grado de diferenciación y los órdenes de retraso, lo que dificulta la lectura del resultado. Las etiquetas de regresor de un objeto modelo se pueden alterar anulando el atributo **names** de la sección de coeficientes usando la función **attr()**. Por lo tanto, para una mejor legibilidad, se utilizan las órdenes de retraso como etiquetas regresivas.
+
+```{r, 868, echo=T}
+# establecer órdenes de retraso como etiquetas regresivas
+attr(FOJC_mod_DM$coefficients, "names")[1:20] <- c("(Intercept)", as.character(0:18))
+attr(FOJC_mod_CM1$coefficients, "names")[1:20] <- c("(Intercept)", as.character(0:18))
+attr(FOJC_mod_CM2$coefficients, "names")[1:20] <- c("(Intercept)", as.character(0:18))
+```
+
+A continuación, se calculan los errores estándar de HAC para cada modelo usando **NeweyWest()** y se recopilan los resultados en una lista que luego se suministra como el argumento **se** a la función **stargazer()**, observe abajo. La muestra consta de 612 observaciones:
+
+```{r, 869}
+length(FDD)
+```
+
+De acuerdo con \@ref(eq:hactruncrot), la regla general para elegir el parámetro de truncamiento $m$ del error estándar HAC, se elige
+
+$$m = \left\lceil0.75 \cdot 612^{1/3} \right\rceil = \lceil6.37\rceil = 7.$$
+
+Para comprobar la sensibilidad de los errores estándar a las diferentes opciones del parámetro de truncamiento en el modelo que se utiliza para estimar los multiplicadores acumulativos, también se calcula el estimador de Newey-West para $m = 14$.
+
+```{r, 870}
+# recopilar errores estándar de HAC en una lista
+SEs <- list(sqrt(diag(NeweyWest(FOJC_mod_DM, lag = 7, prewhite = F))), 
+            sqrt(diag(NeweyWest(FOJC_mod_CM1, lag = 7, prewhite = F))), 
+            sqrt(diag(NeweyWest(FOJC_mod_CM1, lag = 14, prewhite = F))),
+            sqrt(diag(NeweyWest(FOJC_mod_CM2, lag = 7, prewhite = F))))
+```
+
+Luego, los resultados se utilizan para producir la siguiente tabla:
+
+```{r, 871, eval=F}
+stargazer(FOJC_mod_DM , FOJC_mod_CM1, FOJC_mod_CM1, FOJC_mod_CM2,
+  title = "Efectos dinámicos de un día de grados de congelación en el precio del jugo de naranja",
+  header = FALSE, 
+  digits = 3, 
+  column.labels = c("Multiplicadores dinámicos", rep("Multiplicadores acumulativos dinámicos", 3)),
+  dep.var.caption  = "Variable dependiente: Cambio porcentual mensual en el precio del jugo de naranja",
+  dep.var.labels.include = FALSE,
+  covariate.labels = as.character(0:18),
+  omit = "season",
+  se = SEs,
+  no.space = T,
+  add.lines = list(c("¿Indicadores mensuales?","no", "no", "no", "yes"),
+                   c("Truncamiento de HAC","7", "7", "14", "7")),
+  omit.stat = c("rsq", "f","ser")) 
+```
+
+<!--html_preserve-->
+
+```{r, 872, eval = my_output == "html", results = 'asis', echo = F, purl = F, message = F, warning = F}
+stargazer(FOJC_mod_DM , FOJC_mod_CM1, FOJC_mod_CM1, FOJC_mod_CM2,
+  header = FALSE, 
+  type = "html",
+  digits = 3, 
+  column.labels = c("Multiplicadores dinámicos", rep("Multiplicadores acumulativos dinámicos", 3)),
+  dep.var.caption  = "Variable dependiente: Cambio porcentual mensual en el precio del jugo de naranja",
+  dep.var.labels.include = FALSE,
+  covariate.labels = as.character(0:18),
+  omit = "season",
+  se = SEs,
+  no.space = T,
+  add.lines = list(
+                   c("¿Indicadores mensuales?","no", "no", "no", "yes"),
+                   c("Truncamiento de HAC","7", "7", "14", "7")
+                   ),
+  omit.stat = c("rsq", "f","ser")
+  ) 
+
+stargazer_html_title("Efectos dinámicos de un día de grados de congelación en el precio del jugo de naranja", "deoafddotpooj")
+```
+
+<!--/html_preserve-->
+
+```{r, 873, eval = my_output == "latex", results = 'asis', echo = F, purl = F, message = F, warning = F}
+stargazer(FOJC_mod_DM , FOJC_mod_CM1, FOJC_mod_CM1, FOJC_mod_CM2,
+  title = "\\label{tab:deoafddotpooj} Efectos dinámicos de un día de grados de congelación en el precio del jugo de naranja",
+  header = FALSE, 
+  type = "latex",
+  column.sep.width = "20pt",
+  float.env = "sidewaystable",
+  single.row = T,
+  digits = 3, 
+  column.labels = c("Multiplicadores dinámicos", rep("Multiplicadores acumulativos dinámicos", 3)),
+  dep.var.caption  = "Variable dependiente: Cambio porcentual mensual en el precio del jugo de naranja",
+  dep.var.labels.include = FALSE,
+  covariate.labels = paste("lag",as.character(0:18)),
+  omit = "season",
+  se = SEs,
+  no.space = T,
+  add.lines = list(
+                   c("¿Indicadores mensuales?","no", "no", "no", "yes"),
+                   c("Truncamiento de HAC","7", "7", "14", "7")
+                   ),
+  omit.stat = c("rsq", "f","ser")
+  ) 
+```
+
+Según la columna (1) de la Tabla \@ref(tab:deoafddotpooj), el efecto contemporáneo de un día de grado de congelación es un aumento de $0.5\%$ en los precios del jugo de naranja. El efecto estimado es de solo $0.17\%$ para el próximo mes y cercano a cero para los meses siguientes. De hecho, para todos los rezagos mayores que 1, no se puede rechazar la hipótesis nula de que los coeficientes respectivos son cero usando pruebas de $t$ individuales. El modelo **FOJC_mod_DM** solo explica poco de la variación en la variable dependiente ($\bar{R}^2 = 0.11$).
+
+Las columnas (2) y (3) presentan estimaciones de los multiplicadores acumulativos dinámicos del modelo **FOJC_mod_CM1**. Aparentemente, no importa si se elige $m = 7$ o $m = 14$ al calcular los errores estándar de HAC, por lo que se queda con $m = 7$ y los errores estándar informados en la columna (2).
+
+Si la demanda de jugo de naranja es mayor en invierno, $FDD_t$ estaría correlacionado con el término de error, ya que las heladas ocurren más bien en invierno, por lo que se enfrentaría un sesgo de variable omitido. La estimación del tercer modelo, **FOJC_mod_CM2**, tiene en cuenta este posible problema mediante el uso de un conjunto adicional de 11 variables ficticias mensuales. Por brevedad, las estimaciones de los coeficientes ficticios se excluyen de la salida producida por Stargazer (esto se logra estableciendo **omit = 'season'**). Se puede comprobar que se omitió la variable ficticia de enero para evitar una multicolinealidad perfecta.
+
+```{r, 874}
+# estimaciones sobre variables ficticias mensuales
+FOJC_mod_CM2$coefficients[-c(1:20)]
+```
+
+Una comparación de las estimaciones presentadas en las columnas (3) y (4) indica que la adición de variables ficticias mensuales tiene un efecto insignificante. Otra evidencia de esto proviene de una prueba conjunta de la hipótesis de que los 11 coeficientes ficticios son cero. En lugar de usar **linearHypothesis()**, se usa la función **waldtest()** y se proporcionan dos objetos de modelo en su lugar: **unres_model**, el objeto de modelo sin restricciones que es lo mismo que **FOJC_mod_CM2** (excepto por los nombres de los coeficientes, ya que se han modificado arriba) y **res_model**, el modelo donde se impone la restricción de que todos los coeficientes ficticios son cero. **res_model** se obtiene convenientemente usando la función **update()**. Extrae el argumento **formula** de un objeto modelo, lo actualiza según lo especificado y luego vuelve a ajustar el modelo. Estableciendo **formula = . ~ . - season(FDD)** se impone que los maniquíes mensuales no ingresen al modelo.
+
+```{r, 875}
+# probar si los coeficientes de las variables ficticias mensuales son cero
+unres_model <- dynlm(FOJC_pctc ~ L(d(FDD), 0:17) + L(FDD, 18) + season(FDD))
+
+res_model <- update(unres_model, formula = . ~ . - season(FDD))
+
+waldtest(unres_model, 
+         res_model, 
+         vcov = NeweyWest(unres_model, lag = 7, prewhite = F))
+```
+
+El valor de $p$ es $0.47$, por lo que no se puede rechazar la hipótesis de que los coeficientes de las variables ficticias mensuales son cero, incluso en el nivel de $10\%$. Se concluye que las fluctuaciones estacionales en la demanda de jugo de naranja no representan una amenaza seria para la validez interna del modelo.
+
+Es conveniente utilizar gráficos de multiplicadores dinámicos y multiplicadores dinámicos acumulativos. Los siguientes dos fragmentos de código reproducen gráficas que muestran estimaciones puntuales de multiplicadores dinámicos y acumulativos junto con los límites superior e inferior de sus intervalos de confianza de $95\%$ calculados utilizando los errores estándar de HAC anteriores.
+
+```{r, 876, fig.align='center', fig.cap="Multiplicadores Dinámicos", label = MD}
+# límites de IC del 95%
+point_estimates <- FOJC_mod_DM$coefficients
+
+CI_bounds <- cbind("lower" = point_estimates - 1.96 * SEs[[1]],
+                   "upper" = point_estimates + 1.96 * SEs[[1]])[-1, ]
+
+# graficar los multiplicadores dinámicos estimados
+plot(0:18, point_estimates[-1], 
+     type = "l", 
+     lwd = 2, 
+     col = "steelblue", 
+     ylim = c(-0.4, 1),
+     xlab = "Retraso",
+     ylab = "Multiplicador dinámico",
+     main = "Efecto dinámico de FDD en el precio del jugo de naranja")
+
+# agregar una línea discontinua en 0
+abline(h = 0, lty = 2)
+
+# agregar límites de CI
+lines(0:18, CI_bounds[,1], col = "darkred")
+lines(0:18, CI_bounds[,2], col = "darkred")
+```
+
+Los intervalos de confianza de $95\%$ graficados en la Figura \@ref(fig:DM) de hecho incluyen cero para retrasos mayores que 1, de modo que el nulo de un multiplicador cero no puede rechazarse para estos retrasos.
+
+```{r, 877, fig.align='center', fig.cap="Multiplicadores Acumulativos Dinámicos", label = MAD}
+# límites de IC del 95%
+point_estimates <- FOJC_mod_CM1$coefficients
+
+CI_bounds <- cbind("lower" = point_estimates - 1.96 * SEs[[2]],
+                   "upper" = point_estimates + 1.96 * SEs[[2]])[-1,]
+
+
+# graficar multiplicadores dinámicos estimados
+plot(0:18, point_estimates[-1], 
+     type = "l", 
+     lwd = 2, 
+     col = "steelblue", 
+     ylim = c(-0.4, 1.6),
+     xlab = "Retraso",
+     ylab = "Multiplicador dinámico acumulativo",
+     main = "Efecto dinámico acumulativo de FDD en el precio del jugo de naranja")
+
+# agregar línea discontinua en 0
+abline(h = 0, lty = 2)
+
+# agregar límites de CI
+lines(0:18, CI_bounds[, 1], col = "darkred")
+lines(0:18, CI_bounds[, 2], col = "darkred")
+```
+
+Como se puede ver en la Figura \@ref(fig:DCM), los multiplicadores acumulativos dinámicos estimados crecen hasta el séptimo mes cuando ocurre un aumento del precio de aproximadamente $0.91\%$ y luego disminuyen ligeramente hasta el multiplicador acumulativo estimado a largo plazo de $0.37\%$ que, sin embargo, no es significativamente diferente de cero en el nivel de $5\%$.
+
+¿Los multiplicadores dinámicos se han mantenido estables en el tiempo? Una forma de ver esto es estimar estos multiplicadores para diferentes subperíodos del intervalo muestral. Por ejemplo, considere los períodos 1950-1966, 1967-1983 y 1984-2000. Si los multiplicadores son los mismos para los tres períodos, las estimaciones deben ser cercanas y, por lo tanto, los multiplicadores acumulativos estimados también deben ser similares. Se investiga esto volviendo a estimar **FOJC_mod_CM1** para los tres períodos de tiempo diferentes y luego se grafican los multiplicadores dinámicos acumulativos estimados para la comparación.
+
+```{r, 878}
+# estimar multiplicadores acumulativos usando diferentes períodos de muestra
+FOJC_mod_CM1950 <- update(FOJC_mod_CM1, start = c(1950, 1), end = c(1966, 12))
+
+FOJC_mod_CM1967 <- update(FOJC_mod_CM1, start = c(1967, 1), end = c(1983, 12))
+
+FOJC_mod_CM1984 <- update(FOJC_mod_CM1, start = c(1984, 1), end = c(2000, 12))
+```
+
+```{r, 879, fig.align='center'}
+# graficar multiplicadores acumulativos dinámicos estimados (1950-1966)
+plot(0:18, FOJC_mod_CM1950$coefficients[-1], 
+     type = "l", 
+     lwd = 2, 
+     col = "steelblue",
+     xlim = c(0, 20),
+     ylim = c(-0.5, 2),
+     xlab = "Retraso",
+     ylab = "Multiplicador dinámico acumulativo",
+     main = "Efecto dinámico acumulativo para diferentes períodos de muestra")
+
+# graficar multiplicadores dinámicos estimados (1967-1983)
+lines(0:18, FOJC_mod_CM1967$coefficients[-1], lwd = 2)
+
+# graficar multiplicadores dinámicos estimados (1984-2000)
+lines(0:18, FOJC_mod_CM1984$coefficients[-1], lwd = 2, col = "darkgreen")
+
+# agregar línea discontinua en 0
+abline(h = 0, lty = 2)
+
+# agregar anotaciones
+text(18, -0.24, "1984 - 2000")
+text(18, 0.6, "1967 - 1983")
+text(18, 1.2, "1950 - 1966")
+```
+
+Claramente, los multiplicadores dinámicos acumulativos han cambiado considerablemente con el tiempo. El efecto de una congelación fue más fuerte y persistente en las décadas de 1950 y 1960. Para la década de 1970, la magnitud del efecto fue menor pero aún muy persistente. Se observa una magnitud aún menor para el tercio final del intervalo de la muestra (1984 - 2000), donde el efecto a largo plazo es mucho menos persistente y esencialmente cero después de un año.
+
+Una prueba QLR para una ruptura en la regresión de retardo distribuido de la columna (1) en la Tabla \@ref(tab:deoafddotpooj) con un recorte de $15\%$ utilizando una estimación de matriz de varianza-covarianza de HAC respalda la conjetura de que los coeficientes de regresión de la población han cambiado tiempo extraordinario.
+
+```{r, 880, cache=TRUE}
+# configurar un rango de posibles fechas de descanso
+tau <- c(window(time(FDD), 
+                time(FDD)[round(612/100*15)], 
+                time(FDD)[round(612/100*85)]))
+
+# inicializar el vector de estadísticos F
+Fstats <- numeric(length(tau))
+
+# el modelo restringido
+res_model <- dynlm(FOJC_pctc ~ L(FDD, 0:18))
+
+# estimación, repetir las fechas de descanso
+for(i in 1:length(tau)) {
+  
+  # configurar variable ficticia
+  D <- time(FOJC_pctc) > tau[i]
+  
+  # estimar el modelo DL con interacciones
+  unres_model <- dynlm(FOJC_pctc ~ D * L(FDD, 0:18))
+                 
+  # calcular y guardar el estadístico F
+  Fstats[i] <- waldtest(res_model, 
+                        unres_model, 
+                        vcov = NeweyWest(unres_model, lag = 7, prewhite = F))$F[2]
+    
+}
+```
+
+Se debe tener en cuenta que este código tarda un par de segundos en ejecutarse, ya que se estima un total de regresiones de **length(tau)** con coeficientes de modelo de $40$ cada una.
+
+```{r, 881}
+# estadístico de prueba de QLR
+max(Fstats)
+```
+
+El estadístico QLR es **round(max(Fstats),2)**. Se puede observar que el valor crítico $1\%$ para la prueba QLR con recorte del $15\%$ y $q = 20$ restricciones es $2.43$. Dado que esta es una prueba del lado derecho, el estadístico QLR se encuentra claramente en la región de rechazo, por lo que se puede descartar la hipótesis nula de no ruptura en la función de regresión de la población.
+
+Se recomienda buscar ejemplos empíricos donde se cuestione si el supuesto de exogeneidad (pasada y presente) de los regresores es plausible.
+
+#### Resumen {-}
+
++ Se ha visto cómo **R** puede usarse para estimar la trayectoria temporal del efecto en $Y$ de un cambio en $X$ (el efecto causal dinámico en $Y$ de un cambio en $X$) usando datos de series de tiempo en ambos. El modelo correspondiente se llama modelo de rezago distribuido. Los modelos de retraso distribuidos se estiman convenientemente usando la función **dynlm()** del paquete **dynlm**.
+
++ El error de regresión en los modelos de rezagos distribuidos a menudo se correlaciona en serie de modo que los errores estándar que son robustos a la *heterocedasticidad* y *autocorrelación* deben usarse para obtener una inferencia válida. El paquete **sandwich** proporciona funciones para el cálculo de los denominados estimadores de matriz de covarianza HAC, por ejemplo **vcovHAC()** y **NeweyWest()**.
+
++ Cuando $X$ es *estrictamente exógeno*, se pueden obtener estimaciones más eficientes utilizando un modelo ADL o mediante la estimación MCG. Se pueden encontrar algoritmos MCG viables en los paquetes **orcutt** y **nlme** de **R**. Se debe enfatizar que el supuesto de exogeneidad estricta es a menudo inverosímil en aplicaciones empíricas.

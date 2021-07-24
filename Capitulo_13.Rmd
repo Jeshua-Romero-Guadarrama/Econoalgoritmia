@@ -1,0 +1,844 @@
+# Regresión de variables instrumentales {#RVI}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 650, child="_setup.Rmd"}
+```
+
+```{r, 651, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Como se discutió en el Capítulo \@ref(EEBRM), los modelos de regresión pueden sufrir problemas como variables omitidas, errores de medición y causalidad simultánea. Si es así, el término de error se correlaciona con el regresor de interés y, por lo tanto, el coeficiente correspondiente se estima de manera inconsistente.
+
+Hasta ahora se ha asumido que se pueden agregar las variables omitidas a la regresión para mitigar el riesgo de estimación sesgada del efecto causal de interés. Sin embargo, si los factores omitidos no se pueden medir o no están disponibles por otras razones, la regresión múltiple no puede resolver el problema.
+
+El mismo problema surge si existe causalidad simultánea. Cuando la causalidad va de $X$ a $Y$ y viceversa, habrá un sesgo de estimación que no se puede corregir mediante regresión múltiple.
+
+Una técnica general para obtener un estimador consistente del coeficiente de interés es la regresión de variables instrumentales (IV). El presente capítulo se enfoca en la herramienta de regresión VI llamada *mínimos cuadrados de dos etapas* (MC2E). Las primeras secciones recapitulan brevemente la mecánica general y los supuestos de la regresión VI y muestran cómo realizar la estimación MC2E usando **R**. A continuación, la regresión VI se utiliza para estimar la elasticidad de la demanda de cigarrillos, un ejemplo clásico en el que la regresión múltiple no funciona debido a la causalidad simultánea.
+
+Al igual que en el capítulo anterior, los paquetes **AER** [@R-AER] y **stargazer** [@R-stargazer] son necesarios para reproducir el código presentado en este capítulo. Compruebe si el fragmento de código a continuación se ejecuta sin ningún mensaje de error.
+
+```{r, 652, warning=FALSE, message=FALSE}
+library(AER)
+library(stargazer)
+```
+
+## El estimador de VI con un solo regresor y un solo instrumento {#EVIURUI}
+
+Considere el modelo de regresión simple
+
+\begin{align}
+  Y_i = \beta_0 + \beta_1 X_i + u_i \ \ , \ \ i=1,\dots,n  (\#eq:srm12)
+\end{align}
+
+donde el término de error $u_i$ se correlaciona con el regresor $X_i$ ($X$ es *endógeno*) de modo que MCO es inconsistente para el verdadero $\beta_1$. En el caso más simple, la regresión VI usa una sola variable instrumental $Z$ para obtener un estimador consistente para $\beta_1$.
+
+$Z$ debe cumplir dos condiciones para ser un instrumento válido:
+
+**1. Condición de relevancia del instrumento**:
+
+<center>$X$ y su instrumento $Z$ *deben estar* correlacionados: $\rho_{Z_i,X_i} \neq 0$.</center>
+
+**2. Condición de exogeneidad del instrumento**:
+
+<center>El instrumento $Z$ *no debe estar* correlacionado con el término de error $u$: $\rho_{Z_i,u_i} = 0$.</center>
+
+#### El estimador de mínimos cuadrados en dos etapas {-}
+
+Como se puede adivinar por su nombre, MC2E procede en dos etapas. En la primera etapa, la variación en el regresor endógeno $X$ se descompone en un componente libre de problemas que se explica por el instrumento $Z$ y un componente problemático que se correlaciona con el error $u_i$. La segunda etapa usa el componente libre de problemas de la variación en $X$ para estimar $\beta_1$.
+
+El modelo de regresión de la primera etapa es $$X_i = \pi_0 + \pi_1 Z_i + \nu_i,$$ donde $\pi_0 + \pi_1 Z_i$ es el componente de $X_i$ que se explica por $Z_i$, mientras que $\nu_i$ es el componente que no puede ser explicado por $Z_i$ y exhibe correlación con $u_i$.
+
+Usando las estimaciones de MCO$\widehat{\pi}_0$ y $\widehat{\pi}_1$ se obtienen los valores predichos $\widehat{X}_i, \ \ i=1,\dots,n$. Si $Z$ es un instrumento válido, los $\widehat{X}_i$ están libres de problemas en el sentido de que $\widehat{X}$ es exógeno en una regresión de $Y$ en $\widehat{X}$ que se realiza en la regresión de la segunda etapa. La segunda etapa produce $\widehat{\beta}_0^{MC2E}$ y $\widehat{\beta}_1^{MC2E}$, las estimaciones de MC2E de $\beta_0$ y $\beta_1$.
+
+Para el caso de un solo instrumento, se puede demostrar que el estimador MC2E de $\beta_1$ es:
+
+\begin{align}
+\widehat{\beta}_1^{MC2E} = \frac{s_{ZY}}{s_{ZX}} = \frac{\frac{1}{n-1}\sum_{i=1}^n(Y_i - \overline{Y})(Z_i - \overline{Z})}{\frac{1}{n-1}\sum_{i=1}^n(X_i - \overline{X})(Z_i - \overline{Z})}, (\#eq:simpleMC2E)
+\end{align}
+
+que no es más que la relación de la covarianza muestral entre $Z$ y $Y$ y la covarianza muestral entre $Z$ y $X$.
+
+Como se muestra, \@ref(eq:simpleMC2E) es un estimador consistente para $\beta_1$ en \@ref(eq:srm12) bajo el supuesto de que $Z$ es un instrumento válido. Al igual que para todos los demás estimadores MCO que se han considerado hasta ahora, el TLC implica que la distribución de $\widehat{\beta}_1^{MC2E}$ puede aproximarse mediante una distribución normal si el tamaño de la muestra es grande. Esto permite usar estadísticos $t$ e intervalos de confianza que también se calculan mediante ciertas funciones **R**.
+
+#### Aplicación a la demanda de cigarrillos {-}
+
+La relación entre la demanda y el precio de los productos básicos es un problema simple pero generalizado en economía. La economía de la salud se ocupa del estudio de cómo el sistema de atención de la salud y la política de regulación influyen en el comportamiento que afecta la salud de los individuos. Probablemente el ejemplo más destacado en los debates sobre políticas públicas sea el tabaquismo, ya que está relacionado con muchas enfermedades y externalidades negativas.
+
+Es plausible que se pueda reducir el consumo de cigarrillos gravando más los cigarrillos. La pregunta es por *cuánto* deben aumentarse los impuestos para lograr una cierta reducción en el consumo de cigarrillos. Los economistas utilizan elasticidades para responder a este tipo de preguntas. Dado que se desconoce la elasticidad precio para la demanda de cigarrillos, debe estimarse. Como se discutió en otros capítulos, una regresión MCO de la cantidad logarítmica sobre el precio logarítmico no puede usarse para estimar el efecto de interés, ya que existe causalidad simultánea entre la oferta y la demanda. En su lugar, se puede utilizar la regresión VI.
+
+Usando el conjunto de datos **CigarettesSW** que viene con el paquete **AER**. Es un conjunto de datos de panel que contiene observaciones sobre el consumo de cigarrillos y varios indicadores económicos para los 48 estados federales continentales de los EE. UU. desde 1985 a 1995. En este sentido, solo se consideran datos para la sección transversal de los estados en 1995.
+
+Se comienza cargando el paquete, adjuntando el conjunto de datos y obteniendo una descripción general.
+
+```{r, 653, warning=FALSE, message=FALSE}
+# cargar el conjunto de datos y obtener una descripción general
+library(AER)
+data("CigarettesSW")
+summary(CigarettesSW)
+```
+
+Utilizar `?CigarettesSW` para obtener una descripción detallada de las variables.
+
+Se está interesado en estimar $\beta_1$ en
+
+\begin{align}
+  \log(Q_i^{cigarettes}) = \beta_0 + \beta_1 \log(P_i^{cigarettes}) + u_i, (\#eq:cigsMC2E)
+\end{align}
+
+donde $Q_i^{cigarrillos}$ es el número de paquetes de cigarrillos per cápita vendidos y $P_i^{cigarrillos}$ es el precio real promedio después de impuestos por paquete de cigarrillos en el estado $i$.
+
+La variable instrumental que se va a utilizar para instrumentar el regresor endógeno $\log(P_i^{cigarrillos})$ es $\text{Impuesto sobre las ventas}$, la parte de los impuestos sobre los cigarrillos que se deriva del impuesto general sobre las ventas. $\text{Impuesto sobre las ventas}$ se mide en dólares por paquete. La idea es que $\text{Impuesto sobre las ventas}$ es un instrumento relevante, ya que está incluido en el precio promedio por paquete después de impuestos. Además, es plausible que $\text{Impuesto sobre las ventas}$ sea exógeno, ya que el impuesto a las ventas no influye en la cantidad vendida directamente, sino indirectamente a través del precio.
+
+Se realizan algunas transformaciones con el fin de obtener datos de sección transversal deflactados para el año 1995.
+
+También se calcula la correlación muestral entre el impuesto sobre las ventas y el precio por paquete. La correlación muestral es un estimador consistente de la correlación poblacional. La estimación de aproximadamente $0.614$ indica que $\text{Impuesto sobre las ventas}$ y $P_i^{cigarrillos}$ exhiben una correlación positiva que cumple con las expectativas: Mayores impuestos a las ventas conducen a precios más altos. Sin embargo, un análisis de correlación como este no es suficiente para comprobar si el instrumento es relevante. Más adelante se volverá al tema de verificar si un instrumento es relevante y exógeno.
+
+```{r, 654}
+# calcular precios reales per cápita
+CigarettesSW$rprice <- with(CigarettesSW, price / cpi)
+
+# calcular el impuesto sobre las ventas
+CigarettesSW$salestax <- with(CigarettesSW, (taxs - tax) / cpi)
+
+# comprobar la correlación entre el impuesto sobre las ventas y el precio
+cor(CigarettesSW$salestax, CigarettesSW$price)
+
+# generar un subconjunto para el año 1995
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+La regresión de la primera etapa es $$\log(P_i^{cigarrillos}) = \pi_0 + \pi_1 \text{Impuesto de venta}_i + \nu_i.$$ 
+
+Se estima este modelo en **R** usando **lm()**. En la segunda etapa, se ejecuta una regresión de $\log(Q_i^{cigarrillos})$ en $\widehat{\log(P_i^{cigarrillos})}$ para obtener $\widehat{\beta}_0^{MC2E}$ y $\widehat{\beta}_1^{MC2E}$.
+
+```{r, 655}
+# realizar la regresión de la primera etapa
+cig_s1 <- lm(log(rprice) ~ salestax, data = c1995)
+
+coeftest(cig_s1, vcov = vcovHC, type = "HC1")
+```
+
+La regresión de la primera etapa es $$\widehat{\log(P_i^{cigarrillos})} = \underset{(0.03)}{4.62} + \underset{(0.005)}{0.031} \text{Impuesto de venta}_i$$ que predice la relación entre el precio del impuesto sobre las ventas por cigarrillos sea positivo. ¿Qué parte de la variación observada en $\log(P^{cigarrillos})$ se explica por el instrumento $\text{Impuesto de venta}$? Esto se puede responder observando los $R^2$ de la regresión, que establece que aproximadamente $47\%$ de la variación en los precios después de impuestos se explica por la variación del impuesto sobre las ventas entre los estados.
+
+```{r, 656}
+# inspeccionar el R^2 de la regresión de la primera etapa
+summary(cig_s1)$r.squared
+```
+
+A continuación, se almacena $\widehat{\log(P_i^{cigarrillos})}$, los valores ajustados obtenidos por la regresión de la primera etapa **cig_s1**, en la variable **lcigp_pred**.
+
+```{r, 657}
+# almacenar los valores predichos
+lcigp_pred <- cig_s1$fitted.values
+```
+
+A continuación, se ejecuta la regresión de la segunda etapa que da las estimaciones de MC2E que se buscan.
+
+```{r, 658}
+# ejecutar la regresión de la etapa 2
+cig_s2 <- lm(log(c1995$packs) ~ lcigp_pred)
+coeftest(cig_s2, vcov = vcovHC)
+```
+
+Estimando así el modelo \@ref(eq:cigsMC2E) usando rendimientos de MC2E
+
+\begin{align}
+  \widehat{\log(Q_i^{cigarettes})} = \underset{(1.70)}{9.72} + \underset{(0.36)}{1.08} \log(P_i^{cigarettes}), (\#eq:ecigsMC2E)
+\end{align}
+
+donde se escribió $\log(P_i^{cigarettes})$ en lugar de $\widehat{\log(P_i^{cigarettes})}$ para mantener la coherencia.
+
+La función **ivreg()** del paquete **AER** realiza el procedimiento MC2E automáticamente. Se usa de manera similar a **lm()**. Los instrumentos se pueden agregar a la especificación habitual de la fórmula de regresión utilizando una barra vertical que separa la ecuación del modelo de los instrumentos. Por lo tanto, para la regresión en cuestión, la fórmula correcta es **log(packs) ~ log (rprice)|salestax**.
+
+```{r, 659}
+# realizar MC2E usando 'ivreg()'
+cig_ivreg <- ivreg(log(packs) ~ log(rprice) | salestax, data = c1995)
+
+coeftest(cig_ivreg, vcov = vcovHC, type = "HC1")
+```
+
+Se ha encontrado que las estimaciones de los coeficientes coinciden para ambos enfoques.
+
+**Dos notas sobre el cálculo de errores estándar de MC2E**
+
+1. Se ha demostrado que ejecutar las regresiones individuales para cada etapa de MC2E usando **lm()** conduce a las mismas estimaciones de coeficientes que cuando se usa **ivreg()**. Sin embargo, los errores estándar informados para la regresión de la segunda etapa, por ejemplo, mediante **coeftest()** o **summary()**, son *inválidos*: Ninguno se ajusta para usar predicciones de la regresión de la primera etapa como regresores en la regresión de la segunda etapa. Afortunadamente, **ivreg()** realiza el ajuste necesario automáticamente. Esta es otra ventaja sobre la estimación manual paso a paso que se ha realizado anteriormente para demostrar la mecánica del procedimiento.
+  
+2. Al igual que en la regresión múltiple, es importante calcular los errores estándar robustos a la heterocedasticidad como lo se hizo anteriormente usando **vcovHC()**.
+
+La estimación de MC2E para $\beta1$ en \@ref(eq:ecigsMC2E) sugiere que un aumento en los precios de los cigarrillos en un uno por ciento reduce el consumo de cigarrillos en aproximadamente $1.08$ puntos porcentuales, lo cual es bastante elástico. Sin embargo, se debe tener en cuenta que esta estimación podría no ser confiable a pesar de que se usó la estimación de VI: Aún puede haber un sesgo debido a las variables omitidas. Por lo tanto, se necesita un enfoque de regresión de VI múltiple.
+
+## El modelo de regresión VI general {#MRVIG}
+
+El modelo de regresión VI simple se extiende fácilmente a un modelo de regresión múltiple al que se debe referir como modelo de regresión VI general. En este modelo se distingue entre cuatro tipos de variables: La variable dependiente, incluidas las variables exógenas, incluidas las endógenas y las instrumentales. El Concepto clave 12.1 resume el modelo y la terminología común.
+
+```{r, 660, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.1">
+<h3 class = "right"> Concepto clave 12.1 </h3>
+<h3 class = "left"> Terminología y modelo de regresión de variables instrumentales generales </h3>
+
+\\begin{align}
+  Y_i = \\beta_0 + \\beta_1 X_{1i} + \\dots + \\beta_k X_{ki} + \\beta_{k+1} W_{1i} + \\dots + \\beta_{k+r} W_{ri} + u_i, (\\#eq:givmodel)
+\\end{align}
+
+con $i=1,\\dots,n$ es el modelo de regresión de variables instrumentales generales donde:
+
+- $Y_i$ es la variable dependiente.
+
+- $\\beta_0,\\dots,\\beta_{k+1}$ son $1+k+r$ coeficientes de regresión desconocidos.
+
+- $X_{1i},\\dots,X_{ki}$ son $k$ regresores endógenos.
+
+- $W_{1i},\\dots,W_{ri}$ son $r$ regresores exógenos que no están correlacionados con $u_i$.
+
+- $u_i$ es el término de error.
+
+- $Z_{1i},\\dots,Z_{mi}$ son $m$ variables instrumentales.
+
+Los coeficientes están sobreidentificados si $m>k$. Si $m<k$, los coeficientes están subidentificados y cuando $m=k$ están exactamente identificados. Para la estimación del modelo de regresión VI, se requiere una identificación exacta o una sobreidentificación.
+
+</div>
+')
+```
+
+```{r, 661, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Terminología y modelo de regresión de variables instrumentales generales]{12.1}
+
+\\begin{align}
+  Y_i = \\beta_0 + \\beta_1 X_{1i} + \\dots + \\beta_k X_{ki} + \\beta_{k+1} W_{1i} + \\dots + \\beta_{k+r} W_{ri} + u_i, \\label{eq:givmodel}
+\\end{align}
+
+con $i=1,\\dots,n$ es el modelo de regresión de variables instrumentales generales donde:\\newline
+
+\\begin{itemize}
+\\item $Y_i$ es la variable dependiente.
+\\item $\\beta_0,\\dots,\\beta_{k+1}$ son $1+k+r$ coeficientes de regresión desconocidos.
+\\item $X_{1i},\\dots,X_{ki}$ son $k$ regresores endógenos.
+\\item $W_{1i},\\dots,W_{ri}$ son $r$ regresores exógenos que no están correlacionados con $u_i$.
+\\item $u_i$ es el término de error.
+\\item $Z_{1i},\\dots,Z_{mi}$ son $m$ variables instrumentales.
+\\end{itemize}\\vspace{0.5cm}
+
+Los coeficientes están sobreidentificados si $m>k$. Si $m<k$, los coeficientes están subidentificados y cuando $m=k$ están exactamente identificados. Para la estimación del modelo de regresión VI, se requiere una identificación exacta o una sobreidentificación.
+
+\\end{keyconcepts}
+')
+```
+
+Si bien calcular ambas etapas de MC2E individualmente no es un gran problema en \@ref(eq:srm12), el modelo de regresión simple con un solo regresor endógeno, el Concepto clave 12.2, aclara por qué recurrir a funciones de MC2E como **ivreg()** son más conveniente cuando el conjunto de regresores (e instrumentos) potencialmente endógenos es grande.
+
+La estimación de modelos de regresión con MC2E utilizando múltiples instrumentos mediante **ivreg()** es sencilla. Sin embargo, existen algunas sutilezas al especificar correctamente la fórmula de regresión.
+
+Suponga que desea estimar el modelo $$Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + W_{1i} + u_i$$ donde $X_{1i}$ y $X_{2i}$ son regresores endógenos que serán instrumentados por $Z_{1i}$, $Z_{2i}$ y $Z_{3i}$ y $W_{1i}$  es un regresor exógeno. Los datos correspondientes están disponibles en un **data.frame** con nombres de columna **y**, **x1**, **x1**, **w1**, **z1**, **z2** y **z3**. Puede ser tentador especificar el argumento **formula** en la llamada de **ivreg()** como **y ~ x1 + x2 + w1 | z1 + z2 + z3** lo cual es incorrecto. Como se explica en la documentación de **ivreg()** (ver `?Ivreg`), también es necesario enumerar *todas las variables exógenas* como instrumentos; es decir, unirlas con **+** a la derecha de la barra vertical: **y ~ x1 + x2 + w1 | w1 + z1 + z2 + z3** donde **w1** se "instrumenta a sí misma".
+
+Si existe una gran cantidad de variables exógenas, puede ser conveniente proporcionar una fórmula de actualización con **.** (esto incluye todas las variables excepto la variable dependiente) justo después de **|** y excluir todas las variables endógenas usando un **-**. Por ejemplo, si existe un regresor exógeno **w1** y un regresor endógeno **x1** con el instrumento **z1**, la fórmula apropiada sería **y ~ w1 + x1 | w1 + z1** que es equivalente a **y ~ w1 + x1 |. - x1 + z1**.
+
+```{r, 662, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.2">
+<h3 class = "right"> Concepto clave 12.2 </h3>
+<h3 class = "left"> Mínimos cuadrados de dos etapas </h3>
+
+De manera similar al modelo de regresión VI simple, el modelo general VI \\@ref(eq:givmodel) se puede estimar usando el estimador de mínimos cuadrados de dos etapas:
+
+1. **Regresión(es) de primera etapa** 
+
+    Ejecutar una regresión MCO para cada una de las variables endógenas ($X_{1i},\\dots,X_{ki}$) en todas las variables instrumentales ($Z_{1i},\\dots,Z_{mi}$), todas variables exógenas ($W_{1i},\\dots,W_{ri}$) y una intersección. Calcular los valores ajustados ($\\widehat{X}_{1i},\\dots,\\widehat{X}_{ki}$).
+
+2. **Regresión de segunda etapa**
+
+    Regresar la variable dependiente en los valores predichos de todos los regresores endógenos, todas las variables exógenas y una intersección usando MCO. Esto da $\\widehat{\\beta}_{0}^{MC2E},\\dots,\\widehat{\\beta}_{k+r}^{MC2E}$, las estimaciones de MC2E de los coeficientes del modelo.
+
+</div>
+')
+```
+
+```{r, 663, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Mínimos cuadrados de dos etapas]{12.2}
+
+De manera similar al modelo de regresión VI simple, el modelo general VI \\@ref(eq:givmodel) se puede estimar usando el estimador de mínimos cuadrados de dos etapas:\\newline
+
+\\begin{itemize}
+\\item \\textbf{Regresión(es) de primera etapa}\\newline Ejecutar una regresión MCO para cada una de las variables endógenas ($X_{1i},\\dots,X_{ki}$) en todas las variables instrumentales ($Z_{1i},\\dots,Z_{mi}$), todas variables exógenas ($W_{1i},\\dots,W_{ri}$) y una intersección. Calcular los valores ajustados ($\\widehat{X}_{1i},\\dots,\\widehat{X}_{ki}$).\\newline 
+\\item \\textbf{Regresión de segunda etapa}\\newline Regresar la variable dependiente en los valores predichos de todos los regresores endógenos, todas las variables exógenas y una intersección usando MCO. Esto da $\\widehat{\\beta}_{0}^{MC2E},\\dots,\\widehat{\\beta}_{k+r}^{MC2E}$, las estimaciones de MC2E de los coeficientes del modelo.
+\\end{itemize}
+\\end{keyconcepts}
+')
+```
+
+En el modelo de regresión general VI, los supuestos de relevancia y exogeneidad del instrumento son los mismos que en el modelo de regresión simple con un solo regresor endógeno y un solo instrumento. Consular el Concepto clave 12.3 para obtener un resumen utilizando la terminología de regresión general VI.
+
+```{r, 664, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.3">
+<h3 class = "right"> Concepto clave 12.3 </h3>
+<h3 class = "left"> Dos condiciones para instrumentos válidos </h3>
+
+Para que $Z_{1i},\\dots,Z_{mi}$ sea un conjunto de instrumentos válidos, se deben cumplir las dos condiciones siguientes:
+
+1. **Relevancia del instrumento**:
+
+    Si existen $k$ variables endógenas, $r$ variables exógenas y $m\\geq k$ instrumentos $Z$ y $\\widehat{X}_{1i}^*,\\dots,\\widehat{X}_{ki}^*$ son los valores predichos de las regresiones de la primera etapa de la población $k$, debe sostenerse que $$(\\widehat{X}_{1i}^*,\\dots,\\widehat{X}_{ki}^*, W_{1i}, \\dots, W_{ri},1)$$ no son perfectamente multicolineales. $1$ denota el regresor constante que es igual a $1$ para todas las observaciones.
+
+    *Nota*: Si solo hay un regresor endógeno $X_i$, debe haber al menos un coeficiente distinto de cero en el $Z$ y el $W$ en la regresión poblacional para que esta condición sea válida: Si todos los los coeficientes son cero, todos los $\\widehat{X}^*_i$ son solo la media de $X$, de modo que existe una multicolinealidad perfecta.
+
+2. **Exogeneidad del instrumento**:
+
+    Todos los instrumentos de $m$ no deben estar correlacionados con el término de error, $$\\rho_{Z_{1i},u_i} = 0,\\dots,\\rho_{Z_{mi},u_i} = 0.$$
+
+</div>
+')
+```
+
+```{r, 665, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Dos condiciones para instrumentos válidos]{12.3}
+
+Para que $Z_{1i},\\dots,Z_{mi}$ sea un conjunto de instrumentos válidos, se deben cumplir las dos condiciones siguientes:\\newline
+
+\\begin{enumerate}
+\\item \\textbf{Relevancia del instrumento}\\newline Si existen $k$ variables endógenas, $r$ variables exógenas y $m\\geq k$ instrumentos $Z$ y $\\widehat{X}_{1i}^*,\\dots,\\widehat{X}_{ki}^*$ son los valores predichos de las regresiones de la primera etapa de la población $k$, debe sostenerse que $$(\\widehat{X}_{1i}^*,\\dots,\\widehat{X}_{ki}^*, W_{1i}, \\dots, W_{ri},1)$$ no son perfectamente multicolineales. $1$ denota el regresor constante que es igual a $1$ para todas las observaciones.\\newline
+
+\\textit{Nota}: Si solo hay un regresor endógeno $X_i$, debe haber al menos un coeficiente distinto de cero en el $Z$ y el $W$ en la regresión poblacional para que esta condición sea válida: Si todos los los coeficientes son cero, todos los $\\widehat{X}^*_i$ son solo la media de $X$, de modo que existe una multicolinealidad perfecta.\\newline
+
+\\item \\textbf{Exogeneidad del instrumento}\\newline
+
+Todos los instrumentos de $m$ no deben estar correlacionados con el término de error, $$\\rho_{Z_{1i},u_i} = 0,\\dots,\\rho_{Z_{mi},u_i} = 0.$$
+
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+Se puede demostrar que si se cumplen los supuestos de regresión VI presentados en el Concepto clave 12.4, el estimador MC2E en \@ref(eq:givmodel) es consistente y se distribuye normalmente cuando el tamaño de la muestra es grande. El razonamiento detrás de esto se traslada al modelo VI general.
+
+Para el propósito actual, es suficiente tener en cuenta que la validez de los supuestos establecidos en el Concepto clave 12.4 permiten obtener inferencias estadísticas válidas utilizando funciones **R** que calculan las pruebas $t$ y $F$, así como los intervalos de confianza para los coeficientes del modelo.
+
+```{r, 666, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.4">
+<h3 class = "right"> Concepto clave 12.4 </h3>
+<h3 class = "left"> Los supuestos de regresión VI </h3>
+
+Para el modelo de regresión general VI en el Concepto clave 12.1 se asumió lo siguiente:
+
+1. $E(u_i\\vert W_{1i}, \\dots, W_{ri}) = 0.$
+
+2. $(X_{1i},\\dots,X_{ki},W_{1i},\\dots,W_{ri},Z_{1i},\\dots,Z_{mi})$ son i.i.d. a partir de su distribución conjunta.
+
+3. Todas las variables tienen cuartos momentos finitos distintos de cero; es decir, es poco probable que existan valores atípicos.
+
+4. Los $Z$ son instrumentos válidos (ver Concepto clave 12.3).
+
+</div>
+')
+```
+
+```{r, 667, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Los supuestos de regresión VI]{12.4}
+
+Para el modelo de regresión general VI en el Concepto clave 12.1 se asumió lo siguiente:\\newline
+
+\\begin{enumerate}
+\\item $E(u_i\\vert W_{1i}, \\dots, W_{ri}) = 0.$
+\\item $(X_{1i},\\dots,X_{ki},W_{1i},\\dots,W_{ri},Z_{1i},\\dots,Z_{mi})$ son i.i.d. a partir de su distribución conjunta.
+\\item Todas las variables tienen cuartos momentos finitos distintos de cero; es decir, es poco probable que existan valores atípicos.
+\\item Los $Z$ son instrumentos válidos (ver Concepto clave 12.3).
+\\end{enumerate}
+
+\\end{keyconcepts}
+')
+```
+
+#### Aplicación a la demanda de cigarrillos {-}
+
+La elasticidad estimada de la demanda de cigarrillos en \@ref(eq:srm12) es $1.08$. Aunque \@ref(eq:srm12) se estimó mediante la regresión VI, es plausible que la estimación VI esté sesgada: En este modelo, el estimador MC2E es inconsistente para el verdadero $\beta_1$ si el instrumento (el impuesto real sobre las ventas por paquete) se correlaciona con el término de error. Es probable que este sea el caso, ya que existen factores económicos, como los ingresos estatales, que afectan la demanda de cigarrillos y se correlacionan con el impuesto a las ventas. Los estados con altos ingresos personales tienden a generar ingresos fiscales mediante impuestos sobre la renta y menos mediante impuestos sobre las ventas. En consecuencia, los ingresos estatales deben incluirse en el modelo de regresión.
+
+\begin{align}
+  \log(Q_i^{cigarettes}) = \beta_0 + \beta_1 \log(P_i^{cigarettes}) + \beta_2 \log(income_i) + u_i (\#eq:mcigsMC2E1)
+\end{align}
+
+Antes de estimar \@ref(eq:mcigsMC2E1) usando **ivreg()**, se define $income$ como ingresos reales per cápita **rincome** y los se agrega al conjunto de datos **CigarettesSW**.
+
+```{r, 668}
+# agregar rincome al conjunto de datos
+CigarettesSW$rincome <- with(CigarettesSW, income / population / cpi)
+
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+```{r, 669}
+# estimar el modelo
+cig_ivreg2 <- ivreg(log(packs) ~ log(rprice) + log(rincome) | log(rincome) + 
+                    salestax, data = c1995)
+
+coeftest(cig_ivreg2, vcov = vcovHC, type = "HC1")
+```
+
+Se obtiene:
+
+\begin{align}
+  \widehat{\log(Q_i^{cigarettes})} = \underset{(1.26)}{9.42} - \underset{(0.37)}{1.14} \log(P_i^{cigarettes}) + \underset{(0.31)}{0.21} \log(income_i). (\#eq:emcigsMC2E2)
+\end{align}
+
+Se agregan los impuestos específicos a los cigarrillos ($cigtax_i$) como una variable instrumental adicional y se estima nuevamente usando MC2E.
+
+```{r, 670}
+# agregar cigtax al conjunto de datos
+CigarettesSW$cigtax <- with(CigarettesSW, tax/cpi)
+
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+```{r, 671}
+# estimar el modelo
+cig_ivreg3 <- ivreg(log(packs) ~ log(rprice) + log(rincome) | 
+                    log(rincome) + salestax + cigtax, data = c1995)
+
+coeftest(cig_ivreg3, vcov = vcovHC, type = "HC1")
+```
+
+Usando los dos instrumentos $salestax_i$ y $cigtax_i$ se tiene que $m = 2$ y $k = 1$, por lo que el coeficiente del regresor endógeno $\log(P_i^{cigarettes})$ es *sobreidentificado*. La estimación de MC2E de \@ref(eq:mcigsMC2E1) es
+
+\begin{align}
+  \widehat{\log(Q_i^{cigarettes})} = \underset{(0.96)}{9.89} - \underset{(0.25)}{1.28} \log(P_i^{cigarettes}) + \underset{(0.25)}{0.28} \log(income_i). (\#eq:emcigsMC2E3)
+\end{align}
+
+¿Debería confiar en las estimaciones presentadas en \@ref(eq:emcigsMC2E2) o más bien confiar en \@ref(eq:emcigsMC2E3)? Las estimaciones obtenidas con ambos instrumentos son más precisas ya que en \@ref(eq:emcigsMC2E3) todos los errores estándar reportados son menores que en \@ref(eq:emcigsMC2E2). De hecho, el error estándar para la estimación de la elasticidad de la demanda es solo dos tercios del error estándar cuando el impuesto a las ventas es el único instrumento utilizado. Esto se debe a que se está utilizando más información en la estimación \@ref(eq:emcigsMC2E3). *Si* los instrumentos son válidos, \@ref(eq:emcigsMC2E3) puede considerarse más confiable.
+
+Sin embargo, sin conocimientos sobre la validez de los instrumentos, no es sensato hacer tal afirmación. Esto enfatiza por qué es esencial verificar la validez del instrumento. El capítulo \@ref(CVI) analiza brevemente las pautas para verificar la validez de un instrumento y presenta enfoques que permiten probar la relevancia y exogeneidad del instrumento bajo ciertas condiciones. Luego se utilizan en una aplicación a la demanda de cigarrillos en el Capítulo \@ref(ADC).
+
+## Comprobación de la validez del instrumento {#CVI}
+
+#### Relevancia del instrumento {-}
+
+Los instrumentos que explican poca variación en el regresor endógeno $X$ se denominan *instrumentos débiles*. Los instrumentos débiles proporcionan poca información sobre la variación en $X$ que es aprovechada por la regresión VI para estimar el efecto de interés: La estimación del coeficiente sobre el regresor endógeno se estima de manera inexacta. Además, los instrumentos débiles hacen que la distribución del estimador se desvíe considerablemente de una distribución normal incluso en muestras grandes, de modo que los métodos habituales para obtener inferencias sobre el coeficiente verdadero en $X$ pueden producir resultados erróneos.
+
+```{r, 672, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.5">
+<h3 class = "right"> Concepto clave 12.5 </h3>
+<h3 class = "left"> Una regla general para comprobar si hay instrumentos débiles </h3>
+
+Considere el caso de un solo regresor endógeno $X$ y $m$ instrumentos $Z_1,\\dots,Z_m$. Si los coeficientes de todos los instrumentos en la regresión de la primera etapa de la población de una estimación MC2E son cero, los instrumentos no explican ninguna de las variaciones en el $X$ que claramente viola el supuesto 1 del Concepto clave 12.2. Si bien es poco probable que este último caso se encuentre en la práctica, se debería preguntar "en qué medida" debe cumplirse el supuesto de pertinencia del instrumento.
+
+Si bien esto es difícil de responder para la regresión VI general, en el caso de un regresor endógeno *único* $X$ uno puede usar la siguiente regla empírica:
+
+Calcular el estadístico $F$ que corresponde a la hipótesis de que los coeficientes en $Z_1,\\dots,Z_m$ son todos cero en la regresión de la primera etapa. Si el estadístico $F$ es menor que $10$, los instrumentos son débiles de tal manera que la estimación MC2E del coeficiente en $X$ está sesgada y no se puede hacer una inferencia estadística válida sobre su valor real.
+
+</div>
+')
+```
+
+```{r, 673, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Una regla general para comprobar si hay instrumentos débiles]{12.5}
+Consider the case of a single endogenous regressor $X$ and $m$ instruments $Z_1,\\dots,Z_m$. If the coefficients on all instruments in the population first-stage regression of a MC2E estimation are zero, the instruments do not explain any of the variation in the $X$ which clearly violates assumption 1 of Key Concept 12.2. Although the latter case is unlikely to be encountered in practice, we should ask ourselves to what extent the assumption of instrument relevance should be fulfilled.\\newline 
+
+Si bien esto es difícil de responder para la regresión VI general, en el caso de un regresor endógeno \\textit{único} $X$ uno puede usar la siguiente regla empírica:\\newline
+
+Calcular el estadístico $F$ que corresponde a la hipótesis de que los coeficientes en $Z_1,\\dots,Z_m$ son todos cero en la regresión de la primera etapa. Si el estadístico $F$ es menor que $10$, los instrumentos son débiles de tal manera que la estimación MC2E del coeficiente en $X$ está sesgada y no se puede hacer una inferencia estadística válida sobre su valor real.
+
+\\end{keyconcepts}
+')
+```
+
+La regla general del Concepto clave 12.5 se implementa fácilmente en **R**. Ejecute la regresión de la primera etapa usando **lm()** y luego calcule el estadístico $F$ robusto a la heterocedasticidad mediante **linearHypothesis()**. Esto es parte de la aplicación a la demanda de cigarrillos discutida en el Capítulo \@ref(ADC).
+
+#### Si los instrumentos son débiles {-}
+
+Existen dos formas de proceder si los instrumentos son débiles:
+
+1. Desechar los instrumentos débiles y/o buscar instrumentos más fuertes. Mientras que lo primero es solo una opción si los coeficientes desconocidos permanecen identificados cuando se descartan los instrumentos débiles, lo segundo puede ser muy difícil e incluso puede requerir un rediseño de todo el estudio.
+
+2. Seguir con los instrumentos débiles pero usando métodos que mejoren el MC2E en este escenario; por ejemplo, estimación de máxima verosimilitud de información limitada.
+
+#### Cuando se infringe la suposición de exogeneidad del instrumento {-}
+
+Si hay correlación entre un instrumento y el término de error, la regresión VI no es consistente. La prueba de restricciones de sobreidentificación (también llamada prueba $J$) es un enfoque para probar la hipótesis de que los instrumentos *adicionales* son exógenos. Para que la prueba $J$ sea aplicable es necesario que haya *más* instrumentos que regresores endógenos. La prueba $J$ se resume en el Concepto clave 12.5.
+
+```{r, 674, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC12.6">
+<h3 class = "right"> Concepto clave 12.6 </h3>
+<h3 class = "left"> Estadístico $J$ / Prueba de sobreidentificación de restricciones </h3>
+
+Tome $\\widehat{u}_i^{MC2E} \\ , \\ i = 1,\\dots,n$, los residuos de la estimación MC2E del modelo de regresión general VI \\@ref(eq:givmodel). Ejecute la regresión MCO.
+
+\\begin{align}
+  \\widehat{u}_i^{MC2E} =& \\, \\delta_0 + \\delta_1 Z_{1i} + \\dots + \\delta_m Z_{mi} + \\delta_{m+1} W_{1i} + \\dots + \\delta_{m+r} W_{ri} + e_i (\\#eq:jstatreg)
+\\end{align}
+
+y probar la hipótesis conjunta $$H_0: \\delta_1 = 0, \\dots, \\delta_{m} = 0$$ que establece que todos los instrumentos son exógenos. Esto se puede hacer usando el estadístico $F$ correspondiente calculando  $$J = mF.$$ Esta prueba es la prueba de restricciones de sobreidentificación y la estadística se llama estadístico $J$ con $$J \\sim \\chi^2_{m-k}$$ en muestras grandes bajo la hipótesis nula y el supuesto de homocedasticidad. Los grados de libertad $m-k$ indican el grado de sobreidentificación, ya que este es el número de instrumentos $m$ menos el número de regresores endógenos $k$.
+
+</div>
+')
+```
+
+```{r, 675, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Estadístico $J$ / Prueba de sobreidentificación de restricciones]{12.6}
+
+Tome $\\widehat{u}_i^{MC2E} \\ , \\ i = 1,\\dots,n$, los residuos de la estimación MC2E del modelo de regresión general VI \\@ref(eq:givmodel). Ejecute la regresión MCO.
+
+\\begin{align}
+  \\widehat{u}_i^{MC2E} =& \\, \\delta_0 + \\delta_1 Z_{1i} + \\dots + \\delta_m Z_{mi} + \\delta_{m+1} W_{1i} + \\dots + \\delta_{m+r} W_{ri} + e_i \\label{eq:jstatreg}
+\\end{align}
+
+y probar la hipótesis conjunta $$H_0: \\delta_1 = 0, \\dots, \\delta_{m} = 0$$ que establece que todos los instrumentos son exógenos. Esto se puede hacer usando el estadístico $F$ correspondiente calculando  $$J = mF.$$ Esta prueba es la prueba de restricciones de sobreidentificación y la estadística se llama estadístico $J$ con $$J \\sim \\chi^2_{m-k}$$ en muestras grandes bajo la hipótesis nula y el supuesto de homocedasticidad. Los grados de libertad $m-k$ indican el grado de sobreidentificación, ya que este es el número de instrumentos $m$ menos el número de regresores endógenos $k$.
+
+\\end{keyconcepts}
+')
+```
+
+Es importante notar que el estadístico $J$ discutido en el Concepto clave 12.6 solo está distribuido en $\chi^2_{m-k}$ cuando el término de error $e_i$ en la regresión \@ref(eq:jstatreg) es homoscedástico. Una discusión del estadístico $J$ robusto a la heterocedasticidad está más allá del alcance de este capítulo. 
+
+En cuanto al procedimiento que se muestra en el Concepto clave 12.6, la aplicación en la siguiente sección muestra cómo aplicar la prueba $J$ usando **linearHypothesis()**.
+
+## Aplicación a la demanda de cigarrillos {#ADC}
+
+¿Son válidos el impuesto general sobre las ventas y el impuesto específico a los cigarrillos? De lo contrario, MC2E no es útil para estimar la elasticidad de la demanda de cigarrillos discutida en el Capítulo \@ref(MRVIG). Como se discutió en el Capítulo \@ref(EVIURUI), es probable que ambas variables sean relevantes, pero si son exógenas es una cuestión diferente.
+
+Se sostiene que los impuestos específicos a los cigarrillos podrían ser endógenos porque podrían haber factores históricos específicos del estado, como la importancia económica del cultivo de tabaco y la industria de producción de cigarrillos, que presionan para obtener impuestos bajos específicos de los cigarrillos. Dado que es plausible que los estados productores de tabaco tengan tasas de tabaquismo más altas que otros, esto conduciría a la endogeneidad de los impuestos específicos a los cigarrillos. Si se tuvieran datos sobre el tamaño de la industria del tabaco y los cigarrillos, se podría resolver este problema potencial al incluir la información en la regresión. Desafortunadamente, este no es el caso.
+
+Sin embargo, dado que el papel de la industria del tabaco y los cigarrillos es un factor que se puede asumir que difiere entre los estados, pero no con el tiempo; en su lugar, se puede aprovechar la estructura del panel de **CigarettesSW**: Como se muestra en el Capítulo \@ref(DPDPTCAD), cuando la regresión usa datos sobre *cambios* entre dos períodos de tiempo elimina tales efectos específicos del estado e invariantes en el tiempo. Se consideran los cambios en las variables entre 1985 y 1995. Es decir, interesa estimar la *elasticidad a largo plazo* de la demanda de cigarrillos.
+
+El modelo que será estimado por MC2E utiliza el impuesto general a las ventas y el impuesto a las ventas específicas de cigarrillos como instrumentos, por lo tanto, es
+
+\begin{align}
+\begin{split}
+  \log(Q_{i,1995}^{cigarettes}) - \log(Q_{i,1995}^{cigarettes}) =& \, \beta_0 + \beta_1 \left[\log(P_{i,1995}^{cigarettes}) - \log(P_{i,1985}^{cigarettes}) \right] \\ &+ \beta_2 \left[\log(income_{i,1995}) - \log(income_{i,1985})\right] + u_i. \end{split}(\#eq:diffivreg)
+\end{align}
+
+Primero se crean diferencias de 1985 a 1995 para la variable dependiente, los regresores y ambos instrumentos.
+
+```{r, 676}
+# subconjunto de los datos para el año 1985
+c1985 <- subset(CigarettesSW, year == "1985")
+
+# definir diferencias en variables
+packsdiff <- log(c1995$packs) - log(c1985$packs)
+
+pricediff <- log(c1995$price/c1995$cpi) - log(c1985$price/c1985$cpi)
+
+incomediff <- log(c1995$income/c1995$population/c1995$cpi) -
+log(c1985$income/c1985$population/c1985$cpi)
+
+salestaxdiff <- (c1995$taxs - c1995$tax)/c1995$cpi - (c1985$taxs - c1985$tax)/c1985$cpi
+
+cigtaxdiff <- c1995$tax/c1995$cpi - c1985$tax/c1985$cpi
+```
+
+Ahora se realizan tres estimaciones de VI diferentes de \@ref(eq:diffivreg) usando **ivreg()**:
+
+1. MC2E utilizando solo la diferencia en los impuestos sobre las ventas entre 1985 y 1995 como instrumento.
+
+2. MC2E utilizando solo la diferencia en los impuestos a las ventas específicos de cigarrillos 1985 y 1995 como instrumento.
+
+3. MC2E utilizando como instrumentos tanto la diferencia en los impuestos a las ventas de 1985 y 1995 como la diferencia en los impuestos a las ventas específicas de cigarrillos de 1985 y 1995.
+
+```{r, 677}
+# estimar los tres modelos
+cig_ivreg_diff1 <- ivreg(packsdiff ~ pricediff + incomediff | incomediff + 
+                         salestaxdiff)
+
+cig_ivreg_diff2 <- ivreg(packsdiff ~ pricediff + incomediff | incomediff + 
+                         cigtaxdiff)
+
+cig_ivreg_diff3 <- ivreg(packsdiff ~ pricediff + incomediff | incomediff + 
+                         salestaxdiff + cigtaxdiff)
+```
+
+Como de costumbre, se usa **coeftest()** junto con **vcovHC()** para obtener resúmenes robustos de coeficientes para todos los modelos.
+
+```{r, 678}
+# resumen robusto de coeficientes para 1.
+coeftest(cig_ivreg_diff1, vcov = vcovHC, type = "HC1")
+
+# resumen robusto de coeficientes para 2.
+coeftest(cig_ivreg_diff2, vcov = vcovHC, type = "HC1")
+
+# resumen robusto de coeficientes para 3.
+coeftest(cig_ivreg_diff3, vcov = vcovHC, type = "HC1")
+```
+
+Se procede a generar un resumen tabulado de los resultados de la estimación utilizando **stargazer())**.
+
+```{r, 679, eval = F}
+# recopilar errores estándar robustos en una lista
+rob_se <- list(sqrt(diag(vcovHC(cig_ivreg_diff1, type = "HC1"))),
+               sqrt(diag(vcovHC(cig_ivreg_diff2, type = "HC1"))),
+               sqrt(diag(vcovHC(cig_ivreg_diff3, type = "HC1"))))
+
+# generar tabla
+stargazer(cig_ivreg_diff1, cig_ivreg_diff2,cig_ivreg_diff3,
+  header = FALSE, 
+  type = "html",
+  omit.table.layout = "n",
+  digits = 3, 
+  column.labels = c("IV: Impuesto sobre las ventas", "IV: Impuesto sobre los cigarros", "IV: Impuesto sobre las ventas, impuesto sobre el consumo"),
+  dep.var.labels.include = FALSE,
+  dep.var.caption = "Variable dependiente: Diferencia 1985-1995 en el precio de registro por paquete",
+  se = rob_se)
+```
+
+<!--html_preserve-->
+
+```{r, 680, message=F, warning=F, results='asis', echo=F, purl=F, eval=my_output == "html"}
+# recopilar errores estándar robustos en una lista
+rob_se <- list(sqrt(diag(vcovHC(cig_ivreg_diff1, type = "HC1"))),
+               sqrt(diag(vcovHC(cig_ivreg_diff2, type = "HC1"))),
+               sqrt(diag(vcovHC(cig_ivreg_diff3, type = "HC1"))))
+
+stargazer(cig_ivreg_diff1, cig_ivreg_diff2,cig_ivreg_diff3,
+  header = FALSE, 
+  type = "html",
+  digits = 3, 
+  column.labels = c("IV: Impuesto sobre las ventas", "IV: Impuesto sobre los cigarros", "IV: Impuesto sobre las ventas, impuesto sobre el consumo"),
+  dep.var.labels.include = FALSE,
+  dep.var.caption = "Variable dependiente: Diferencia 1985-1995 en el precio de registro por paquete",
+  se = rob_se)
+
+stargazer_html_title("Estimaciones de MC2E de la elasticidad a largo plazo de la demanda de cigarrillos utilizando datos de panel", "MC2Eeotlteotdfcupd")
+```
+
+<!--/html_preserve-->
+
+```{r, 681, message=F, warning=F, results='asis', eval=my_output == "latex", echo=F, purl=F}
+library(stargazer)
+
+stargazer(cig_ivreg_diff1, cig_ivreg_diff2,cig_ivreg_diff3,
+  title = "\\label{tab:MC2Eeotlteotdfcupd} Estimaciones de MC2E de la elasticidad a largo plazo de la demanda de cigarrillos utilizando datos de panel",
+  header = F, 
+  digits = 3,
+  type = "latex",
+  no.space = T,
+  column.sep.width = "35pt",
+  omit.table.layout = "n",
+  column.labels = c("IV: Impuesto sobre las ventas", "IV: Impuesto sobre los cigarros", "IV: Impuesto sobre las ventas, impuesto sobre el consumo"),
+  dep.var.labels.include = FALSE,
+  dep.var.caption = "Variable dependiente: Diferencia 1985-1995 en el precio de registro por paquete",
+  se = rob_se)
+```
+
+La tabla \@ref(pestaña:MC2Eeotlteotdfcupd) informa estimaciones negativas del coeficiente de **priceiff** que son bastante diferentes en magnitud. ¿En cuál se debe confiar? Esto depende de la validez de los instrumentos utilizados. Para evaluar esto, se calculan los estadísticos $F$ para las regresiones de la primera etapa de los tres modelos para verificar la relevancia del instrumento.
+
+```{r, 682}
+# regresiones de primera etapa
+mod_relevance1 <- lm(pricediff ~ salestaxdiff + incomediff)
+mod_relevance2 <- lm(pricediff ~ cigtaxdiff + incomediff)
+mod_relevance3 <- lm(pricediff ~ incomediff + salestaxdiff + cigtaxdiff)
+```
+
+```{r, 683}
+# comprobar la relevancia del instrumento para el modelo (1)
+linearHypothesis(mod_relevance1, 
+                 "salestaxdiff = 0", 
+                 vcov = vcovHC, type = "HC1")
+```
+
+```{r, 684}
+# comprobar la relevancia del instrumento para el modelo (2)
+linearHypothesis(mod_relevance2, 
+                 "cigtaxdiff = 0", 
+                 vcov = vcovHC, type = "HC1")
+```
+
+```{r, 685}
+# comprobar la relevancia del instrumento para el modelo (3)
+linearHypothesis(mod_relevance3, 
+                 c("salestaxdiff = 0", "cigtaxdiff = 0"), 
+                 vcov = vcovHC, type = "HC1")
+```
+
+También se realiza la prueba de restricciones de sobreidentificación para el modelo tres, que es el único modelo en que el coeficiente de la diferencia en los logaritmos de los precios está sobreidentificado ($m = 2$, $k = 1$) de modo que se pueda calcular el estadístico de $J$. Para hacer esto, se toman los residuos almacenados en **cig_ivreg_diff3** y se retroceden en ambos instrumentos y en el regresor presuntamente exógeno **incomediff**. De nuevo, se usa **linearHypothesis()** para probar si los coeficientes en ambos instrumentos son cero, lo cual es necesario para que se cumpla el supuesto de exogeneidad. Se debe tener en cuenta que con **test = "Chisq"** se obtiene una estadística de prueba distribuida chi-cuadrada en lugar de un estadístico de $F$.
+
+```{r, 686}
+# calcular el estadístico J
+cig_iv_OR <- lm(residuals(cig_ivreg_diff3) ~ incomediff + salestaxdiff + cigtaxdiff)
+
+cig_OR_test <- linearHypothesis(cig_iv_OR, 
+                               c("salestaxdiff = 0", "cigtaxdiff = 0"), 
+                               test = "Chisq")
+cig_OR_test
+```
+
+**Precaución**: En este caso, el valor $p$ informado por **linearHypothesis()** es incorrecto porque los grados de libertad se establecen en $2$. Esto difiere del grado de sobreidentificación ($mk = 2-1 = 1$) por lo que el estadístico $J$ esta distribuido $\chi^2_1$, en lugar de seguir una distribución $\chi^2_2$ como se supone de forma predeterminada por **linearHypothesis()**. Se puede calcular el valor $p$ correcto usando **pchisq()**.
+
+```{r, 687}
+# calcular el valor p correcto para el estadístico J
+pchisq(cig_OR_test[2, 5], df = 1, lower.tail = FALSE)
+```
+
+Dado que este valor es menor que $0.05$, se rechaza la hipótesis de que ambos instrumentos son exógenos al nivel de $5\%$. Esto implica uno de los siguientes:
+
+1. El impuesto sobre las ventas es un instrumento inválido para el precio por paquete.
+2. El impuesto sobre las ventas específico de cigarrillos es un instrumento inválido para el precio por paquete.
+3. Ambos instrumentos son inválidos.
+
+Se puede sostener que es más probable que se mantenga el supuesto de exogeneidad del instrumento para el impuesto general a las ventas, de modo que la estimación VI de la elasticidad a largo plazo de la demanda de cigarrillos que se considera más fiable es $-0.94$, la estimación MC2E obtenida utilizando el impuesto general a las ventas como único instrumento.
+
+La interpretación de esta estimación es que durante un período de 10 años, se espera que un aumento en el precio promedio por paquete en un uno por ciento disminuya el consumo en aproximadamente $0.94$ puntos porcentuales. Esto sugiere que, a largo plazo, los aumentos de precios pueden reducir considerablemente el consumo de cigarrillos.
+
+## ¿De dónde provienen los instrumentos válidos?
+
+Existen muchos enfoques para encontrar instrumentos válidos en la práctica. A continuación se ejemplifican tres preguntas de investigación:
+
++ ¿Poner a los criminales en la cárcel reduce el crimen?
++ ¿Reducir el tamaño de las clases aumenta los puntajes de las pruebas?
++ ¿El tratamiento agresivo de los infartos prolonga la vida?
+
+Esta sección no está directamente relacionada con las aplicaciones en **R**, por lo que no se discute el contenido aquí. Se le invita a trabajar en estas preguntas por su cuenta.
+
+#### Resumen {-}
+
+La función **ivreg()** del paquete **AER** proporciona funcionalidades convenientes para estimar modelos de regresión VI en **R**. Es una implementación del enfoque de estimación MC2E.
+
+Además de tratar la estimación de VI, también se ha discutido cómo probar instrumentos débiles y cómo realizar una prueba de restricciones de sobreidentificación cuando existan más instrumentos que regresores endógenos que usan **R**.
+
+Una aplicación empírica ha demostrado cómo **ivreg()** se puede utilizar para estimar la elasticidad a largo plazo de la demanda de cigarrillos en función de **CigarettesSW**, un conjunto de datos de panel sobre el consumo de cigarrillos y los indicadores económicos de los 48 estados continentales de EE. UU. para 1985 y 1995. Se utilizaron diferentes conjuntos de instrumentos y se ha argumentado por qué utilizar el impuesto general sobre las ventas como único instrumento es la opción preferida. La estimación de la elasticidad de la demanda que se considera más confiable es de $-0.94$. Esta estimación sugiere que existe un notable efecto negativo a largo plazo sobre el consumo de cigarrillos por el aumento de los precios.
+
+## Ejercicios {#Ejercicios-12}
+
+```{r, 688, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Los datos de distancia de la universidad {-}
+
+Existen muchos estudios en economía laboral que tratan el tema de la estimación de las funciones de ingresos del capital humano que establecen cómo los ingresos salariales están determinados por la educación y la experiencia laboral. Un ejemplo destacado es @card1993, que investiga el rendimiento económico de la educación y utiliza la proximidad a la universidad como variable instrumental.
+
+Los ejercicios de este capítulo tratan con el conjunto de datos <tt>CollegeDistance</tt> que es similar a los datos utilizados por @card1993. Proviene de una encuesta de graduados de preparatoria con variables codificadas como salario, educación, matrícula promedio y una serie de medidas socioeconómicas. El conjunto de datos también incluye la distancia desde una universidad mientras los participantes de la encuesta estaban en la escuela preparatoria. <tt>CollegeDistance</tt> viene con el paquete <tt>AER</tt>.
+
+**Instrucciones:**
+
+  + Adjuntar el paquete <tt>AER</tt> y cargar los datos de <tt>CollegeDistance</tt>.
+
+  + Obtener una descripción general del conjunto de datos.
+
+  + La variable <tt>distance</tt> (la distancia a la universidad de 4 años más cercana en 10 millas) servirá como instrumento en ejercicios posteriores. Utilizar un histograma para visualizar la distribución de <tt>distance</tt>.
+
+<iframe src="DCL/ex12_1.html" frameborder="0" scrolling="no" style="width:100%;height:330px"></iframe>
+
+**Sugerencias:**
+
+  + Usar <tt>data()</tt> para adjuntar el conjunto de datos.
+
+  + La función <tt>hist()</tt> se puede utilizar para generar histogramas.
+
+</div>')}
+```
+
+
+```{r, 689, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. El problema de la selección {-}
+
+Hacer una regresión de <tt>wage</tt> en <tt>education</tt> y las variables de control para estimar la función de ingresos del capital humano es problemático porque la educación no se asigna al azar entre los encuestados: Los individuos toman sus propias decisiones de educación y, por lo tanto, medir las diferencias de las ganancias entre individuos con diferentes niveles de educación dependen de cómo se tomen dichas decisiones. En la literatura, esto se conoce como un *problema de selección*. Este problema de selección implica que <tt>education</tt> es *endógena* por lo que la estimación de MCO estará sesgada y no se puede hacer una inferencia válida respecto al coeficiente verdadero.
+
+En este ejercicio se pide estimar dos regresiones que no arrojan estimaciones confiables del coeficiente de educación debido al problema esbozado anteriormente. A continuación, se compararán los resultados con los obtenidos mediante el enfoque de variables instrumentales aplicado por @card1993.
+
+Se ha adjuntado el paquete <tt>AER</tt>. El conjunto de datos <tt>CollegeDistance</tt> está disponible en el entorno global.
+
+**Instrucciones:**
+
+  + Hacer una regresión del *logaritmo* de <tt>wage</tt> sobre <tt>education</tt>; es decir, estimar el modelo $$\\log(wage_i) = \\beta_0 + \\beta_1 education_i + u_i$$. Guardar el resultado en <tt>wage_mod_1</tt>.
+
+  + Aumentar el modelo incluyendo los regresores <tt>unemp</tt>, <tt>hispanic</tt>, <tt>af-am</tt>, <tt>female</tt> y <tt>urban</tt>. Guardar el resultado en <tt>wage_mod_2</tt>
+
+  + Obtener resúmenes de los coeficientes estimados en ambos modelos.
+
+<iframe src="DCL/ex12_2.html" frameborder="0" scrolling="no" style="width:100%;height:330px"></iframe>
+
+</div>')}
+```
+
+```{r, 690, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. Enfoques de regresión de variables instrumentales --- I {-}
+
+El problema de selección discutido anteriormente hace que las estimaciones de regresión en el ejercicio 2 sean inverosímiles, por lo que @card1993 sugiere una regresión de variables instrumentales que utiliza la distancia de la universidad como un instrumento para la educación.
+
+¿Por qué utilizar la distancia universitaria como instrumento? La lógica detrás de esto es que la distancia de una universidad estará correlacionada con la decisión de obtener un título universitario (relevancia), pero es posible que no prediga los salarios aparte del aumento de la educación (exogeneidad), por lo que la proximidad a la universidad podría considerarse un instrumento válido (recuerde la definición de un instrumento válido indicado al comienzo del Capítulo \\@ref(TIVEWASRAASI)).
+
+Se ha adjuntado el paquete <tt>AER</tt>. El conjunto de datos <tt>CollegeDistance</tt> está disponible en el entorno global.
+
+**Instrucciones:**
+
+  + Calcular las correlaciones del instrumento <tt>distance</tt> con el regresor endógeno <tt>education</tt> y la variable dependiente <tt>wage</tt>.
+
+  + ¿Qué proporción de la variación en <tt>education</tt> se explica por la *regresión de la primera etapa* que usa <tt>distance</tt> como regresor? Guardar el resultado en <tt>R2</tt>.
+
+  + Repetir el ejercicio 2 con la regresión VI; es decir, utilizar <tt>distance</tt> como instrumento para <tt>education</tt> en ambas regresiones usando <tt>ivreg()</tt>. Guardar los resultados en <tt>wage_mod_iv1</tt> y <tt>wage_mod_iv2</tt>. Obtenga resúmenes robustos de coeficientes para ambos modelos.
+
+<iframe src="DCL/ex12_3.html" frameborder="0" scrolling="no" style="width:100%;height:410px"></iframe>
+
+</div>')}
+```
+
+
+```{r, 691, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. Enfoques de regresión de variables instrumentales --- II {-}
+
+Convénzase usted mismo de que <tt>ivreg()</tt> funciona como se esperaba implementando el algoritmo MC2E presentado en el Concepto clave 12.2 para un solo instrumento, consulte el Capítulo \\@ref(MRVIG).
+
+**Instrucciones:**
+
+  + Completar la función <tt>MC2E()</tt> de manera que implemente el estimador MC2E.
+
+  + Usar <tt>MC2E()</tt> para reproducir las estimaciones de coeficientes obtenidas usando <tt>ivreg()</tt> para ambos modelos del ejercicio 3.
+
+<iframe src="DCL/ex12_4.html" frameborder="0" scrolling="no" style="width:100%;height:460px"></iframe>
+
+**Sugerencias:**
+
+  + La finalización de la función se reduce a reemplazar el <tt>. . .</tt> con argumentos apropiados.
+
+  + Además del conjunto de datos (<tt>data</tt>), la función espera la variable dependiente (<tt>Y</tt>), los regresores exógenos (<tt>W</tt>), los regresores endógenos (<tt>X</tt>) y un instrumento (<tt>Z</tt>) como argumentos. Todos estos deben ser de clase <tt>character</tt>.
+  
+  + Incluir <tt>W = NULL</tt> en el encabezado de la definición de función asegura que el conjunto de variables exógenas esté vacío, por defecto.
+
+</div>')}
+```
+
+```{r, 692, echo=F, purl=F, results='asis'}
+if (my_output == "html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. ¿Se debe confiar en los resultados? {-}
+
+Este no es un ejercicio de código real (no existen pruebas de corrección de envío para verificar su código). En su lugar, utilice el widget a continuación para comparar los resultados obtenidos usando las regresiones MCO del Ejercicio 2 con los de las regresiones VI del Ejercicio 3.
+
+El conjunto de datos <tt>CollegeDistance</tt> y todos los objetos del modelo de los Ejercicios 2 y 3 están disponibles en el entorno global.
+
+**Instrucciones:**
+
+  Convénzase de lo siguiente:
+
+  1. Es probable que el sesgo del coeficiente estimado de <tt>education</tt> en el modelo de regresión simple <tt>wage_mod_1</tt> sea sustancial porque el regresor es endógeno debido a la omisión de variables del modelo que se correlacionan con <tt>education</tt> e impactan los ingresos salariales.
+
+  2. Debido al problema de selección descrito en el ejercicio 2, la estimación del coeficiente de interés no es confiable incluso en el modelo de regresión múltiple <tt>wage_mod_2</tt> que incluye varias variables de control socioeconómico. El coeficiente de <tt>education</tt> no es significativo y su estimación es cercana a cero).
+
+  3. Instrumentar la educación por la distancia de la universidad como se hizo en <tt>wage_mod_iv1</tt> produce la estimación VI del coeficiente de interés. Sin embargo, el resultado no debe considerarse confiable porque este modelo simple probablemente adolece de sesgo de variables omitidas al igual que el modelo de regresión múltiple <tt>wage_mod_2</tt> del Ejercicio 2, ver 1. Nuevamente, el coeficiente en <tt>education</tt> no es significativo, su estimación es bastante pequeña.
+
+  4. En el modelo de regresión múltiple <tt>wage_mod_iv2</tt>, donde se incluyeron variables de control demográfico y se instrumenta <tt>education</tt> por <tt>distance</tt> ofrece la estimación más confiable del impacto de la educación sobre la renta salarial entre todos los modelos considerados. El coeficiente es muy significativo y la estimación es de aproximadamente $0.067$. Siguiendo el Concepto clave 8.2, la interpretación es que se espera que un año adicional de escolaridad aumente los ingresos salariales en aproximadamente $0.067 \\cdot 100\\% = 6.7\\%$.
+
+  5. ¿Es confiable la estimación del coeficiente de educación reportada por <tt>wage_mod_iv2</tt>? Esta pregunta no es fácil de responder. En cualquier caso, se debe tener en cuenta que utilizar un enfoque de variables instrumentales es problemático cuando el instrumento es *débil*. Este podría ser el caso aquí: Las familias con una fuerte preferencia por la educación pueden mudarse a vecindarios cercanos a las universidades. Además, los vecindarios cercanos a las universidades pueden tener mercados laborales más fuertes reflejados en ingresos más altos. Tales características invalidarían el instrumento, ya que introducen variables no observadas que influyen en los ingresos pero que no pueden ser capturadas por años de escolaridad, la medida de educación.
+
+<iframe src="DCL/ex12_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+</div>')}
+```

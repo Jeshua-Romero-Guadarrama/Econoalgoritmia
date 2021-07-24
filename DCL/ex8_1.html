@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+      <body>
+      <div data-datacamp-exercise data-lang='r' data-height =320> 
+      <code data-type="pre-exercise-code">
+      library(MASS)
+      data(Boston)
+      mod <- lm(medv ~ lstat, data = Boston)
+      </code>
+      
+      <code data-type="sample-code">
+      # calcular la correlación entre medv y lstat
+      
+      # graficar medv contra lstat y agregar la línea de regresión
+      
+      </code>
+      
+      <code data-type="solution">
+      # calcular la correlación entre medv y lstat
+      corr <- cor(Boston$medv, Boston$lstat)
+      
+      # graficar medv contra lstat y agregar la línea de regresión
+      plot(medv ~ lstat, data = Boston)
+      abline(reg = mod, col = "red")
+      </code>
+      
+      <code data-type="sct">
+      ex() %>% check_object("corr") %>% check_equal()
+      test_or({ex() %>% check_function("plot") %>% {
+            check_arg(., "formula") %>% check_equal()
+            check_arg(., "data") %>% check_equal()
+            }
+            },{
+      ex() %>% override_solution("plot(Boston$lstat, Boston$medv)") %>% check_function("plot") %>% { 
+            check_arg(., "x") %>% check_equal()
+            check_arg(., "y") %>% check_equal()
+            }
+            },{
+      ex() %>% override_solution("plot(Boston$medv ~ Boston$lstat)") %>% check_function("plot") %>%
+            check_arg("formula") %>% check_equal()
+            })
+      ex() %>% check_function("abline") %>% check_arg("reg") %>% check_equal()
+      success_msg("¡Correcto! Aunque el coeficiente de correlación sugiere que medv e lstat son linealmente dependientes negativamente, la relación entre ellos claramente no es lineal. Por tanto, esta especificación lineal de la función de regresión es inapropiada aquí.")
+      </code>
+      </div>
+      </body>
+</html>

@@ -1,0 +1,1514 @@
+# Revisión de estadística con R {#RER}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 219, child="_setup.Rmd"}
+```
+
+```{r, 220, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+Esta sección revisa conceptos estadísticos importantes:
+
+- Estimación de parámetros poblacionales desconocidos.
+
+- Evaluación de la hipótesis.
+
+- Intervalos de confianza.
+
+Estos métodos se utilizan mucho en econometría. Se discutirán en el contexto simple de inferencia sobre una media poblacional desconocida, así como de diferentes aplicaciones en **R**. Dichas aplicaciones en **R** encuentran fundamento en los siguientes paquetes que no forman parte de la versión base de **R**:
+
++ **readxl** - permite importar datos de *Excel* a **R**.
+
++ **dplyr** - proporciona una gramática flexible para la manipulación de datos.
+
++ **MASS** - una colección de funciones para estadísticas aplicadas.
+
+Asegúrese de que estén instalados antes de continuar e intentar replicar los ejemplos. La forma más segura de hacerlo es verificando si el siguiente fragmento de código se ejecuta sin errores.
+
+```{r, 221, warning=FALSE, message=FALSE, eval=FALSE}
+library(dplyr)
+library(MASS)
+library(readxl)
+```
+
+## Estimación de la media poblacional
+
+```{r, 222, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.1">
+<h3 class = "right"> Concepto clave 3.1 </h3>          
+<h3 class = "left"> Estimadores y estimaciones </h3>
+
+Los *estimadores* son funciones extraídas de una muestra de datos que parten de una población desconocida. Las *estimaciones* son valores numéricos calculados por estimadores basados en los datos de la muestra. Los estimadores son variables aleatorias porque son funciones de datos *aleatorios*. Las estimaciones son números no aleatorios.
+
+</div>
+')
+```
+
+```{r, 223, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Estimadores y estimaciones]{3.1}
+Los \\textit{estimadores} son funciones extraídas de una muestra de datos que parten de una población desconocida. Las \\textit{estimaciones} son valores numéricos calculados por estimadores basados en los datos de la muestra. Los estimadores son variables aleatorias porque son funciones de datos \\textit{aleatorios}. Las estimaciones son números no aleatorios.
+\\end{keyconcepts}')
+```
+
+Piense en alguna variable económica, por ejemplo, los ingresos por hora de los graduados universitarios, denotados por $Y$. Suponga que se está interesado en $\mu_Y$ la media de $Y$. Para calcular exactamente $\mu_Y$ se tendrían que entrevistar a todos los graduados que trabajan en el sistema económico. Simplemente no se puede hacer esto debido a limitaciones de tiempo y costos. Sin embargo, se puede extraer una muestra aleatoria de $n$ i.i.d. observaciones $Y_1, \dots, Y_n$ y estimar $\mu_Y$ usando uno de los estimadores más simples en el sentido del Concepto Clave 3.1 que uno pueda imaginar, es decir,
+
+$$ \overline{Y} = \frac{1}{n} \sum_{i=1}^n Y_i, $$
+
+la media muestral de $Y$. Por otra parte, se podría usar un estimador aún más simple para $\mu_Y$: la primera observación de la muestra, $Y_1$. ¿Es $Y_1$ un buen estimador? Por ahora, asuma que
+
+$$ Y \sim \chi_{12}^2 $$
+
+lo cual no es demasiado irracional ya que los ingresos por hora no son negativos y se espera que muchas ganancias por hora estén en un rango de $5€\,$ a $15€$. Además, es común que las distribuciones de ingresos estén sesgadas hacia la derecha, una propiedad de la distribución $\chi^2_{12}$. 
+
+```{r, 224, fig.align='center'}
+# graficar la distribución chi_12^2
+curve(dchisq(x, df=12), 
+      from = 0, 
+      to = 40, 
+      ylab = "Densidad", 
+      xlab = "Ganancias por hora en euros")
+```
+
+Ahora se extraerá una muestra de $n = 100$ observaciones y se tomará la primera observación $Y_1$ como una estimación de $\mu_Y$
+
+```{r, 225, fig.align='center'}
+# sembrar la semilla para la reproducibilidad
+set.seed(1)
+
+# muestra de la distribución chi_12^2, usar solo la primera observación
+rsamp <- rchisq(n = 100, df = 12)
+rsamp[1]
+```
+
+El estimado de $8.26$ no está muy lejos de $\mu_Y = 12$ pero es algo intuitivo que se podría hacer algo mejor: el estimador $Y_1$ descarta mucha información y su varianza es la varianza de la población:
+
+$$ \text{Var}(Y_1) = \text{Var}(Y) = 2 \cdot 12 = 24 $$
+
+Esto nos lleva a la siguiente pregunta: ¿Qué es un estimador *bueno* de un parámetro desconocido en primer lugar? Esta cuestión se aborda en los Conceptos clave 3.2 y 3.3.
+
+```{r, 226, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.2">
+<h3 class = "right"> Concepto clave 3.2 </h3>          
+<h3 class = "left"> Sesgo, consistencia y eficiencia </h3>
+
+Las características deseables de un estimador incluyen insesgabilidad, consistencia y eficiencia.
+
+**Insesgabilidad:**
+
+Si la media de la distribución muestral de algún estimador $\\hat\\mu_Y$ para la media poblacional $\\mu_Y$ es igual a $\\mu_Y$,
+
+$$ E(\\hat\\mu_Y) = \\mu_Y, $$
+
+el estimador es imparcial para $\\mu_Y$. El *sesgo* de $\\hat\\mu_Y$ entonces es $0$:
+
+$$ E(\\hat\\mu_Y) - \\mu_Y = 0$$
+
+**Consistencia:**
+
+Se quiere que la incertidumbre del estimador $\\mu_Y$ disminuya a medida que aumenta el número de observaciones en la muestra. Más precisamente, se quiere que la probabilidad de que la estimación $\\hat\\mu_Y$ caiga dentro de un pequeño intervalo alrededor del valor real $\\mu_Y$ se acerque cada vez más a $1$ a medida que $n$ crece. Se escribe esto como
+
+$$ \\hat\\mu_Y \\xrightarrow{p} \\mu_Y. $$
+
+**Varianza y eficiencia:**
+
+Se quiere que el estimador sea eficiente. Suponga que se tienen dos estimadores, $\\hat\\mu_Y$ y $\\overset{\\sim}{\\mu}_Y$ para un tamaño de muestra dado $n$ se sigue que
+
+$$ E(\\hat\\mu_Y) = E(\\overset{\\sim}{\\mu}_Y) = \\mu_Y $$
+
+pero
+
+$$\\text{Var}(\\hat\\mu_Y) < \\text{Var}(\\overset{\\sim}{\\mu}_Y).$$
+
+Entonces se prefiere usar $\\hat\\mu_Y$, ya que tiene una variación menor que $\\overset{\\sim}{\\mu}_Y$, lo que significa que $\\hat\\mu_Y$ es más *eficiente* en el uso de la información proporcionada por las observaciones en la muestra.
+
+</div>
+')
+```
+
+```{r, 227, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Sesgo\\comma consistencia y eficiencia]{3.2}
+Las características deseables de un estimador incluyen insesgabilidad, consistencia y eficiencia.\\newline
+
+\\textbf{Insesgabilidad::}
+
+Si la media de la distribución muestral de algún estimador $\\hat\\mu_Y$ para la media poblacional $\\mu_Y$ es igual a $\\mu_Y$,
+
+$$ E(\\hat\\mu_Y) = \\mu_Y, $$
+
+el estimador es imparcial para $\\mu_Y$. El \\textit{sesgo} de $\\hat\\mu_Y$ entonces es $0$:
+
+$$ E(\\hat\\mu_Y) - \\mu_Y = 0$$
+
+\\textbf{Consistencia:}
+
+Se quiere que la incertidumbre del estimador $\\mu_Y$ disminuya a medida que aumenta el número de observaciones en la muestra. Más precisamente, se quiere que la probabilidad de que la estimación $\\hat\\mu_Y$ caiga dentro de un pequeño intervalo alrededor del valor real $\\mu_Y$ se acerque cada vez más a $1$ a medida que $n$ crece. Se escribe esto como
+
+$$ \\hat\\mu_Y \\xrightarrow{p} \\mu_Y. $$
+
+\\textbf{Varianza y eficiencia:}
+
+Se quiere que el estimador sea eficiente. Suponga que se tienen dos estimadores, $\\hat\\mu_Y$ y $\\overset{\\sim}{\\mu}_Y$ para un tamaño de muestra dado $n$ se sigue que
+
+$$ E(\\hat\\mu_Y) = E(\\overset{\\sim}{\\mu}_Y) = \\mu_Y $$
+
+pero
+
+$$\\text{Var}(\\hat\\mu_Y) < \\text{Var}(\\overset{\\sim}{\\mu}_Y).$$
+
+Entonces se prefiere usar $\\hat\\mu_Y$, ya que tiene una variación menor que $\\overset{\\sim}{\\mu}_Y$, lo que significa que $\\hat\\mu_Y$ es más \\textit{eficiente} en el uso de la información proporcionada por las observaciones en la muestra.
+\\end{keyconcepts}')
+```
+
+## Propiedades de la media muestral {#PMM}
+
+```{block2, consistency, type='rmdknit'}
+Una forma más precisa de expresar la consistencia de un estimador $\hat\mu$ para un parámetro $\mu$ es
+
+$$ P(|\hat{\mu} - \mu|<\epsilon) \xrightarrow[n \rightarrow \infty]{p} 1 \quad \text{for any}\quad\epsilon>0.$$
+
+Esta expresión implica que la probabilidad de observar una desviación del valor verdadero de $\mu$ que es menor que algún $\epsilon > 0$ arbitrario converge a $1$ a medida que $n$ crece. La consistencia no requiere imparcialidad.
+```
+
+Para examinar las propiedades de la media muestral como estimador de la media poblacional correspondiente, considere el siguiente ejemplo en **R**.
+
+Se genera una población **pop** que consta de observaciones $Y_i$, $i=1,\dots,10000$ que se originan en una distribución normal con media $\mu = 10$ y varianza $\sigma^2 = 1$.
+
+Para investigar el comportamiento del estimador $\hat{\mu} = \bar{Y}$ se pueden extraer muestras aleatorias de esta población y calcular $\bar{Y}$ para cada una de ellas. Esto se hace fácilmente haciendo uso de la función **replicate()**. El argumento **expr** se evalúa **n** veces. En este caso, se extraen muestras de tamaños $n = 5$ y $n = 25$, se calculan las medias muestrales y se repite esto exactamente $N = 25000$ veces.
+
+Para fines de comparación, se almacenan los resultados para el estimador $Y_1$, la primera observación en una muestra para una muestra de tamaño $5$, por separado.
+
+```{r, 228, echo = T, eval = T, message = F, warning = F}
+# generar una población ficticia
+pop <- rnorm(10000, 10, 1)
+
+# muestra de la población y estimación de la media
+est1 <- replicate(expr = mean(sample(x = pop, size = 5)), n = 25000)
+
+est2 <- replicate(expr = mean(sample(x = pop, size = 25)), n = 25000)
+
+fo <- replicate(expr = sample(x = pop, size = 5)[1], n = 25000)
+```
+
+Comprobar que **est1** y **est2** son vectores de longitud $25000$:
+
+```{r, 229}
+# comprobar si el tipo de objeto es vector
+is.vector(est1)
+is.vector(est2)
+
+# comprobar la longitud
+length(est1)
+length(est2)
+```
+
+El fragmento de código a continuación produce una gráfica de las distribuciones muestrales de los estimadores $\bar{Y}$ y $Y_1$ sobre la base de las muestras de $25000$ en cada caso. También se grafica la función de densidad de la distribución $\mathcal{N}(10,1)$.
+
+```{r, 230, echo = T, eval = T, message = F, warning = F, fig.align='center'}
+# graficar la densidad de la estimación Y_1
+plot(density(fo), 
+      col = "green", 
+      lwd = 2,
+      ylim = c(0, 2),
+      xlab = "Estimados",
+      main = "Distribuciones muestrales de estimadores insesgados")
+
+# agregar la estimación de densidad para la distribución de la media muestral con n = 5 a la gráfica
+lines(density(est1), 
+     col = "steelblue", 
+     lwd = 2, 
+     bty = "l")
+
+# agregar la estimación de densidad para la distribución de la media muestral con n = 25 a la gráfica
+lines(density(est2), 
+      col = "red2", 
+      lwd = 2)
+
+# agregar una línea vertical en el parámetro verdadero
+abline(v = 10, lty = 2)
+
+# agregar la densidad N(10, 1) a la gráfica
+curve(dnorm(x, mean = 10), 
+     lwd = 2,
+     lty = 2,
+     add = T)
+
+# agregar una leyenda
+legend("topleft",
+       legend = c("N(10,1)",
+                  expression(Y[1]),
+                  expression(bar(Y) ~ n == 5),
+                  expression(bar(Y) ~ n == 25)
+                  ), 
+       lty = c(2, 1, 1, 1), 
+       col = c("black","green", "steelblue", "red2"),
+       lwd = 2)
+```
+
+Primero, *todas* las distribuciones de muestreo (representadas por líneas continuas) se centran alrededor de $\mu = 10$. Esto es evidencia de la *imparcialidad* de $Y_1$, $\overline{Y}_{5}$ y $\overline{Y}_{25}$. Por supuesto, la densidad teórica $\mathcal{N}(10,1)$ también se centra en $10$.
+
+A continuación, se observa la extensión de las distribuciones muestrales. Varias cosas son dignas de mención:
+
+- La distribución de muestreo de $Y_1$ (curva verde) rastrea la densidad de la distribución $\mathcal{N}(10,1)$ (línea discontinua negra) bastante de cerca. De hecho, la distribución muestral de $Y_1$ es la distribución $\mathcal{N}(10,1)$. Esto es menos sorprendente si se tiene en cuenta que el estimador $Y_1$ no hace más que informar una observación que se selecciona al azar de una población con distribución $\mathcal{N}(10,1)$. Por lo tanto, $Y_1 \sim \mathcal{N}(10,1)$. Se debe tener en cuenta que este resultado no depende del tamaño de la muestra $n$: la distribución muestral de $Y_1$ *es siempre* la distribución de la población, sin importar el tamaño de la muestra. $Y_1$ es una buena estimación de $\mu_Y$, pero se puede hacer mejor.
+
+- Ambas distribuciones de muestreo de $\overline{Y}$ muestran menos dispersión que la distribución de muestreo de $Y_1$. Lo cual implica que $\overline{Y}$ tiene una variación menor que $Y_1$. En vista de los Conceptos clave 3.2 y 3.3, se encuentra que $\overline{Y}$ es un estimador más eficiente que $Y_1$. De hecho, esto es válido para todos los $n > 1$.
+
+- $\overline{Y}$ muestra un comportamiento que ilustra la coherencia (ver Concepto clave 3.2). Las densidades azul y roja están mucho más concentradas alrededor de $\mu=10$ que la verde. A medida que aumenta el número de observaciones de $1$ a $5$, la distribución muestral se ajusta en torno al parámetro verdadero. Al aumentar el tamaño de la muestra a $25$, este efecto se vuelve más evidente. Esto implica que la probabilidad de obtener estimaciones cercanas al valor real aumenta con $n$. Esto también se refleja en los valores estimados de la función de densidad cercanos a $10$: cuanto mayor es el tamaño de la muestra, mayor es el valor de la densidad.
+
+Se recomienda que siga adelante y modifique el código. Pruebe diferentes valores para el tamaño de la muestra y vea cómo cambia la distribución muestral de $\overline{Y}$.
+
+#### $\overline{Y}$ es el estimador de mínimos cuadrados de $\mu_Y$ {-}
+
+Suponga que tiene algunas observaciones $Y_1,\dots,Y_n$ en $Y \sim \mathcal{N}(10,1)$ (que se desconoce) y le gustaría encontrar un estimador $m$ que prediga las observaciones también como sea posible. Por bueno se quiere decir elegir $m$ de manera que la desviación al cuadrado total entre el valor predicho y los valores observados sea pequeña. Matemáticamente, esto significa que se quiere encontrar un $m$ que minimice
+
+\begin{equation}
+  \sum_{i=1}^n (Y_i - m)^2. (\#eq:sqm)
+\end{equation}
+
+Piense en $Y_i - m$ como el error cometido al predecir $Y_i$ por $m$. También se podría minimizar la suma de las desviaciones absolutas de $m$, pero minimizar la suma de las desviaciones al cuadrado es matemáticamente más conveniente (y conduce a un resultado diferente). Es por eso que el estimador que se está buscando se llama *estimador de mínimos cuadrados*. $m = \overline{Y}$, la media de la muestra, es este estimador.
+
+Se puede mostrar esto generando una muestra aleatoria y graficando \@ref(eq:sqm) como una función de $m$.
+
+```{r, 231, fig.align='center'}
+# definir la función y vectorizarla
+sqm <- function(m) {
+ sum((y-m)^2)
+}
+sqm <- Vectorize(sqm)
+
+# extraer una muestra aleatoria y calcular la media
+y <- rnorm(100, 10, 1)
+mean(y)
+```
+
+```{r, 232, fig.align='center'}
+# graficar la función objetivo
+curve(sqm(x), 
+      from = -50, 
+      to = 70,
+      xlab = "m",
+      ylab = "sqm(m)")
+
+# agregar una línea vertical en la media (y)
+abline(v = mean(y), 
+       lty = 2, 
+       col = "darkred")
+
+# agregar anotación en la media (y)
+text(x = mean(y), 
+     y = 0, 
+     labels = paste(round(mean(y), 2)))
+```
+
+Observe que \@ref(eq:sqm) es una función cuadrática, por lo que solo hay un mínimo. La gráfica muestra que este mínimo se encuentra exactamente en la media muestral de los datos muestrales.
+
+```{block2, vecfunction, type='rmdknit'}
+Algunas funciones en <tt>R</tt> solo pueden interactuar con funciones que toman un vector como entrada y evalúan el cuerpo de la función en cada entrada del vector, por ejemplo <tt>curve()</tt>. A estas funciones se les da el nombre de funciones vectorizadas y, a menudo, es una buena idea escribir las funciones vectorizadas por usted mismo, aunque esto es engorroso en algunos casos. Tener una función vectorizada en <tt>R</tt> nunca es un inconveniente ya que estas funciones sirven tanto para valores únicos, así como para vectores.    
+
+Se puede ver la función <tt>sqm()</tt>, que no está vectorizada:
+
+<tt>
+sqm <- function(m) {  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sum((y-m)^2)   #cuerpo de la función    
+}
+</tt>
+  
+Proporcionar, por ejemplo, <tt>c (1,2,3)</tt> como argumento <tt>m</tt> causaría un error, ya que entonces la operación <tt>ym</tt> no es válida: los vectores <tt>y</tt> y <tt>m</tt> son de dimensiones incompatibles. Es por eso que no se puede usar <tt>sqm()</tt> junto con <tt>curve()</tt>.
+
+Aquí entra en juego <tt>Vectorize()</tt>. Genera una versión vectorizada de una función no vectorizada.
+```
+
+#### ¿Por qué es importante el muestreo aleatorio? {-}
+
+Hasta ahora, se asume (a veces implícitamente) que los datos observados $Y_1, \dots, Y_n$ son el resultado de un proceso de muestreo que satisface el supuesto de muestreo aleatorio simple. Esta suposición a menudo se cumple al estimar la media de una población usando $\overline{Y}$. Si este no es el caso, las estimaciones pueden estar sesgadas.
+
+Volviendo a **pop**, la población ficticia de observaciones de $10000$ y calcular la media de la población $\mu_{\texttt{pop}}$:
+
+```{r, 233}
+# calcular la media poblacional de pop
+mean(pop)
+```
+
+A continuación, se toman muestras de $10$ observaciones de **pop** con **sample()** y se estima $\mu_{\texttt{pop}}$ usando $\overline{Y}$ repetidamente. Sin embargo, ahora se usa un esquema de muestreo que se desvía del muestreo aleatorio simple: en lugar de asegurar que cada miembro de la población tenga la misma probabilidad de terminar en una muestra, se asigna una probabilidad más alta de ser muestreada a las observaciones más pequeñas de $2500$ de la población estableciendo el argumento **prob** en un vector adecuado de ponderaciones de probabilidad:
+
+```{r, 234}
+# simular resultados para la media muestral cuando la suposición de variables aleatorias i.i.d. falla
+est3 <-  replicate(n = 25000, 
+                   expr = mean(sample(x = sort(pop), 
+                                      size = 10, 
+                                      prob = c(rep(4, 2500), rep(1, 7500)))))
+
+# calcular la media muestral de los resultados
+mean(est3)
+```
+
+A continuación, se traza la distribución muestral de $\overline{Y}$ para el caso de no i.i.d. y se compara con la distribución muestral cuando la suposición de i.i.d. se mantiene.
+
+```{r, 235, fig.align='center'}
+# distribución muestral de la media muestral, i.i.d. sostiene, n = 25
+plot(density(est2), 
+      col = "steelblue",
+      lwd = 2,
+      xlim = c(8, 11),
+      xlab = "Estimados",
+      main = "Cuando la suposición de i.i.d. falla")
+
+# distribución muestral de la media muestral, i.i.d. falla, n = 25
+lines(density(est3),
+      col = "red2",
+      lwd = 2)
+
+# agrega una leyenda
+legend("topleft",
+       legend = c(expression(bar(Y)[n == 25]~", i.i.d. falla"),
+                  expression(bar(Y)[n == 25]~", i.i.d. se mantiene")
+                  ), 
+       lty = c(1, 1), 
+       col = c("red2", "steelblue"),
+       lwd = 2)
+```
+
+Aquí, el fracaso de la suposición de i.i.d. implica que, en promedio, se ha *subestimado* $\mu_Y$ usando $\overline{Y}$: la distribución correspondiente de $\overline{Y}$ se desplaza hacia la izquierda. En otras palabras, $\overline{Y}$ es un estimador *sesgado* para $\mu_Y$ si la suposición de i.i.d. no se sostiene.
+
+## Pruebas de hipótesis relativas a la media de la población
+
+En esta sección, se revisan brevemente los conceptos de la prueba de hipótesis y se discute cómo realizar pruebas de hipótesis en **R**. El objetivo en hacer inferencias sobre una media poblacional desconocida.
+
+#### Acerca de las hipótesis y las pruebas de hipótesis {-}
+
+En una prueba de significancia se quiere aprovechar la información contenida en una muestra como evidencia a favor o en contra de una hipótesis. Esencialmente, las hipótesis son preguntas simples que pueden responderse con un "sí" o un "no". En una prueba de hipótesis, normalmente se trata con dos hipótesis diferentes:
+
+- La *hipótesis nula*, denotada $H_0$, es la hipótesis que se está interesado en probar.
+
+- Debe haber una *hipótesis alternativa*, denotada $H_1$, la hipótesis que se cree que se cumple si se rechaza la hipótesis nula.
+
+La hipótesis nula de que la media poblacional de $Y$ es igual al valor $\mu_{Y,0}$ se escribe como
+
+$$ H_0: E(Y) = \mu_{Y,0}. $$
+
+A menudo, la hipótesis alternativa elegida es la más general,
+
+$$ H_1: E(Y) \neq \mu_{Y,0}, $$
+
+lo que implica que $E(Y)$ puede ser cualquier cosa menos el valor de la hipótesis nula. Esto se llama una alternativa *de dos caras*.
+
+En aras de la brevedad, solo se consideran alternativas de dos caras en las secciones siguientes de este apartado.
+
+### El valor p (p-Value) {-}
+
+Suponga que la hipótesis nula es *verdadera*. El valor $p$ es la probabilidad de extraer datos y observar un estadístico de prueba correspondiente que sea al menos tan adverso a lo que se establece bajo la hipótesis nula, como el estadístico de prueba realmente calculado usando los datos de la muestra.
+
+En el contexto de la media poblacional y la media muestral, esta definición puede expresarse matemáticamente de la siguiente manera:
+
+\begin{equation}
+p \text{-value} = P_{H_0}\left[ \lvert \overline{Y} - \mu_{Y,0} \rvert > \lvert \overline{Y}^{act} - \mu_{Y,0} \rvert \right] (\#eq:pvalue)
+\end{equation}
+
+En \@ref(eq:pvalue), $\overline{Y}^{act}$ es la media muestral de los datos disponibles (un valor). Para calcular el valor $p$ como en \@ref(eq:pvalue), se requiere el conocimiento sobre la distribución muestral de $\overline{Y}$ (una variable aleatoria) cuando la hipótesis nula es verdadera (la *distribución nula*). Sin embargo, en la mayoría de los casos se desconoce la distribución muestral y, por tanto, la distribución nula de $\overline{Y}$. Afortunadamente, el TLC (ver Concepto clave 2.7) permite la aproximación de muestra grande 
+
+$$ \overline{Y} \approx \mathcal{N}(\mu_{Y,0}, \, \sigma^2_{\overline{Y}}) \ \ , \ \ \sigma^2_{\overline{Y}} = \frac{\sigma_Y^2}{n}, $$
+
+asumiendo que la hipótesis nula $H_0: E(Y) = \mu_{Y, 0}$ es cierta. Con algo de álgebra se sigue para una $n$ grande que
+
+$$ \frac{\overline{Y} - \mu_{Y,0}}{\sigma_Y/\sqrt{n}} \sim \mathcal{N}(0,1). $$
+
+Entonces, en muestras grandes, el valor $p$ se puede calcular *sin* conocimiento de la distribución muestral exacta de $\overline{Y}$ usando la aproximación normal anterior.
+
+### Cálculo del valor p cuando se conoce la desviación estándar {-}
+
+Por ahora, se supone que se conoce $\sigma_{\overline{Y}}$. Entonces, se puede reescribir \@ref(eq:pvalue) como:
+
+\begin{align}
+p \text{-value} =& \, P_{H_0}\left[ \left\lvert \frac{\overline{Y} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert > \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert \right] \\
+=& \, 2 \cdot \Phi \left[ - \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}}  \right\rvert\right].  (\#eq:pvaluenorm1)
+\end{align}
+
+El valor $p$ es el área en las colas de la distribución $\mathcal{N}(0,1)$ que se encuentra más allá de
+
+\begin{equation}
+\pm \left\lvert \frac{\overline{Y}^{act} - \mu_{Y,0}}{\sigma_{\overline{Y}}} \right\rvert (\#eq:pvaluenorm2)
+\end{equation}
+
+Ahora usando **R** para visualizar lo que se indica en \@ref(eq:pvaluenorm1) y \@ref(eq:pvaluenorm2). El siguiente fragmento de código replica la Figura 3.1.
+
+```{r, 236, fig.align='center'}
+# graficar la densidad normal estándar en el intervalo [-4,4]
+curve(dnorm(x),
+      xlim = c(-4, 4),
+      main = "Calcular un valor p",
+      yaxs = "i",
+      xlab = "z",
+      ylab = "",
+      lwd = 2,
+      axes = "F")
+
+# agregar eje x
+axis(1, 
+     at = c(-1.5, 0, 1.5), 
+     padj = 0.75,
+     labels = c(expression(-frac(bar(Y)^"act"~-~bar(mu)[Y,0], sigma[bar(Y)])),
+                0,
+                expression(frac(bar(Y)^"act"~-~bar(mu)[Y,0], sigma[bar(Y)]))))
+
+# sombrear la región del valor p/2 en la cola izquierda
+polygon(x = c(-6, seq(-6, -1.5, 0.01), -1.5),
+        y = c(0, dnorm(seq(-6, -1.5, 0.01)),0), 
+        col = "steelblue")
+
+# sombrear la región del valor p/2 en la cola derecha
+polygon(x = c(1.5, seq(1.5, 6, 0.01), 6),
+        y = c(0, dnorm(seq(1.5, 6, 0.01)), 0), 
+        col = "steelblue")
+```
+
+### Varianza de muestra, desviación estándar de muestra y error estándar {-}
+
+Si se desconoce $\sigma^2_Y$, debe estimarse. Esto se puede hacer usando la varianza de la muestra:
+
+\begin{equation}
+s_Y^2 = \frac{1}{n-1} \sum_{i=1}^n (Y_i - \overline{Y})^2.
+\end{equation}
+
+Además
+
+\begin{equation}
+s_Y = \sqrt{\frac{1}{n-1} \sum_{i=1}^n (Y_i - \overline{Y})^2}
+\end{equation}
+
+es un estimador adecuado para la desviación estándar de $Y$. En **R**, $s_Y$ se implementa en la función **sd()**, ver `?Sd`.
+
+Usando **R** se puede ilustrar que $s_Y$ es un estimador consistente para $\sigma_Y$, es decir
+
+$$ s_Y \overset{p}{\longrightarrow} \sigma_Y. $$
+
+La idea aquí es generar una gran cantidad de muestras $Y_1,\dots,Y_n$ donde, $Y\sim \mathcal{N}(10, 9)$ digamos, estimar $\sigma_Y$ usando $s_Y$ e investigar cómo la distribución de $s_Y$ cambia a medida que $n$ aumenta.
+
+```{r, 237, fig.align='center'}
+# vector de tamaños de muestra
+n <- c(10000, 5000, 2000, 1000, 500)
+
+# observaciones de muestra, estimando usando 'sd()' y graficar las distribuciones estimadas
+sq_y <- replicate(n = 10000, expr = sd(rnorm(n[1], 10, 3)))
+plot(density(sq_y),
+     main = expression("Distribuciones de muestreo o" ~ s[Y]),
+     xlab = expression(s[y]),
+     lwd = 2)
+
+for (i in 2:length(n)) {
+  sq_y <- replicate(n = 10000, expr = sd(rnorm(n[i], 10, 3)))
+  lines(density(sq_y), 
+        col = i, 
+        lwd = 2)
+}
+
+# agrega una leyenda
+legend("topleft",
+       legend = c(expression(n == 10000),
+                  expression(n == 5000),
+                  expression(n == 2000),
+                  expression(n == 1000),
+                  expression(n == 500)), 
+       col = 1:5,
+       lwd = 2)
+```
+
+El gráfico muestra que la distribución de $s_Y$ se ajusta alrededor del valor real $\sigma_Y = 3$ a medida que aumenta $n$.
+
+La función que estima la desviación estándar de un estimador se llama *error estándar del estimador*. El concepto clave 3.4 resume la terminología en el contexto de la media muestral.
+
+```{r, 238, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.4">
+<h3 class = "right"> Concepto clave 3.4 </h3>          
+<h3 class = "left"> El error estándar de $\\overline{Y}$ </h3>
+Tomar una muestra i.i.d. $Y_1, \\dots, Y_n$. La media de $Y$ se estima consistentemente mediante $\\overline{Y}$, la media muestral de $ Y_i $. Dado que $\\overline{Y}$ es una variable aleatoria, tiene una distribución de muestreo con varianza $\\frac{\\sigma_Y^2}{n}$.
+
+El error estándar de $\\overline{Y}$, denotado $SE(\\overline{Y})$ es un estimador de la desviación estándar de $\\overline{Y}$:
+
+$$ SE(\\overline{Y}) = \\hat\\sigma_{\\overline{Y}} = \\frac{s_Y}{\\sqrt{n}} $$
+
+El signo de intercalación (\\^) sobre $\\sigma$ indica que $\\hat\\sigma_{\\overline{Y}}$ es un estimador de $\\sigma_{\\overline{Y}}$.
+</div>
+')
+```
+
+```{r, 239, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[El error estándar de $\\overline{Y}$]{3.4}
+Tomar una muestra i.i.d. $Y_1, \\dots, Y_n$. La media de $Y$ se estima consistentemente mediante $\\overline{Y}$, la media muestral de $ Y_i $. Dado que $\\overline{Y}$ es una variable aleatoria, tiene una distribución de muestreo con varianza $\\frac{\\sigma_Y^2}{n}$.
+
+El error estándar de $\\overline{Y}$, denotado $SE(\\overline{Y})$ es un estimador de la desviación estándar de $\\overline{Y}$:
+
+$$ SE(\\overline{Y}) = \\hat\\sigma_{\\overline{Y}} = \\frac{s_Y}{\\sqrt{n}} $$
+
+El signo de intercalación (\\^) sobre $\\sigma$ indica que $\\hat\\sigma_{\\overline{Y}}$ es un estimador de $\\sigma_{\\overline{Y}}$.
+\\end{keyconcepts}
+')
+```
+
+Como ejemplo para respaldar el Concepto clave 3.4, considere una muestra de $n = 100$ i.i.d. observaciones de la variable distribuida de Bernoulli $Y$ con probabilidad de éxito $p=0.1$. Entonces $E(Y)=p=0.1$ y $\text{Var}(Y)=p(1-p)$. $E(Y)$ se puede estimar mediante $\overline{Y}$, que luego tiene una variación
+
+$$ \sigma^2_{\overline{Y}} = p(1-p)/n = 0.0009 $$
+
+y desviación estándar
+
+$$ \sigma_{\overline{Y}} = \sqrt{p(1-p)/n} = 0.03. $$
+
+En este caso, el error estándar de $\overline{Y}$  puede estimarse mediante
+
+$$ SE(\overline{Y}) = \sqrt{\overline{Y}(1-\overline{Y})/n}. $$
+
+Se comprueba si $\overline{Y}$ y $SE(\overline{Y})$ estiman los valores verdaderos respectivos, en promedio.
+
+```{r, 240}
+# extraiga 10000 muestras de tamaño 100 y estime la media de Y y
+# estimar el error estándar de la media muestral
+
+mean_estimates <- numeric(10000)
+se_estimates <- numeric(10000)
+
+for (i in 1:10000) {
+  
+  s <- sample(0:1, 
+              size = 100,  
+              prob = c(0.9, 0.1),
+              replace = T)
+  
+  mean_estimates[i] <- mean(s)
+  se_estimates[i] <- sqrt(mean(s) * (1 - mean(s)) / 100)
+
+}
+
+mean(mean_estimates)
+mean(se_estimates)
+```
+
+Ambos estimadores parecen no tener sesgos para los parámetros verdaderos. De hecho, esto es cierto para la media de la muestra, pero no para $SE(\overline{Y})$. Sin embargo, ambos estimadores son *consistentes* para los parámetros verdaderos.
+
+### Cálculo del valor p cuando la desviación estándar es desconocida {-}
+
+Cuando se desconoce $\sigma_Y$, el valor de $p$ para una prueba de hipótesis sobre $\mu_Y$ usando $\overline{Y}$  se puede calcular reemplazando $\sigma_{\overline{Y}}$ en \@ref(eq:pvaluenorm1) por el error estándar $SE(\overline{Y}) = \hat\sigma_{\overline{Y}}$. Luego,
+
+$$ p\text{-value} = 2\cdot\Phi\left(-\left\lvert \frac{\overline{Y}^{act}-\mu_{Y,0}}{SE(\overline{Y})} \right\rvert \right). $$
+
+Esto se hace fácilmente en **R**:
+
+```{r, 241}
+# muestra y estimación, calcula el error estándar
+samplemean_act <- mean(
+  sample(0:1, 
+         prob = c(0.9, 0.1), 
+         replace = T, 
+         size = 100))
+
+SE_samplemean <- sqrt(samplemean_act * (1 - samplemean_act) / 100)
+
+# hipótesis nula
+mean_h0 <- 0.1
+
+# calcular el valor p
+pvalue <- 2 * pnorm(- abs(samplemean_act - mean_h0) / SE_samplemean)
+pvalue
+```
+
+Más adelante en el curso, se encontrarán enfoques más convenientes para obtener estadísticos $t$ y valores $p$ usando **R**.
+
+### La estadística t {-}
+
+En la prueba de hipótesis, el promedio de la muestra estandarizada
+
+\begin{equation}
+t = \frac{\overline{Y} - \mu_{Y,0}}{SE(\overline{Y})} (\#eq:tstat)
+\end{equation}
+
+se llama un estadístico $t$. Dicho estadístico de $t$ juega un papel importante en la prueba de hipótesis sobre $\mu_Y$. Es un ejemplo destacado de estadística de prueba.
+
+Implícitamente, ya se ha calculado un estadístico $t$ para $\overline{Y}$ en el fragmento de código anterior.
+
+```{r, 242}
+# calcular un estadístico t para la media de la muestra
+tstatistic <- (samplemean_act - mean_h0) / SE_samplemean
+tstatistic
+```
+
+Usando **R** se puede ilustrar que si $\mu_{Y,0}$ es igual al valor verdadero, es decir, si la hipótesis nula es verdadera, \@ref(eq:tstat) es aproximadamente $\mathcal{N}(0,1)$ distribuido cuando $n$ es grande.
+
+```{r, 243}
+# preparar un vector vacío para estadísticas t
+tstatistics <- numeric(10000)
+
+# establecer tamaño de muestra
+n <- 300
+
+# simular 10000 estadísticos t
+for (i in 1:10000) {
+  
+  s <- sample(0:1, 
+              size = n,  
+              prob = c(0.9, 0.1),
+              replace = T)
+  
+  tstatistics[i] <- (mean(s)-0.1)/sqrt(var(s)/n)
+  
+}
+```
+
+En la simulación anterior, se estimó la varianza de $Y_i$ usando **var(s)**. Esto es más general que `mean(s)*(1-mean(s))`, ya que esta última requiere que los datos estén distribuidos por Bernoulli y que se sepa esto.
+
+```{r, 244, fig.align='center'}
+# graficar densidad y comparar con la densidad N(0,1)
+plot(density(tstatistics),
+     xlab = "Estadístico t",
+     main = "Distribución estimada del estadístico t cuando n = 300",
+     lwd = 2,
+     xlim = c(-4, 4),
+     col = "steelblue")
+
+# N(0,1) densidad (discontinua)
+curve(dnorm(x), 
+      add = T, 
+      lty = 2, 
+      lwd = 2)
+```
+
+A juzgar por el gráfico, la aproximación normal funciona razonablemente bien para el tamaño de muestra elegido. Esta aproximación normal ya se ha utilizado en la definición del valor $p$, ver \@ref(eq:tstat).
+
+### Prueba de hipótesis con un nivel de significancia preespecificado {-}
+
+```{r, 245, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.5">
+<h3 class = "right"> Concepto clave 3.5 </h3>          
+<h3 class = "left"> La terminología de la prueba de hipótesis </h3>
+
+En la prueba de hipótesis, son posibles dos tipos de errores:
+
+1. La hipótesis nula *es* rechazada aunque es cierta (error de tipo I)
+
+2. La hipótesis nula *no se* rechaza aunque es falsa (error de tipo II)
+
+El **nivel de significancia** de la prueba es la probabilidad de cometer un error de tipo I, que se está dispuesto a aceptar de antemano. Por ejemplo, usando un nivel de significancia preespecificado de $0.05$, se rechaza la hipótesis nula si y solo si el valor $p$ es menor que $0.05$. El nivel de significancia se elige antes de realizar la prueba.
+
+Un procedimiento equivalente es rechazar la hipótesis nula si el estadístico de prueba observado es, en términos de valor absoluto, mayor que el **valor crítico** del estadístico de prueba. El valor crítico está determinado por el nivel de significancia elegido y define dos conjuntos de valores separados que se denominan **región de aceptación** y **región de rechazo**. La región de aceptación contiene todos los valores de la estadística de prueba para los que la prueba no rechaza, mientras que la región de rechazo contiene todos los valores para los que la prueba sí rechaza.
+
+El **valor $p$** es la probabilidad de que, en un muestreo repetido bajo las mismas condiciones, se observe un estadístico de prueba que proporcione tanta evidencia contra la hipótesis nula como el estadístico de prueba realmente observado.
+
+La probabilidad real de que la prueba rechace la verdadera hipótesis nula se denomina **tamaño de la prueba**. En un entorno ideal, el tamaño es igual al nivel de significancia.
+
+La probabilidad de que la prueba rechace correctamente una hipótesis nula falsa se llama **potencia**. 
+
+</div>
+')
+```
+
+```{r, 246, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[La terminología de la prueba de hipótesis]{3.5}
+
+En la prueba de hipótesis, son posibles dos tipos de errores:\\newline
+
+\\begin{enumerate}
+\\item La hipótesis nula \\textit{es} rechazada aunque es cierta (error de tipo I)
+\\item La hipótesis nula \\textit{no se} rechaza aunque es falsa (error de tipo II) 
+\\end{enumerate}\\vspace{0.5cm}
+
+El \\textit{nivel de significancia} de la prueba es la probabilidad de cometer un error de tipo I, que se está dispuesto a aceptar de antemano. Por ejemplo, usando un nivel de significancia preespecificado de $0.05$, se rechaza la hipótesis nula si y solo si el valor $p$ es menor que $0.05$. El nivel de significancia se elige antes de realizar la prueba.\\newline
+
+Un procedimiento equivalente es rechazar la hipótesis nula si el estadístico de prueba observado es, en términos de valor absoluto, mayor que el \\textit{valor crítico} del estadístico de prueba. El valor crítico está determinado por el nivel de significancia elegido y define dos conjuntos de valores separados que se denominan \\textit{región de aceptación} y \\textit{región de rechazo}. La región de aceptación contiene todos los valores de la estadística de prueba para los que la prueba no rechaza, mientras que la región de rechazo contiene todos los valores para los que la prueba sí rechaza.\\newline
+
+El \\textit{valor $p$} es la probabilidad de que, en un muestreo repetido bajo las mismas condiciones, se observe un estadístico de prueba que proporcione tanta evidencia contra la hipótesis nula como el estadístico de prueba realmente observado.\\newline
+
+La probabilidad real de que la prueba rechace la verdadera hipótesis nula se denomina \\textit{tamaño de la prueba}. En un entorno ideal, el tamaño es igual al nivel de significancia.\\newline
+
+La probabilidad de que la prueba rechace correctamente una hipótesis nula falsa se llama \\textit{potencia}. 
+
+\\end{keyconcepts}
+')
+```
+
+Reconsidere el **valor p** calculado más arriba:
+
+```{r, 247}
+# comprobar si el valor p < 0.05
+pvalue < 0.05
+```
+
+La condición no se cumple por lo que no se rechaza correctamente la hipótesis nula.
+
+Cuando se trabaja con un estadístico $t$ en su lugar, es equivalente a aplicar la siguiente regla:
+
+$$ \text{Rechazar } H_0 \text{ si } \lvert t^{act} \rvert > 1.96 $$
+
+Se rechaza la hipótesis nula al nivel de significancia de $5\%$ si la estadística de $t$ calculada se encuentra más allá del valor crítico de 1.96 en términos de valor absoluto. $1.96$ es el cuantil $0.975$ de la distribución normal estándar.
+
+```{r, 248}
+# comprobar el valor crítico
+qnorm(p = 0.975)
+
+# compruebar si la hipótesis nula se rechaza utilizando el estadístico t calculado más arriba
+abs(tstatistic) > 1.96
+```
+
+Al igual que con el valor $p$, no se puede rechazar la hipótesis nula utilizando el estadístico $t$ correspondiente. El Concepto clave 3.6 resume el procedimiento de realizar una prueba de hipótesis bilateral sobre la media poblacional $E(Y)$.
+
+```{r, 249, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.6">
+<h3 class = "right"> Concepto clave 3.6 </h3>          
+<h3 class = "left"> Prueba de la hipótesis $E(Y) = \\mu_{Y,0}$ contra la alternativa $E(Y) \\neq \\mu_{Y,0}$ </h3>
+
+1. Estimar $\\mu_{Y}$ usando $\\overline{Y}$ y calculando el $SE(\\overline{Y})$, error estándar de $\\overline{Y}$.
+
+2. Calcular el estadístico $t$.
+
+3. Calcular el valor $p$ y rechazar la hipótesis nula en el nivel de significancia $5\\%$ si el valor $p$ es menor que $0.05$ o, de manera equivalente, si 
+
+$$ \\left\\lvert t^{act} \\right\\rvert > 1.96. $$
+</div>
+
+')
+```
+
+```{r, 250, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Probar la hipótesis $E(Y) = \\mu_{Y,0}$ contra la alternativa $E(Y) \\neq \\mu_{Y,0}$]{3.6}
+\\begin{enumerate}
+\\item Estimar $\\mu_{Y}$ usando $\\overline{Y}$ y calculando el $SE(\\overline{Y})$, error estándar de $\\overline{Y}$.
+\\item Calcular el estadístico $t$.
+\\item Calcular el valor $p$ y rechazar la hipótesis nula en el nivel de significancia $5\\%$ si el valor $p$ es menor que $0.05$ o, de manera equivalente, si 
+
+$$ \\left\\lvert t^{act} \\right\\rvert > 1.96. $$
+\\end{enumerate}
+\\end{keyconcepts}
+')
+```
+
+### Alternativas unilaterales {-}
+
+A veces interesa probar si la media es mayor o menor que algún valor hipotético bajo el nulo. Para ceñirse al curso, se toma la presunta brecha salarial entre los trabajadores con buena educación y los menos educados. Dado que se anticipó que existe tal diferencial, una alternativa relevante (a la hipótesis nula de que no existe un diferencial salarial) es que los individuos bien educados ganan más; es decir, que el salario promedio por hora para este grupo, $\mu_Y$ es *mayor* que $\mu_{Y, 0}$, el salario promedio de los trabajadores con menos educación que se asume que se conoce aquí por simplicidad (la sección \@ref(CMDP) analiza cómo probar la equivalencia de medias poblacionales desconocidas).
+
+Este es un ejemplo de una *prueba del lado derecho* y el par de hipótesis se elige para ser
+
+$$ H_0: \mu_Y = \mu_{Y,0} \ \ \text{vs} \ \ H_1: \mu_Y > \mu_{Y,0}. $$
+
+Se rechaza la hipótesis nula si el estadístico de prueba calculado es mayor que el valor crítico $1.64$, el equivalente de $0.95$ de la distribución $\mathcal{N}(0,1)$. Esto asegura que $1-0.95=5\%$ masa de probabilidad permanece en el área a la derecha del valor crítico. Como antes, se puede visualizar esto en **R** usando la función **polygon()**.
+
+```{r, 251, fig.align='center'}
+# graficar la densidad normal estándar en el dominio [-4,4]
+curve(dnorm(x),
+      xlim = c(-4, 4),
+      main = "Región de rechazo de una prueba del lado derecho",
+      yaxs = "i",
+      xlab = "Estadístico t",
+      ylab = "",
+      lwd = 2,
+      axes = "F")
+
+# Agregar el eje x
+axis(1, 
+     at = c(-4, 0, 1.64, 4), 
+     padj = 0.5,
+     labels = c("", 0, expression(Phi^-1~(.95)==1.64), ""))
+
+# Sombrear la región de rechazo en la cola izquierda
+polygon(x = c(1.64, seq(1.64, 4, 0.01), 4),
+        y = c(0, dnorm(seq(1.64, 4, 0.01)), 0), 
+        col = "darkred")
+```
+
+De manera análoga, para la prueba del lado izquierdo se tiene
+
+$$ H_0: \ mu_Y = \ mu_ {Y, 0} \ \ \ text {vs.} \ \ H_1: \ mu_Y <\ mu_ {Y, 0}. $$ 
+
+El nulo se rechaza si el estadístico de prueba observado no alcanza el valor crítico que, para una prueba en el nivel de significancia de $0.05$, está dado por $-1.64$, el equivalente de $0.05$ -cuantil de la distribución $\mathcal{N}(0,1)$. $5\%$ masa de probabilidad se encuentra a la izquierda del valor crítico.
+
+Es sencillo adaptar el fragmento de código anterior al caso de una prueba del lado izquierdo. Solo se tiene que ajustar el sombreado de color y las marcas de graduación.
+
+```{r, 252, fig.align='center'}
+# graficar la densidad normal estándar en el dominio [-4,4]
+curve(dnorm(x),
+      xlim = c(-4, 4),
+      main = "Región de rechazo de una prueba del lado izquierdo",
+      yaxs = "i",
+      xlab = "Estadístico t",
+      ylab = "",
+      lwd = 2,
+      axes = "F")
+
+# Agregar eje x
+axis(1, 
+     at = c(-4, 0, -1.64, 4), 
+     padj = 0.5,
+     labels = c("", 0, expression(Phi^-1~(.05)==-1.64), ""))
+
+# Región de rechazo de sombra en la cola derecha
+polygon(x = c(-4, seq(-4, -1.64, 0.01), -1.64),
+        y = c(0, dnorm(seq(-4, -1.64, 0.01)), 0), 
+        col = "darkred")
+```
+
+## Intervalos de confianza para la media de la población
+
+Como se enfatizó anteriormente, nunca se calcula el valor *exacto* de la media poblacional de $Y$ usando una muestra aleatoria. Sin embargo, se pueden calcular los intervalos de confianza para la media de la población. En general, un intervalo de confianza para un parámetro desconocido es una receta que, en muestras repetidas, produce intervalos que contienen el parámetro verdadero con una probabilidad preespecificada, el *nivel de confianza*. Los intervalos de confianza se calculan utilizando la información disponible en la muestra. Dado que esta información es el resultado de un proceso aleatorio, los intervalos de confianza son variables aleatorias en sí mismas.
+
+El Concepto clave 3.7 muestra cómo calcular los intervalos de confianza para la media poblacional desconocida $E(Y)$.
+
+```{r, 253, eval = my_output == "html", results='asis', echo=F, purl=F}
+cat('
+<div class = "keyconcept" id="KC3.7">
+<h3 class = "right"> Concepto clave 3.7 </h3>          
+<h3 class = "left"> Intervalos de confianza para la media poblacional </h3>
+
+Un intervalo de confianza de $95\\%$ para $\\mu_Y$ es una *variable aleatoria* que contiene el verdadero $\\mu_Y$ en $95\\%$ de todas las muestras aleatorias posibles. Cuando $n$ es grande, se puede usar la aproximación normal. Entonces, $99\\%$,  $95\\%$, $90\\%$ los intervalos de confianza son:
+
+\\begin{align}
+&99\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[ \\overline{Y} \\pm 2.58 \\times SE(\\overline{Y}) \\right], \\\\
+&95\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[\\overline{Y} \\pm 1.96 \\times SE(\\overline{Y}) \\right], \\\\
+&90\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[ \\overline{Y} \\pm 1.64 \\times SE(\\overline{Y}) \\right].
+\\end{align}
+
+Estos intervalos de confianza son conjuntos de hipótesis nulas que no se pueden rechazar en una prueba de hipótesis bilateral con el nivel de confianza dado.
+
+Ahora considerar las siguientes declaraciones.
+
+1. En muestreo repetido, el intervalo
+
+$$ \\left[ \\overline{Y} \\pm 1.96 \\times SE(\\overline{Y}) \\right] $$
+
+cubre el valor real de $\\mu_Y$ con una probabilidad de $95\\%$.
+
+2. Se ha calculado $\\overline{Y} = 5.1$ y $SE(\\overline{Y})=2.5$ por lo que el intervalo
+
+$$ \\left[ 5.1  \\pm 1.96 \\times 2.5 \\right] = \\left[0.2,10\\right] $$ 
+
+cubre el valor real de $\\mu_Y$ con una probabilidad de $95\\%$.
+
+Si bien 1. es correcto (esto está en línea con la definición anterior), 2. está incorrecto y ninguno de profesionista quiere leer una oración de este tipo en un trabajo final, examen escrito o similar, creealo.
+
+La diferencia es que, mientras que 1. es la definición de una variable aleatoria, 2. es un posible *resultado* de dicha variable aleatoria, por lo que no tiene sentido hacer ninguna afirmación probabilística al respecto. ¡O el intervalo calculado cubre $\\mu_Y$ *o no*!
+
+</div>
+')
+```
+
+```{r, 254, eval = my_output == "latex", results='asis', echo=F, purl=F}
+cat('\\begin{keyconcepts}[Intervalos de confianza para la media poblacional]{3.7}
+
+Un intervalo de confianza de $95\\%$ para $\\mu_Y$ es una \\texttt{variable aleatoria} que contiene el verdadero $\\mu_Y$ en $95\\%$ de todas las muestras aleatorias posibles. Cuando $n$ es grande, se puede usar la aproximación normal. Entonces, $99\\%$,  $95\\%$, $90\\%$ los intervalos de confianza son:\\newline
+
+\\begin{align}
+&99\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[ \\overline{Y} \\pm 2.58 \\times SE(\\overline{Y}) \\right], \\\\
+&95\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[\\overline{Y} \\pm 1.96 \\times SE(\\overline{Y}) \\right], \\\\
+&90\\%\\text{ intervalo de confianza para } \\mu_Y = \\left[ \\overline{Y} \\pm 1.64 \\times SE(\\overline{Y}) \\right].
+\\end{align}
+
+Estos intervalos de confianza son conjuntos de hipótesis nulas que no se pueden rechazar en una prueba de hipótesis bilateral con el nivel de confianza dado.\\newline
+
+Ahora considerar las siguientes declaraciones.\\newline
+
+\\begin{enumerate}
+\\item En muestreo repetido, el intervalo
+$$ \\left[ \\overline{Y} \\pm 1.96 \\times SE(\\overline{Y}) \\right] $$
+cubre el valor real de $\\mu_Y$ con una probabilidad de $95\\%$.
+
+\\item Se ha calculado $\\overline{Y} = 5.1$ y $SE(\\overline{Y})=2.5$ por lo que el intervalo
+$$ \\left[5.1  \\pm 1.96 \\times 2.5 \\right] = \\left[0.2,10\\right] $$ 
+cubre el valor real de $\\mu_Y$ con una probabilidad de $95\\%$.
+\\end{enumerate}\\vspace{0.5cm}
+
+Si bien 1. es correcto (esto está en línea con la definición anterior), 2. está incorrecto y ninguno de profesionista quiere leer una oración de este tipo en un trabajo final, examen escrito o similar, creealo.
+
+La diferencia es que, mientras que 1. es la definición de una variable aleatoria, 2. es un posible \\textit{resultado} de dicha variable aleatoria, por lo que no tiene sentido hacer ninguna afirmación probabilística al respecto. ¡O el intervalo calculado cubre $\\mu_Y$ \\textit{o no}!
+
+\\end{keyconcepts}
+')
+```
+
+En **R**, probar hipótesis sobre la media de una población sobre la base de una muestra aleatoria es muy fácil debido a funciones como **t.test()** del paquete **stats**. Produce un objeto del tipo **list**. Afortunadamente, una de las formas más sencillas de usar **t.test()** es cuando se desea obtener un intervalo de confianza de $95\%$ para alguna media poblacional. Comenzando por generar algunos datos aleatorios y llamando a **t.test()** junto con **ls()** para obtener un desglose de los componentes de salida.
+
+```{r, 255}
+# sembrar semilla
+set.seed(1)
+
+# generar algunos datos de muestra
+sampledata <- rnorm(100, 10, 10)
+
+# comprobar el tipo de resultado producido por t.test
+typeof(t.test(sampledata))
+
+# mostrar los elementos de la lista producidos por t.test
+ls(t.test(sampledata))
+```
+
+Aunque se seinforman muchos elementos, por el momento solo interesa calcular un conjunto de confianza de $95\%$ para la media.
+
+```{r, 256}
+t.test(sampledata)$"conf.int"
+```
+
+Esto indica que el intervalo de confianza de $95\%$ es
+
+$$ \left[9.31, 12.87\right]. $$
+
+En este ejemplo, el intervalo calculado obviamente cubre el verdadero $\mu_Y$ que se sabe que es $10$.
+
+Resulta importante echar un vistazo a toda la salida estándar producida por **t.test()**.
+
+```{r, 257}
+t.test(sampledata)
+```
+
+Se puede ver que **t.test()** no solo calcula un intervalo de confianza de $95\%$ sino que automáticamente realiza una prueba de significancia bilateral de la hipótesis $H_0: \mu_Y = 0$ al nivel de $5\%$ e informa los parámetros relevantes de la misma: la hipótesis alternativa, la media estimada, el estadístico $t$ resultante, los grados de libertad de la distribución $t$ subyacente (**t.test()** utiliza realizar la aproximación normal) y el valor $p$ correspondiente. ¡Esto es muy conveniente!
+
+En este ejemplo, se llegó a la conclusión de que la media poblacional *es significativamente* diferente de $0$ (lo cual es correcto) al nivel de $5\%$, ya que $\mu_Y = 0$ no es un elemento del $95\%$ intervalo de confianza
+
+$$ 0 \not\in \left[9.31,12.87\right]. $$
+
+Se llega a un resultado equivalente cuando se usa la regla de rechazo del valor $p$, ya que
+
+$$ p\text{-value} = 2.2\cdot 10^{-16} \ll 0.05. $$
+
+## Comparación de medias de diferentes poblaciones {#CMDP}
+
+Suponga que está interesado en las medias de dos poblaciones diferentes, denotadas como $\mu_1$ y $\mu_2$. Más específicamente, interesa si estas medias poblacionales son diferentes entre sí y planear usar una prueba de hipótesis para verificar esto sobre la base de datos de muestra independientes de ambas poblaciones. Un par de hipótesis adecuadas es
+
+\begin{equation}
+H_0: \mu_1 - \mu_2 = d_0 \ \ \text{vs.} \ \ H_1: \mu_1 - \mu_2 \neq d_0 (\#eq:hypmeans)
+\end{equation}
+
+donde $d_0$ denota la diferencia hipotética de medias (entonces $d_0 = 0$ cuando las medias son iguales, bajo la hipótesis nula). En el curso se enseña que $H_0$ se puede probar con el estadístico $t$
+
+\begin{equation}
+t=\frac{(\overline{Y}_1 - \overline{Y}_2) - d_0}{SE(\overline{Y}_1 - \overline{Y}_2)} (\#eq:tstatmeans)
+\end{equation}
+
+donde 
+
+\begin{equation}
+SE(\overline{Y}_1 - \overline{Y}_2) = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}.
+\end{equation}
+
+Esto se denomina prueba $t$ de dos muestras. Para $n_1$ y $n_2$ grandes, \@ref(eq:tstatmeans) es normal estándar bajo la hipótesis nula. De manera análoga a la prueba simple $t$, se pueden calcular intervalos de confianza para la verdadera diferencia en las medias poblacionales:
+
+$$ (\overline{Y}_1 - \overline{Y}_2) \pm 1.96 \times SE(\overline{Y}_1 - \overline{Y}_2) $$
+
+es un intervalo de confianza de $95\%$ para $d$. <br> En **R**, las hipótesis como en \@ref(eq:hypmeans) también se pueden probar con **t.test()**. Se debe tener en cuenta que **t.test()** elige $d_0 = 0$ de forma predeterminada. En consecuenci, esto se puede cambiar configurando el argumento **mu**.
+
+El siguiente fragmento de código demuestra cómo realizar una prueba $t$ de dos muestras en **R** utilizando datos simulados.
+
+```{r, 258}
+# establecer semilla aleatoria
+set.seed(1)
+
+# extraer datos de dos poblaciones diferentes con la misma media
+sample_pop1 <- rnorm(100, 10, 10)
+sample_pop2 <- rnorm(100, 10, 20)
+
+# realizar una prueba t de dos muestras
+t.test(sample_pop1, sample_pop2)
+```
+
+Se ha encontrado que la prueba $t$ de dos muestras no rechaza la hipótesis nula (verdadera) de que $d_0 = 0$.
+
+## Una aplicación a la brecha de género en los ingresos {#UABGI}
+
+En esta sección se analiza cómo reproducir los resultados presentados en el estudio *La brecha de género en los ingresos de los graduados universitarios en los Estados Unidos*.
+
+Para reproducir los resultados, se deben descargar los datos de replicación que están alojados en Pearson y se pueden descargar mediante el siguiente [enlace](https://wps.pearsoned.com/wps/media/objects/11422/11696965/datasets3e /datasets/cps_ch3.xlsx). El archivo contiene datos que van desde $1992$ hasta $2008$ y las ganancias se expresan en precios de $2008$.
+
+Existen varias formas de importar los archivos **.xlsx** a **R**. La sugerencia es la función **read_excel()** del paquete **readxl** [@R-readxl]. El paquete no forma parte de la versión base de **R** y debe instalarse manualmente.
+
+```{r, 259, message=F, warning=F}
+# cargar el paquete 'readxl'
+library(readxl)
+```
+
+Ahora está listo para importar el conjunto de datos. ¡Asegúrese de utilizar la ruta correcta para importar el archivo descargado! En el presente ejemplo, el archivo se guarda en una subcarpeta del directorio de trabajo llamada **Datos**. Si no está seguro de cuál es su directorio de trabajo actual, use **getwd()**, vea también **?Getwd**. Esto le dará la ruta que apunta al lugar donde **R** está buscando archivos con los que trabajar.
+
+```{r, 260, message = F, warning = F,}
+# importar los datos a R
+cps <- read_excel(path = "data/cps_ch3.xlsx")
+```
+
+A continuación, instale y cargue el paquete **dyplr** [@R-dplyr]. Dicho paquete proporciona algunas funciones útiles que simplifican mucho la manipulación de datos. Hace uso del operador **%>%** (mejor conocido en la ciencia de datos como tubería).
+
+```{r, 261, message=F, warning=F}
+# cargar el paquete 'dplyr'
+library(dplyr)
+```
+
+Primero, obtenga una descripción general del conjunto de datos. Luego, use **%>%** y algunas funciones del paquete **dplyr** para agrupar las observaciones por género y año, así como para calcular estadísticas descriptivas para ambos grupos.
+
+```{r, 262, echo=T, eval=T, fig.align='center'}
+# obtener una descripción general de la estructura de datos
+head(cps)
+
+# agrupar los datos por género y año y calcular la media, la desviación estándar
+# y número de observaciones para cada grupo
+avgs <- cps %>% 
+        group_by(a_sex, year) %>% 
+        summarise(mean(ahe08), 
+                  sd(ahe08), 
+                  n())
+
+# imprimir los resultados en la consola
+print(avgs)
+```
+
+Con el operador de tubería **%>%** simplemente se encadenan diferentes funciones de **R** que producen entradas y salidas compatibles. En el código anterior, se tomó el conjunto de datos **cps** y se usó como entrada para la función **group_by()**. La salida de **group_by()** se utiliza posteriormente como entrada para **summarise()** y así sucesivamente.
+
+Ahora que se han calculado las estadísticas de interés para ambos géneros, se puede investigar cómo evoluciona la brecha en los ingresos entre ambos grupos con el tiempo.
+
+```{r, 263, echo=T}
+# dividir el conjunto de datos por género
+male <- avgs %>% dplyr::filter(a_sex == 1) 
+
+female <- avgs %>% dplyr::filter(a_sex == 2)
+
+# cambiar el nombre de las columnas de ambas divisiones
+colnames(male)   <- c("Sexo", "Año", "Y_bar_m", "s_m", "n_m")
+colnames(female) <- c("Sexo", "Año", "Y_bar_f", "s_f", "n_f")
+
+# estimar brechas de género, calcular errores estándar e intervalos de confianza para todas las fechas
+gap <- male$Y_bar_m - female$Y_bar_f
+
+gap_se <- sqrt(male$s_m^2 / male$n_m + female$s_f^2 / female$n_f)
+
+gap_ci_l <- gap - 1.96 * gap_se
+
+gap_ci_u <- gap + 1.96 * gap_se
+
+result <- cbind(male[,-1], female[,-(1:2)], gap, gap_se, gap_ci_l, gap_ci_u)
+
+# imprimir los resultados en la consola
+print(result, digits = 3)
+```
+
+Se observan prácticamente los mismos resultados que los presentados en el artículo. Las estadísticas calculadas sugieren que *existe una brecha de género en los ingresos*. Se debe tener en cuenta que se puede rechazar la hipótesis nula de que la brecha es cero para todos los períodos. Además, las estimaciones de la brecha y los límites de los intervalos de confianza de $95\%$ indican que la brecha ha sido bastante estable en el pasado reciente.
+
+## Diagramas de dispersión, covarianza de muestra y correlación de muestra
+
+Un diagrama de dispersión representa datos bidimensionales, por ejemplo $n$ observación en $X_i$ y $Y_i$, por puntos en un sistema de coordenadas. Es muy fácil generar gráficos de dispersión usando la función **plot()** en **R**. Es momento de generar algunos datos artificiales sobre la edad y los ingresos de los trabajadores y trazar un gráfico.
+
+```{r, 264, fig.align='center'}
+# establecer semilla aleatoria
+set.seed(123)
+
+# generar conjunto de datos
+X <- runif(n = 100, 
+           min = 18, 
+           max = 70)
+
+Y <- X + rnorm(n=100, 50, 15)
+
+# graficar observaciones
+plot(X, 
+     Y, 
+     type = "p",
+     main = "Una gráfica de dispersión de X e Y",
+     xlab = "Edad",
+     ylab = "Ganancias",
+     col = "steelblue",
+     pch = 19)
+```
+
+El gráfico muestra una correlación positiva entre la edad y los ingresos. Esto está en consonancia con la noción de que los trabajadores de más edad ganan más que los que se incorporaron recientemente a la población activa.
+
+#### Covarianza y correlación de muestra {-}
+
+A estas alturas debería estar familiarizado con los conceptos de varianza y covarianza. Si no es así:
+
++ La varianza es una medida de dispersión definida como la esperanza del cuadrado de la desviación de una variable aleatoria respecto a su media. La varianza tiene como valor mínimo 0 y puede verse muy influida por los valores atípicos; por tanto, no se aconseja su uso cuando las distribuciones de las variables aleatorias tienen colas pesadas.
+
++ La covarianza es una medida de variabilidad entre dos variables. Implica que el aumento del valor de una variable se corresponde con el aumento del valor de otra, lo que da como resultado una covarianza positiva. Cuando el valor de una variable aumenta, mientras que el valor de otra disminuye, se dice que la covarianza es negativa. La covarianza muestra la relación lineal entre ambas variables, aunque la magnitud de la covarianza es difícil de interpretar. En este sentido, la correlación es la versión normalizada de la covarianza.
+
+Al igual que la varianza, covarianza y correlación de dos variables son propiedades que se relacionan con la distribución de probabilidad conjunta (desconocida) de las variables. Se puede estimar la covarianza y la correlación mediante estimadores adecuados utilizando una muestra $(X_i, Y_i)$, $i = 1, \dots, n$.
+
+La covarianza de la muestra
+
+$$ s_{XY} = \frac{1}{n-1} \sum_{i=1}^n (X_i - \overline{X})(Y_i - \overline{Y}) $$
+
+es un estimador de la varianza poblacional de $X$ y $Y$, mientras que la correlación muestral
+
+$$ r_{XY} = \frac{s_{XY}}{s_Xs_Y} $$
+
+se puede utilizar para estimar la correlación poblacional, una medida estandarizada de la fuerza de la relación lineal entre $X$ y $Y$. 
+
+En cuanto a la varianza y la desviación estándar, estos estimadores se implementan como funciones **R** en el paquete **stats**. Se pueden usar para estimar la covarianza poblacional y la correlación poblacional de los datos artificiales sobre edad e ingresos.
+
+```{r, 265}
+# calcular la covarianza de muestra de X e Y
+cov(X, Y)
+
+# calcular la correlación de la muestra entre X e Y
+cor(X, Y)
+
+# una forma equivalente de calcular la correlación de la muestra
+cov(X, Y) / (sd(X) * sd(Y))
+```
+
+Las estimaciones indican que $X$ y $Y$ tienen una correlación moderada.
+
+El siguiente fragmento de código usa la función **mvnorm()** del paquete **MASS** [@R-MASS] para generar datos de muestra bivariados con diferentes grados de correlación.
+
+```{r, 266, fig.align='center'}
+library(MASS)
+
+# establecer semilla aleatoria
+set.seed(1)
+
+# correlación positiva (0,81)
+example1 <- mvrnorm(100,
+                    mu = c(0, 0), 
+                    Sigma = matrix(c(2, 2, 2, 3), ncol = 2),
+                    empirical = TRUE)
+
+# correlación negativa (-0,81)
+example2 <- mvrnorm(100,
+                    mu = c(0, 0), 
+                    Sigma = matrix(c(2, -2, -2, 3), ncol = 2),
+                    empirical = TRUE)
+
+# sin correlación
+example3 <- mvrnorm(100,
+                    mu = c(0, 0), 
+                    Sigma = matrix(c(1, 0, 0, 1), ncol = 2),
+                    empirical = TRUE)
+
+# sin correlación (relación cuadrática)
+X <- seq(-3, 3, 0.01)
+Y <- - X^2 + rnorm(length(X))
+
+example4 <- cbind(X, Y)
+
+# dividir el área de la gráfica como una matriz de 2 por 2
+par(mfrow = c(2, 2))
+
+# plot datasets
+plot(example1, col = "steelblue", pch = 20, xlab = "X", ylab = "Y", 
+     main = "Correlación = 0.81")
+
+plot(example2, col = "steelblue", pch = 20, xlab = "X", ylab = "Y", 
+     main = "Correlación = -0.81")
+
+plot(example3, col = "steelblue", pch = 20, xlab = "X", ylab = "Y", 
+     main = "Correlación = 0")
+
+plot(example4, col = "steelblue", pch = 20, xlab = "X", ylab = "Y", 
+     main = "Correlación = 0")
+```
+
+## Ejercicios {#Ejercicios-3}
+
+```{r, 267, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 1. Sesgado ... {-}
+
+Considere el siguiente estimador alternativo para $\\mu_Y$, la media de $Y_i$
+
+$$\\widetilde{Y}=\\frac{1}{n-1}\\sum\\limits_{i=1}^n Y_i$$
+
+En este ejercicio se ilustrara que este estimador es un estimador sesgado para $\\mu_Y$.
+
+**Instrucciones:**
+
+  + Definir una función <tt>Y_tilde</tt> que implemente el estimador anterior.
+  
+  + Dibujar al azar 5 observaciones de la distribución $\\mathcal{N}(10, 25)$ y calcular una estimación usando <tt>Y_tilde()</tt>. Repetir este procedimiento 10000 veces y almacenar los resultados en <tt>est_biased</tt>.
+  
+  + Graficar un histograma de <tt>est_biased</tt>.
+  
+  + Agregar una línea vertical roja en $\\mu = 10$ usando la función <tt>abline()</tt>.
+  
+<iframe src="DCL/ex3_1.html" frameborder="0" scrolling="no" style="width:100%;height:400px"></iframe>
+
+**Sugerencias:**
+
+  + Para calcular la suma de un vector se puede usar <tt>sum()</tt>, para obtener la longitud de un vector puede usar <tt>length()</tt>.
+  
+  + Utilizar la función <tt>replicate()</tt> para calcular repetidamente estimaciones de muestras aleatorias. Con los argumentos <tt>expr</tt> y <tt>n</tt> se puede especificar la operación y la frecuencia con la que debe replicarse.
+  
+  + Se puede trazar un histograma con la función <tt>hist()</tt>.
+  
+  + El punto en el eje x así como el color de la línea vertical se pueden especificar mediante los argumentos <tt>v</tt> y <tt>col</tt>.
+
+</div>')
+} else {
+  cat('\\begin{center}\\textit{Esta parte interactiva del curso solo está disponible en la versión HTML.}\\end{center}')
+}
+```
+
+```{r, 268, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 2. ... pero estimador consistente {-}
+
+Considere nuevamente el estimador del ejercicio anterior. Está disponible en su entorno como la función <tt>Y_tilde()</tt>. Se le solicita que realice el mismo procedimiento que en el ejercicio anterior. Sin embargo, esta vez, aumente el número de observaciones para extraer de 5 a 1000.
+
+¿Que se puede notar? ¿Qué se puede decir sobre este estimador?
+
+**Instrucciones:**
+
+  + Dibujar al azar 1000 observaciones de la distribución $\\mathcal{N}(10, 25)$ y calcular una estimación de la media usando <tt>Y_tilde()</tt>. Repetir este procedimiento 10000 veces y almacenar los resultados en <tt>est_consistent</tt>.
+  
+  + Graficar un histograma de <tt>est_consistent</tt>.
+  
+  + Agregar una línea vertical roja en $\\mu = 10$ usando la función <tt>abline()</tt>.
+  
+<iframe src="DCL/ex3_2.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Utilizar la función <tt>replicate()</tt> para calcular estimaciones de muestras aleatorias extraídas repetidamente. Usando los argumentos <tt>expr</tt> y <tt>n</tt> especificar la operación y con qué frecuencia se replicará.
+  
+  + Se puede graficar un histograma con la función <tt>hist()</tt>.
+  
+  + La posición en el eje x así como el color de la línea vertical se pueden especificar mediante los argumentos <tt>v</tt> y <tt>col</tt>.
+
+</div>')}
+```
+
+```{r, 269, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 3. Eficiencia de un estimador {-}
+
+En este ejercicio se quiere ilustrar el resultado de que la media muestral:
+
+$$\\hat{\\mu}_Y=\\sum\\limits_{i=1}^{n}a_iY_i$$ 
+
+con el esquema de ponderación igual $a_i=\\frac{1}{n}$ por $i=1,...,n$ es el mejor estimador lineal insesgado (AZUL) de $\\mu_Y$.
+
+Como alternativa, considere el estimador:
+
+$$\\tilde{\\mu}_Y=\\sum\\limits_{i=1}^{n}b_iY_i$$
+
+donde $b_i$ da a las primeras $\\frac{n}{2}$ observaciones una ponderación más alta que las segundas $\\frac{n}{2}$ observaciones (asumiendo que $n$ es par por simplicidad). 
+
+El vector de pesos <tt>w</tt> ya se ha definido y está disponible en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Verificar que $\\tilde{\\mu}$ sea un estimador imparcial de $\\mu_Y$, la media de $Y_i$.
+  
+  + Implementar el estimador alternativo de $\\mu_Y$ como una función <tt>mu_tilde()</tt>.
+
+  + Extraer al azar 100 observaciones de la distribución $\\mathcal{N}(5, 10)$ y calcular estimaciones con ambos estimadores. Repetir este procedimiento 10000 veces y almacenar los resultados en <tt>est_bar</tt> y <tt>est_tilde</tt>.
+  
+  + Calcular las varianzas muestrales de <tt>est_bar</tt> y <tt>est_tilde</tt>. ¿Qué puedes decir sobre ambos estimadores?
+  
+<iframe src="DCL/ex3_3.html" frameborder="0" scrolling="no" style="width:100%;height:420px"></iframe>
+
+**Sugerencias:**
+
+  + Para que $\\tilde{\\mu}$ sea un estimador imparcial, todos los pesos deben sumar 1.
+  
+  + Utilizar la función <tt>replicate()</tt> para calcular estimaciones de muestras extraídas repetidamente. Con los argumentos <tt>expr</tt> y <tt>n</tt> se puede especificar la operación y con qué frecuencia se replica.
+
+  + Se puede usar <tt>var()</tt> para calcular la varianza de la muestra.
+
+</div>')}
+```
+
+```{r, 270, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 4. Prueba de hipótesis --- estadístico $t$ {-}
+
+Considere nuevamente el conjunto de datos de (CPS) \\@ref(UABGI). El conjunto de datos <tt>cps</tt> está disponible en su entorno de trabajo.
+
+Suponga que las ganancias medias por hora (en precios de 2012) <tt>ahe12</tt> superan los 23.50 $\\$/h$ y se desea probar esta hipótesis a un nivel de significancia de $\\alpha = 0.05$. Por favor haga lo siguiente:
+
+**Instrucciones:**
+
+  + Calcular la estadística de prueba a mano y asígnarla a <tt>tstat</tt>.
+  
+  + Utilizar <tt>tstat</tt> para aceptar o rechazar la hipótesis nula. Hacerlo utilizando la aproximación normal.
+  
+<iframe src="DCL/ex3_4.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Probar $H_0:\\mu_{Y_{ahe}}\\leq 23.5$ frente a $H_1:\\mu_{Y_{ahe}}>23.5$. Es decir, realizar una prueba del lado derecho.
+  
+  + La estadística $t$ se define como $\\frac{\\bar{Y}-\\mu_{Y,0}}{s_{Y}/\\sqrt{n}}$ donde $s_Y$ denota la varianza de la muestra.
+
+  + Para decidir si la hipótesis nula es aceptada o rechazada, puede comparar la estadística $t$ con el respectivo cuantil de la distribución normal estándar. Utilice operadores lógicos.
+
+</div>')}
+```
+
+```{r, 271, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 5. Prueba de hipótesis --- valor $p$ {-}
+
+Reconsiderar la situación de prueba del ejercicio anterior. El conjunto de datos <tt>cps</tt> y el vector <tt>tstat</tt> están disponibles en su entorno de trabajo.
+
+En lugar de usar el estadístico $t$ como criterio de decisión, también se puede usar el valor $p$. Ahora hacer lo siguiente:
+
+**Instrucciones:**
+
+  + Calcular el valor $p$ a mano y asignarlo a <tt>pval</tt>.
+  
+  + Utilizar <tt>pval</tt> para aceptar o rechazar la hipótesis nula.
+  
+<iframe src="DCL/ex3_5.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El valor $p$ para una prueba del lado derecho se puede calcular como $p=P(t>t^{act}|H_0)$.
+  
+  + Se rechaza la hipótesis nula si $p<\\alpha$. Se usan operadores lógicos para verificar esto.
+
+</div>')}
+```
+
+```{r, 272, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 6. Prueba de hipótesis --- Una muestra prueba $t$ {-}
+
+En los dos últimos ejercicios se discutieron dos formas de realizar una prueba de hipótesis. Estos enfoques son algo engorrosos de aplicar a mano, por lo que <tt>R</tt> proporciona la función <tt>t.test()</tt>. Hace la mayor parte del trabajo automáticamente. <tt>t.test()</tt> proporciona el estadístico $t$, valor $p$ e incluso intervalos de confianza (más sobre esto último en ejercicios posteriores). Se debe tener en cuenta que <tt>t.test()</tt> usa la distribución $t$ en lugar de la distribución normal, que se vuelve importante cuando el tamaño de la muestra es pequeño.
+
+El conjunto de datos <tt>cps</tt> y la variable <tt>pval</tt> del ejercicio 3.4 están disponibles en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Realizar la prueba de hipótesis de ejercicios anteriores usando la función <tt>t.test()</tt>.
+  
+  + Extraer es estadístico $t$ y el valor $p$ de la lista creada por <tt>t.test()</tt>. Asígnarlos a las variables <tt>tstat</tt> y <tt>pvalue</tt>.
+  
+  + Verificar que el uso de la aproximación normal sea válido calculando la diferencia entre ambos valores de $p$.
+  
+<iframe src="DCL/ex3_6.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + El tipo de prueba así como la hipótesis nula se pueden especificar mediante los argumentos <tt>alternative</tt> y <tt>mu</tt>.
+  
+  + La estadística $t$ y el valor $p$ se pueden obtener mediante <tt>\\$statistic</tt> y <tt>\\$p.value</tt>, respectivamente.
+
+</div>')}
+```
+
+```{r, 273, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 7. Prueba de hipótesis --- Dos muestras prueba $t$ {-}
+
+Considere los niveles máximos anuales del mar en Port Pirie (Australia Meridional) y Fremantle (Australia Occidental) durante los últimos 30 años.
+
+Las observaciones están disponibles como vectores <tt>portpirie</tt> y <tt>fremantle</tt> en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Pruebe si existe una diferencia significativa en los niveles máximos anuales del mar a un nivel de significancia de $\\alpha = 0.05$.
+
+<iframe src="DCL/ex3_7.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + Probar $H_0:\\mu_{P}-\\mu_{F}=0$  frente a $H_1:\\mu_{P}-\\mu_{F}\\ne 0$. Es decir, realizar una prueba $t$ de dos muestras.
+  
+  + Para una prueba $t$ de dos muestras, la función <tt>t.test()</tt> espera dos vectores que contengan los datos.
+
+</div>')}
+```
+
+```{r, 274, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 8. Intervalo de confianza {-}
+
+Reconsidar la situación de prueba con respecto a los niveles máximos anuales del mar en Port Pirie y Fremantle.
+
+Las variables <tt>portpirie</tt> y <tt>fremantle</tt> vuelven a estar disponibles en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Construir un intervalo de confianza de $95\\%$ - para la diferencia en los niveles del mar usando <tt>t.test()</tt>.
+
+<iframe src="DCL/ex3_8.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + La función <tt>t.test()</tt> calcula un intervalo de confianza de $95\\%$ por defecto. Esto es accesible a través de <tt>$conf.int</tt>.
+
+</div>')}
+```
+
+```{r, 275, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 9. (Co)varianza y correlación I {-}
+
+Considerar una muestra aleatoria $(X_i, Y_i)$ para $i = 1, ..., 100$.
+
+Los vectores respectivos <tt>X</tt> e <tt>Y</tt> están disponibles en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular la varianza de $X$ usando la función <tt>cov()</tt>.
+  
+  + Calcular la covarianza de $X$ y $Y$.
+  
+  + Calcular la correlación entre $X$ y $Y$.
+
+<iframe src="DCL/ex3_9.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencias:**
+
+  + La varianza es un caso especial de covarianza.
+  
+  + <tt>cov()</tt> y <tt>cor()</tt> esperan un vector para cada variable.
+
+</div>')}
+```
+
+```{r, 276, echo=F, purl=F, results='asis'}
+if (my_output=="html") {
+  cat('
+<div  class = "DCexercise">
+
+#### 10. (Co)varianza y correlación II {-}
+
+En este ejercicio se quieren examinar las limitaciones de la correlación como medida de dependencia.
+
+Una vez que se haya inicializado la sesión, verá la gráfica de 100 realizaciones de dos variables aleatorias $X$ y $Y$.
+
+Las observaciones respectivas están disponibles en los vectores <tt>X</tt> e <tt>Y</tt> en su entorno de trabajo.
+
+**Instrucciones:**
+
+  + Calcular la correlación entre $X$ y $Y$. Interpretar su resultado de manera crítica.
+
+<iframe src="DCL/ex3_10.html" frameborder="0" scrolling="no" style="width:100%;height:340px"></iframe>
+
+**Sugerencia:**
+
+  + <tt>cor()</tt> espera un vector para cada variable.
+
+</div>')}
+```

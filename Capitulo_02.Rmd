@@ -1,0 +1,1153 @@
+# Repaso de las nociones fundamentales de R para la econometría y ciencia de datos {#RNFRECD}
+
+```{r, echo = F}
+options(knitr.duplicate.label = "allow")
+```
+
+```{r, 41, child="_setup.Rmd"}
+```
+
+```{r, 42, eval=knitr::opts_knit$get("rmarkdown.pandoc.to") == "html", results='asis', echo=FALSE}
+cat('<hr style="background-color:#03193b;height:2px">')
+```
+
+El software estadístico **R** se puede utilizar en varios niveles. Por supuesto, la aritmética estándar está disponible y, por lo tanto, se puede usar como una calculadora (bastante sofisticada). También está provisto de un sistema gráfico que escribe en una gran variedad de dispositivos. Adicionalmente, **R** es un lenguaje  de programación con todas las funciones que se pueden emplear para abordar todas las tareas típicas para las que también se utilizan otros lenguajes de programación. Asimismo, se conecta a otros lenguajes, programas y bases de datos, y también al sistema operativo; los usuarios pueden controlar todo esto desde la plataforma de **R**.
+
+En este capítulo, se ilustran algunos de los usos típicos de **R**. A menudo, las soluciones no son únicas; en este sentido, se evitan los atajos sofisticados. Sin embargo, se anima a todos los lectores a explorar soluciones alternativas reutilizando lo aprendido en el curso en otros contextos.
+
+## **R** como calculadora {#RCC}
+
+Los operadores aritméticos estándar **+**, **-**, $\textbf{*}$, **/** y **^** están disponibles, donde **x^y** representa la exponenciación **$x^y$**. Por eso
+
+```{r, 43, echo = T, eval = T, message = F, warning = F} 
+1 + 1
+2^3
+```
+
+En la salida, **[1]** indica la posición del primer elemento del vector devuelto por **R**. Dicho resultado no es sorprendente en este contexto, donde todos los vectores tienen una longitud $1$, pero será útil más adelante.
+
+Las funciones matemáticas comunes, como **log()**, **exp()**, **sin()**, **asin()**, **cos()**, **acos()**, **tan()**, **atan()**, **sign()**, **sqrt()**, **abs()**, **min()** y **max()**, también están disponibles. Específicamente, **log(x, base = a)** devuelve el logaritmo de $x$ a la base $a$, dónde $a$ se encuentra predeterminado por **exp(1)**. Por lo tanto
+
+```{r, 44, echo = T, eval = T, message = F, warning = F} 
+log(exp(sin(pi/4)^2) * exp(cos(pi/4)^2))
+```
+
+que también muestra que $pi$ es una constante incorporada. Existen otras funciones de conveniencia, como **log10()** y **log2()**, pero aquí se usará principalmente **log()**. Una lista completa de todas las opciones y funciones relacionadas está disponible al escribir **?log**, **?sin**, entre otros. Las funciones adicionales útiles en estadística y econometría son **gamma()**, **beta()**, y sus logaritmos y derivadas (se recomienda consultar **?gama** para mayor información).
+
+### Aritmética vectorial {-}
+
+En **R**, la unidad básica es un vector y, por ende, todas estas funciones operan directamente sobre los vectores. Se genera un vector usando la función **c()**, dónde **c** significa "combinar" o "concatenar". Así pues, el siguiente código genera un objeto $x$, un vector, que contiene las entradas $1.8$, $3.14$, $4$, $88.169$ y $13$:
+
+```{r, 45, echo = T, eval = T, message = F, warning = F} 
+x <- c(1.8, 3.14, 4, 88.169, 13)
+```
+
+La longitud de un vector está disponible usando **length()**:
+
+```{r, 46, echo = T, eval = T, message = F, warning = F} 
+length(x)
+```
+
+Se debe tener en cuenta que la asignación de nombres distingue entre mayúsculas y minúsculas; por eso $X$ y $x$ son distintos.
+
+La declaración anterior usa el operador de asignación **<-**, que debe leerse como un solo símbolo (aunque requiere dos pulsaciones de teclas), una flecha que apunta a la variable a la que se asigna el valor. Alternativamente, **=** puede usarse a nivel de usuario, pero como se prefiere **<-** para la programación, se usa en todo este curso. No existe un resultado inmediatamente visible, pero a partir de ahora **x** tiene como valor el vector definido anteriormente y, por esta razón, puede utilizarse en cálculos posteriores:
+
+```{r, 47, echo = T, eval = T, message = F, warning = F} 
+2 * x + 3
+5:1 * x + 1:5
+```
+
+Esto requiere una explicación. En el primer enunciado, los escalares (es decir, vectores de longitud $1$) $2$ y $3$ se reciclan para coincidir con la longitud de **x**, de modo que cada elemento de **x** se multiplica por $2$ antes de agregarle $3$. En la segunda declaración, **x** se multiplicación por los elementos en el vector **5:1** (la secuencia de $1$ a $5$ que se puede ver arriba) y luego el vector **1:5** se agrega elemento por elemento.
+
+También se pueden aplicar funciones matemáticas; así pues, el siguiente comando devuelve un vector que contiene los logaritmos de las entradas originales de **x**:
+
+```{r, 48, echo = T, eval = T, message = F, warning = F} 
+log(x)
+```
+
+### Vectores de subconjuntos {-}
+
+A menudo es necesario acceder a subconjuntos de vectores. Lo anterior requiere hacer uso del operador **[,**, que se puede utilizar de varias formas para extraer elementos de un vector. Por ejemplo, se puede especificar qué elementos incluir o qué elementos excluir.
+
+Un vector de índices positivos, como el que se codifica a continuación, especifica los elementos a extraer:
+
+```{r, 49, echo = T, eval = T, message = F, warning = F} 
+x[c(1, 4)]
+```
+
+Alternativamente, un vector de índices negativos, como el que se codifica a continuación, selecciona todos los elementos menos los indicados (obteniendo el mismo resultado de antes):
+
+```{r, 50, echo = T, eval = T, message = F, warning = F} 
+x[-c(2, 3, 5)]
+```
+
+De hecho, mucho otros métodos se encuentran disponibles para realizar subconjuntos con **[,** que se explican más abajo.
+
+### Modelado de vectores {-}
+
+En estadística y econometría, existen muchos casos en los que se necesitan vectores con patrones especiales. **R** proporciona una serie de funciones para crear dichos vectores, que incluyen:
+
+```{r, 51, echo = T, eval = T, message = F, warning = F} 
+ones <- rep(1, 10)
+even <- seq(from = 2, to = 20, by = 2)
+trend <- 1981:2005
+```
+
+Aquí, **ones** es un vector de unos de longitud $10$, **even** es un vector que contiene los números pares del $2$ al $20$ y **trend** es un vector que contiene los números enteros de $1981$ a $2005$.
+
+Dado que el elemento básico es un vector, también es posible concatenar vectores. Por lo tanto:
+
+```{r, 52, echo = T, eval = T, message = F, warning = F} 
+c(ones, even)
+```
+
+El código anterior crea un vector de longitud $20$ que consta de los vectores previamente definidos **ones** y **even** puesto de cabo a rabo.
+
+## Operaciones con matrices {#OCM}
+
+Una matriz $2 \times 3$ que contiene los elementos $1:6$, por columna, se genera a través de:
+
+```{r, 53, echo = T, eval = T, message = F, warning = F} 
+A <- matrix(1:6, nrow = 2)
+```
+
+Alternativamente, **ncol** podría haber sido usado, con **matrix(1:6, ncol = 3)** dando el mismo resultado:
+
+```{r, 54, echo = T, eval = T, message = F, warning = F} 
+matrix(1:6, ncol = 3)
+```
+
+### Álgebra básica matricial {-}
+
+La transposición $A^T$ de $A$ es:
+
+```{r, 55, echo = T, eval = T, message = F, warning = F} 
+t(A)
+```
+
+Se puede acceder a las dimensiones de una matriz utilizando **dim()**, **nrow()** y **ncol()**; por eso:
+
+```{r, 56, echo = T, eval = T, message = F, warning = F} 
+dim(A)
+nrow(A)
+ncol(A)
+```
+
+Los elementos individuales de una matriz, los vectores de fila o columna, e incluso las submatrices completas, pueden extraerse especificando las filas y columnas de la matriz de la que se seleccionan. Lo anterior usa una extensión simple de las reglas para subconjuntos de vectores. En realidad, internamente, las matrices son vectores con un atributo de dimensión que habilita la indexación de tipo fila/columna: 
+
+- El elemento $a_{ij}$ de una matriz $A$ se extrae usando $A[i, j]$. 
+- Se pueden extraer filas o columnas enteras mediante $A[i, ]$ y $A[, j]$, respectivamente, que devuelven la fila o columna correspondiente en forma de *vectores*. Esto significa que el atributo de dimensión se descarta (por defecto); por esta razón, el subconjunto devolverá un vector en lugar de una matriz si la matriz resultante tiene solo una columna o fila. 
+
+Ocasionalmente, es necesario extraer filas, columnas o incluso elementos individuales de una matriz, como los es una matriz misma. La eliminación del atributo de dimensión se puede desactivar usando **A[i, j, drop = FALSE]**.
+
+Como ejemplo, el código que se muestra a continuación selecciona una matriz cuadrada que contiene el primer y tercer elemento de cada fila (se debe tener en cuenta que $A$ tiene solo dos filas en el ejemplo):
+
+```{r, 57, echo = T, eval = T, message = F, warning = F} 
+A1 <- A[1:2, c(1, 3)]
+```
+
+Alternativamente, y de forma más compacta, $A1$ podría haber sido generado usando $A[, -2]$. Resulta importante mencionar que si no se especifica ningún número de fila, se tomarán todas las filas; el $-2$ especifica que se requieren todas las columnas excepto la segunda.
+
+$A1$ es una matriz cuadrada, y si no es singular tiene una inversa. Una forma de verificar la singularidad es calcular el determinante usando la función **det()** disponible en **R**. Aquí, `det(A1)`es igual a $-4$; por eso **A1** no es singular. Alternativamente, sus autovalores (y autovectores) están disponibles usando **eigen()**. Aquí, `eigen(A1)`produce los valores propios $7.531$ y $-0.531$, mostrando nuevamente que $A1$ no es singular.
+
+La inversa de una matriz, si no se puede evitar, se calcula utilizando **solve()**:
+
+```{r, 58, echo = T, eval = T, message = F, warning = F} 
+solve(A1)
+```
+
+Se puede comprobar que esto es de hecho el inverso de $A1$ multiplicando $A1$ con su inverso. Esto requiere el operador para la multiplicación de matrices, $\textbf{%*%}$:
+
+```{r, 59, echo = T, eval = T, message = F, warning = F} 
+A1 %*% solve(A1)
+```
+
+De manera similar, las matrices conformables se suman y restan usando los operadores aritméticos **+** y **-**. Vale la pena señalar que en el caso de matrices no conformables, el reciclaje se realiza a lo largo de las columnas. Por cierto, el operador $\textbf{*}$ también funciona para matrices; devuelve la matriz de elementos o el *producto de Hadamard* de matrices conformables. Otros tipos de productos matriciales que a menudo se requieren en econometría son el *producto Kronecker*, disponible a través de la función **kronecker()**, y el producto cruzado $A^{T} B$ de dos matrices, para las cuales se implementa un algoritmo computacionalmente eficiente en la función **crossprod()**.
+
+Además de la descomposición espectral calculada por **eigen()** como se ha mencionado más arriba, **R** proporciona otras descomposiciones matriciales de uso frecuente, incluida la *descomposición de valor singular*, mediante la función **svd()**, la descomposición *QR*, mediante la función **qr()**, y la *descomposición de Cholesky*, mediante la función **chol()**.
+
+### Modelado de matrices {-}
+
+En econometría, existen muchos casos en los que se necesitan construir matrices con patrones especiales. **R** proporciona funciones para generar matrices con tales patrones. Por ejemplo, se puede crear una matriz diagonal con unos en la diagonal usando
+
+```{r, 60, echo = T, eval = T, message = F, warning = F} 
+diag(4)
+```
+
+que produce la matriz de identidad de $4 \times 4$. De manera equivalente, el mismo resultado se puede obtener mediante **diag(1, 4, 4)**, donde el $1$ se recicla a la longitud requerida $4$. Por supuesto, también se obtienen fácilmente matrices diagonales más generales: **diag(rep(c(1,2), c(10, 10)))** produce una matriz diagonal de tamaño $20 \times 20$ cuyos primeros $10$ elementos diagonales son iguales a $1$, mientras que los restantes son iguales a $2$ (los lectores con conocimientos básicos de regresión lineal notarán que una aplicación podría ser un patrón de heterocedasticidad).
+
+Aparte de configurar matrices diagonales, la función **diag()** también se puede utilizar para extraer la diagonal de una matriz existente; por ejemplo, **diag(A1)**. Adicionalmente, **upper.tri()** y **lower.tri()** se pueden utilizar para consultar las posiciones de los elementos
+triangulares superiores o inferiores de una matriz, respectivamente.
+
+### Combinando matrices {-}
+
+También es posible formar nuevas matrices a partir de las existentes para hacer eso se deben usar las funciones **rbind()** y **cbind()**, que son similares a la función **c()** para concatenar vectores; como sugieren sus nombres, combinan matrices por filas o columnas. Por ejemplo, para agregar una columna de unos a la matriz $A1$ se puede usar:
+
+```{r, 61, echo = T, eval = T, message = F, warning = F} 
+cbind(1, A1)
+```
+
+De igual forma, se puede lograr el mismo resultado combinando $A1$ y $diag(4, 2)$ por filas:
+
+```{r, 62, echo = T, eval = T, message = F, warning = F} 
+rbind(A1, diag(4, 2))
+```
+
+### R como lenguaje de programación {-}
+
+**R** es un lenguaje de programación orientado a objetos, interpretado y con todas las funciones. En consecuencia, se puede usar para todas las tareas que también se usan en otros lenguajes de programación, no solo para el análisis de datos. Lo que lo hace particularmente útil para la estadística y econometría; es decir, **R** fue diseñado para “programar con datos” (Chambers 1998). Esto tiene varias implicaciones para los tipos de datos empleados y el paradigma utilizado de orientación a objetos.
+
+Un tratamiento en profundidad de la programación en **S**/**R** se da en Venables y Ripley (2000). Si el lector posee conocimientos básicos de alemán, Ligges (2007) es una excelente introducción a la programación con **R**. En un nivel más avanzado, el equipo central de desarrollo de **R** (2021f, g) proporciona orientación sobre la definición del lenguaje y cómo se puede escribir las extensiones del sistema **R**. Los últimos documentos se pueden descargar de *CRAN* y también se envían con cada distribución de **R**.
+
+### La moda de un vector {-}
+
+Probablemente la estructura de datos más simple en **R** es un vector. Todos los elementos de un vector deben ser del mismo tipo; técnicamente, deben ser de la mismo "moda". La moda de un vector $x$ se puede consultar usando **mode(x)**. En este contexto, se pueden crear vectores de moda "numérica", "lógica" y de "caracteres” (aunque existen otras).
+
+Ya se ha visto que crea un vector numérico cumple con la aplicación típica de almacenar los valores de alguna variable numérica en un conjunto de datos.
+
+```{r, 63, echo = T, eval = T, message = F, warning = F} 
+x <- c(1.8, 3.14, 4, 88.169, 13)
+```
+
+### Vectores lógicos y de caracteres {-}
+
+Los vectores lógicos se componen de las constantes lógicas **TRUE** (cierto) y **FALSE** (falso). En una nueva sesión, los alias **T** y **F** también con compatibles con los operadores lógicos en **R** (esto es, también son utilizados como constantes lógicas). Sin embargo, a diferencia de **TRUE** y **FALSE**, los valores de **T** y **F** puede cambiarse (por ejemplo, utilizando **T** para representar el tamaño de una muestra en un contexto de series de tiempo o utilizando **F** como una variable para denotar un estadístico **F**), por lo que se recomienda no confiar en ellos, sino utilizar siempre **TRUE** y **FALSE**. 
+
+Al igual que los vectores numéricos, los vectores lógicos se pueden crear desde cero. De igual forma, pueden surgir como resultado de una comparación lógica:
+
+```{r, 64, echo = T, eval = T, message = F, warning = F} 
+x > 3.5
+```
+
+A continuación se explican otras operaciones lógicas.
+
+Se pueden emplear vectores de caracteres para almacenar cadenas. Especialmente en los primeros capítulos de este curso, se usarán principalmente para asignar etiquetas o nombres a ciertos objetos como vectores y matrices. Por ejemplo, se pueden asignar nombres a
+los elementos de $x$ mediante:
+
+```{r, 65, echo = T, eval = T, message = F, warning = F} 
+names(x) <- c("a", "b", "c", "d", "e")
+x
+```
+
+Alternativamente, se podría haber usado **names(x) <- letters[1:5]**, donde **letters** y **LETTERS** son vectores integrados que contienen las $26$ letras minúsculas y mayúsculas del alfabeto latino, respectivamente. Aunque no se usan mucho en este curso, se puede notar aquí que las facilidades de manipulación de caracteres en **R** va mucho más allá de estos simples ejemplos, permitiendo, entre otras cosas, cálculos en documentos de texto o cadenas de comandos.
+
+### Más sobre subconjuntos {-}
+
+Habiendo introducido vectores de modas numéricas, de caracteres y lógicos, es útil revisar cómo crear subconjunto de vectores. A estas alturas, se ha visto cómo extraer partes de un vector usando índices numéricos, pero de hecho esto también es posible usando caracteres (si existe un atributo **names**) o lógicos (en cuyo caso los elementos correspondientes a **TRUE** son seleccionados). Por lo tanto, los siguientes comandos producen el mismo resultado:
+
+```{r, 66, echo = T, eval = T, message = F, warning = F} 
+x[3:5]
+x[c("c", "d", "e")]
+x[x > 3.5]
+```
+
+El subconjunto de matrices (y también de marcos de datos o matrices multidimensionales) funciona de manera similar.
+
+### Listas {-}
+
+Hasta ahora, solo se han utilizado vectores planos. Ahora se procede a introducir algunas estructuras de datos relacionadas que son similares, pero contienen más información.
+
+En **R**, las *listas* son *vectores genéricos*, donde cada elemento puede ser virtualmente cualquier tipo de objeto (de moda arbitraria); por ejemplo, un vector, una matriz, un marco de datos completo, una función o nuevamente una lista. Se debe tener en cuenta que este último también permite crear estructuras de datos recursivas. Debido a esta flexibilidad, las listas son la base para la mayoría de los objetos complejos en **R**; por ejemplo, para marcos de datos o modelos de regresión ajustados (por nombrar dos ejemplos que se describirán más adelante).
+
+Como ejemplo simple, se crea, usando la función **list()**, una lista que contiene una muestra de una distribución normal estándar (generada con **rnorm()**) más algunas marcas en forma de una cadena de caracteres ("distribución normal") y una lista que contiene los parámetros de población (**list(mean = 0, sd = 1)**).
+
+```{r, 67, echo = T, eval = T, message = F, warning = F} 
+mylist <- list(sample = rnorm(5), 
+               family = "distribución normal", 
+               parameters = list(mean = 0, sd = 1))
+
+mylist$sample
+mylist$family
+mylist$parameters
+mylist$parameters$mean
+mylist$parameters$sd
+```
+
+Para seleccionar ciertos elementos de una lista, se pueden usar los operadores de extracción **$** o **[[**. Este último es similar a **[,** la principal diferencia es que solo puede seleccionar un único elemento. Por lo tanto, las siguientes declaraciones son equivalentes:
+
+```{r, 68, echo = T, eval = T, message = F, warning = F} 
+mylist[[1]]
+mylist[["sample"]]
+mylist$sample
+```
+
+El tercer elemento de **mylist**, al ser una lista, las funciones del extractor también se pueden combinar en ella como se hizo antes:
+
+```{r, 69, echo = T, eval = T, message = F, warning = F} 
+mylist[[3]]$sd
+```
+
+### Comparaciones lógicas {-}
+
+**R** tiene un conjunto de funciones que implementan comparaciones lógicas estándar, así como algunas funciones adicionales que son convenientes cuando se trabaja con valores lógicos. Los operadores lógicos son **<**, **<=**, **>**, **>=**, **==** (para igualdad exacta) y **!=** ( para la desigualdad). De igual forma, si **expr1** y **expr2** son expresiones lógicas, entonces: 
+
+- **expr1&expr2** representa la intersección entre **expr1** y **expr2** (el operador lógico "**&**" funciona como la intersección "**y**").
+- **expr1|expr2** representa la unión entre **expr1** o **expr2** (el operador lógico "**|**" funciona como la unión "**o**").
+- **!expr1** representa la negación de **expr1** (el operador lógico "**!**" funciona como la negación "**¬**"). 
+
+Por lo tanto
+
+```{r, 70, echo = T, eval = T, message = F, warning = F} 
+x <- c(1.8, 3.14, 4, 88.169, 13)
+x > 3 & x <= 4
+```
+
+Con el objetivo de evaluar para qué elementos de un vector una determinada expresión es **TRUE**, se puede usar la función **which()**:
+
+```{r, 71, echo = T, eval = T, message = F, warning = F} 
+which(x > 3 & x <= 4)
+```
+
+Las funciones especializadas which.min() y which.max() están disponibles para calcular la posición del mínimo y el máximo. En adición a **&** y **|**, las funciones **all()** y **any()** comprueban si todas o al menos algunas entradas de un vector son **TRUE**:
+
+```{r, 72,echo = T, eval = T, message = F, warning = F} 
+all(x > 3)
+any(x > 3)
+```
+
+Se necesita cierta precaución al evaluar la igualdad exacta. Cuando se aplica a una entrada numérica, **==** no permite la representación finita de fracciones o el error de redondeo; de ahí situaciones como:
+
+```{r, 73, echo = T, eval = T, message = F, warning = F} 
+(1.5 - 0.5) == 1
+(1.9 - 0.9) == 1
+```
+
+El error anterior ocurre debido a la aritmética de punto flotante (Goldberg 1991). Para estos fines se recomienda hacer uso de la función **all.equal()**:
+
+```{r, 74, echo = T, eval = T, message = F, warning = F} 
+all.equal(1.9 - 0.9, 1)
+```
+
+Además, la función **identical()** comprueba si dos objetos en **R** son exactamente idénticos.
+
+Debido a la coerción, también es posible calcular directamente vectores lógicos utilizando aritmética ordinaria. Cuando se coacciona a numérico, **FALSE** se convierte en $0$ y **TRUE** se convierte en $1$, como en:
+
+```{r, 75, echo = T, eval = T, message = F, warning = F} 
+7 + TRUE
+```
+
+### Coerción {-}
+
+Para convertir un objeto de un tipo o clase a otro diferente, **R** proporciona una serie de funciones de coerción, denominadas convencionalmente **as.foo()**, dónde *foo* es el tipo o clase deseada; por ejemplo, numérico (*numeric*), carácter (*character*), matriz (*matrix*), marco de datos (*data.frame*), entre muchos otros. Suelen ir acompañadas de un **is.foo()**, función que comprueba si un objeto es de un tipo o clase *foo*. Por tanto:
+
+```{r, 76, echo = T, eval = T, message = F, warning = F} 
+is.numeric(x)
+is.character(x)
+as.character(x)
+```
+ 
+En determinadas situaciones, la coersión también se ve forzada automáticamente por **R**; por ejemplo, cuando el usuario intenta poner elementos de diferentes clases en un solo vector (que solo puede contener elementos de la misma clase). Por ejemplo:
+
+```{r, 77, echo = T, eval = T, message = F, warning = F} 
+c(1, "a")
+```
+
+En este caso, el vector contiene un número y un caracter. No obstante, la coersión del carácter en **R** es mayor que la del número. 
+
+### Generación de números aleatorios {-}
+
+Para los entornos de programación en estadística y econometría, es vital disponer de buenos generadores de números aleatorios (random number generators o RNG), en particular para permitir a los usuarios realizar estudios de Monte Carlo. El RNG de **R** admite varios algoritmos (se recomienda ver **?RNG** para mas detalles). Aquí, se describen algunos comandos importantes.
+
+El RNG se fundamenta en una “semilla aleatoria”, que es la base para la generación de números pseudoaleatorios. Configurando la semilla a un valor específico usando la función **set.seed()**, las simulaciones se pueden reproducir exactamente igual por otros usuarios. Por ejemplo, usando la función **rnorm()** para generar números aleatorios con una distribución normal:
+
+```{r, 78, echo = T, eval = T, message = F, warning = F} 
+set.seed(123)
+rnorm(2)
+
+rnorm(2)
+
+set.seed(123)
+rnorm(2)
+```
+
+Otra función básica para extraer muestras aleatorias, con o sin reemplazo de un conjunto finito de valores, es **sample()**. El valor predeterminado es *draw* (sin reemplazo), un vector del mismo tamaño que su argumento de entrada; es decir, para calcular una permutación de la entrada como en:
+
+```{r, 79, echo = T, eval = T, message = F, warning = F} 
+sample(1:5)
+sample(c("masculino", "femenino"), size = 5, replace = TRUE, prob = c(0.2, 0.8))
+```
+
+El segundo comando extrae una muestra de tamaño $5$, con reemplazo, de los valores "**masculino**" y "**femenino**", que se escogen con probabilidades 0.2 y 0.8, respectivamente.
+
+Arriba, ya se usó la función **rnorm()** para extraer de una distribución normal. Dicha función pertenece a una familia más amplia de funciones que son todas de la forma **r*dist*()**, dónde *dist* correspondiente a una familia distinta de distribución probabilística:
+
+- **norm**
+- **unif**
+- **binom**
+- **pois**
+- **t**
+- **f**
+- **chisq** 
+
+Todas las funciones enlistadas toman el tamaño de la muestra **n** como su primer argumento junto con otros argumentos que controlan los parámetros de la distribución respectiva. Por ejemplo, **rnorm()** toma **mean** (media) y **sd** (desviación estandar) como argumentos adicionales, con $0$ y $1$ como sus correspondientes valores predeterminados. Sin embargo, estas no son las únicas funciones disponibles para distribuciones estadísticas. Normalmente, también existen **d*dist*()**, **p*dist*()** y **q*dist*()**, que implementan la densidad, la función de distribución de probabilidad acumulada y la función de cuantiles (función de distribución inversa), respectivamente.
+
+### Control de flujo {-}
+
+Como la mayoría de los lenguajes de programación, **R** proporciona estructuras de control estándar como las declaraciones **if**/**else**, **for** (para bucles) y **while** (para bucles). Todas ellas tienen en común que una expresión **expr** se evalúa, ya sea condicional a una determinada **cond** (para **if** y **while**) o para una secuencia de valores (para **for**). La expresion **expr** en sí mismo puede ser una expresión simple o una expresión compuesta; es decir, típicamente un conjunto de expresiones simples encerradas entre llaves **{...}**. A continuación se presentan algunos breves ejemplos que ilustran su uso (se recomienda ver **?Control** para mayor información):
+
+Una declaración **if**/**else** es de la forma:
+
+```{r, 80, echo = T, eval = F, message = F, warning = F} 
+if(cond) {
+    expr1
+} else {
+    expr2
+}
+```
+
+Dónde **expr1** se evalúa si **cond** es **TRUE**, de lo contrario se evalúa **expr2**. La rama **else** se puede omitir si está vacía. Un ejemplo simple (si no muy significativo) es:
+
+```{r, 81, echo = T, eval = T, message = F, warning = F}
+x <- c(1.8, 3.14, 4, 88.169, 13)
+if(rnorm(1) > 0) sum(x) else mean(x)
+```
+
+Donde la condición es el valor de un número aleatorio normal estándar, y la evaluación calcula la suma o la media del vector **x**. 
+
+Tenga en cuenta que la condición **cond** solo puede ser de longitud $1$. Sin embargo, también existe una función **ifelse()** ofreciendo una
+versión vectorizada; por ejemplo:
+
+```{r, 82, echo = T, eval = T, message = F, warning = F}
+ifelse(x > 4, sqrt(x), x^2)
+```
+
+Esto calcula la raíz cuadrada de los valores de **x** que son mayores que $4$ y el cuadrado para los restantes.
+
+El bucle **for** se construye de manera similar, pero el argumento principal para **for()** es de tipo variable en secuencia. Para ilustrar su uso, se calculan recursivamente las primeras diferencias en el vector **x**.
+
+```{r, 83, echo = T, eval = T, message = F, warning = F}
+for(i in 2:5) {x[i] <- x[i] - x[i-1]}
+x[-1]
+```
+
+Finalmente, un bucle **while** se ve bastante similar. El argumento para **while()** es una condición que puede cambiar en cada ejecución del bucle para que finalmente pueda convertirse en **FALSE**, como en:
+
+```{r, 84, echo = T, eval = T, message = F, warning = F}
+while(sum(x) < 100) {x <- 2 * x}
+x
+```
+
+### Escritura de funciones {-}
+
+Una de las características de **S** y **R** es que los usuarios se convierten naturalmente en desarrolladores. En otras palabras, crean variables u objetos que aplican a funciones de forma interactiva (ya sea para modificarlos o para crear otros objetos de interés), lo que es parte de cada sesión en **R**. Al hacerlo, a menudo surgen secuencias típicas de comandos que se ejecutan para diferentes conjuntos de valores de entrada. En lugar de repetir los mismos pasos "a mano", se pueden integrar fácilmente nuevas funciones. Un ejemplo simple es:
+
+```{r, 85, echo = T, eval = T, message = F, warning = F}
+cmeans <- function(X) {
+    rval <- rep(0, ncol(X))
+    for(j in 1:ncol(X)) {
+        mysum <- 0
+        for(i in 1:nrow(X)) mysum <- mysum + X[i,j]
+        rval[j] <- mysum/nrow(X)
+        }
+    return(rval)
+}
+```
+
+Esto crea la función **cmeans()** (¡deliberadamente incómoda!), que toma un argumento de matriz **X** y usa un doble bucle **for** para calcular primero la suma y luego la media en cada columna. El resultado se almacena en un vector **rval** (el valor de **return** o valor de retorno), que se devuelve después de completar ambos ciclos. Esta función se puede aplicar fácilmente a nuevos datos, como en:
+
+```{r, 86, echo = T, eval = T, message = F, warning = F}
+X <- matrix(1:20, ncol = 2)
+cmeans(X)
+```
+
+Como era de esperar, produce el mismo resultado que la función incorporada **colMeans()**:
+
+```{r, 87, echo = T, eval = T, message = F, warning = F}
+colMeans(X)
+```
+
+La función **cmeans()** toma solo un argumento **X** que no tiene un valor predeterminado. Si el autor de una función desea establecer un valor predeterminado, esto se puede lograr fácilmente definiendo un función (**function**) con una lista de pares **name = expr**, donde
+**name** es el argumento de la variable y **expr** es una expresión con el valor predeterminado. Si se omite este último, no se establece ningún valor predeterminado.
+
+En lenguajes interpretados basados en matrices, como lo es **R**, los bucles suelen ser menos eficientes que los correspondientes cálculos vectorizados ofrecidos por el sistema. Por lo tanto, evitar bucles reemplazándolos con operaciones vectorizadas puede ahorrar tiempo de cálculo, especialmente cuando el número de iteraciones en el bucle puede aumentar. Para ilustrar el punto anterior, se generan $2 \times 10^6$ números aleatorios de la distribución normal estándar y se compara con la función incorporada **colMeans()** con la incómoda función **cmeans()**. Se emplea la función **system.time()**, que es útil para perfilar código:
+
+```{r, 88, echo = T, eval = T, message = F, warning = F}
+X <- matrix(rnorm(2*10^6), ncol = 2)
+system.time(colMeans(X))
+system.time(cmeans(X))
+```
+
+Claramente, el desempeño de **cmeans()** es vergonzoso y usar **colMeans()** se prefiere.
+
+### Cálculos vectorizados {-}
+
+Como se señaló anteriormente, los bucles se pueden evitar utilizando aritmética vectorizada. En el caso de **cmeans()**, la función calcula las medias de una matriz por columnas, sería útil calcular directamente las medias columna por columna utilizando la función incorporada **mean()**. De hecho, esta es la solución preferida. Utilizando las herramientas de las que se dispone hasta el momento, se podría proceder de la siguiente manera:
+
+```{r, 89, echo = T, eval = T, message = F, warning = F}
+cmeans2 <- function(X) {
+    rval <- rep(0, ncol(X))
+    for(j in 1:ncol(X)) rval[j] <- mean(X[,j])
+    return(rval)
+}
+```
+
+Esto elimina uno de los bucles **for** y solo recorre las columnas. El resultado es idéntico a las soluciones anteriores, pero el rendimiento es claramente mejor que el de **cmeans()**:
+
+```{r, 90, echo = T, eval = T, message = F, warning = F}
+system.time(cmeans2(X))
+```
+
+Sin embargo, el código de **cmeans2()** todavía parece un poco engorroso con el resto de bucles **for** -se puede escribir de forma mucho más compacta con la función **apply()**. Esto aplica funciones sobre los márgenes de una matriz y toma tres argumentos: 
+
+1. La matriz.
+2. El índice del margen.
+3. La función que se va a evaluar. 
+
+En este caso, la llamada a la función es:
+
+```{r, 91, echo = T, eval = T, message = F, warning = F}
+apply(X, 2, mean)
+```
+
+Porque se requieren las medias (usando la función **mean()**) sobre las columnas (es decir, la segunda dimensión) de **X**. El rendimiento de la función **apply()** a veces puede ser mejor que un bucle **for**. Sin embargo, en muchos casos ambos enfoques funcionan de manera bastante similar:
+
+```{r, 92, echo = T, eval = T, message = F, warning = F}
+system.time(apply(X, 2, mean))
+```
+
+Para resumir, lo anterior implica que:
+
+1. Los cálculos por elementos deben evitarse si existen cálculos vectorizados disponibles.
+2. Las soluciones optimizadas (si están disponibles) generalmente funcionan mejor que las soluciones genéricas **for** o **apply()**.
+3. Los bucles se pueden escribir de forma más compacta utilizando la función **apply()**. 
+
+De hecho, esto es tan común en **R** que existen varias alternativas a la función **apply()**; a saber, están disponibles las funciones **lapply()**, **tapply()**, y **sapply()**. El primero devuelve una lista, el segundo una tabla y el tercero intenta simplificar el resultado a un vector o matriz cuando sea posible (se recomienda consultar las páginas del manual correspondientes para obtener información más detallada y ejemplos).
+
+### Palabras reservadas {-}
+
+Como la mayoría de los lenguajes de programación, **R** tiene una serie de palabras reservadas que proporcionan las construcciones gramaticales básicas del idioma. Algunos de estos ya se han presentado anteriormente y algunos más se describen a continuación. Una lista casi completa de palabras reservadas en **R** se puede consultar mediante el comando **?Reserved**. Algunas palabras clave que siempre debe tener en mente son:
+
+- if 
+- else
+- for
+- in
+- while
+- repeat
+- break
+- next
+- function
+- TRUE
+- FALSE
+- NA
+- NULL
+- Inf
+- NaN
+
+Si se intenta utilizar alguno de estos nombres para designar variables o cualquier tipo de objeto, se producirá un error.
+
+## Fórmulas {#Fórmulas}
+
+Las fórmulas son construcciones que se utilizan en varios programas estadísticos para especificar modelos. En **R**, Los objetos de la clase fórmula se pueden usar para almacenar descripciones simbólicas de relaciones entre variables, como el operador **~** en la formación de una fórmula:
+
+```{r, 93, echo = T, eval = T, message = F, warning = F}
+f <- y ~ x
+class(f)
+```
+
+Hasta ahora, esta es solo una descripción sin ningún significado concreto. El resultado depende completamente de la función que evalúa esta fórmula. En **R**, la expresión anterior normalmente significa "Y es explicado por X". Dichas interfaces de fórmulas son convenientes para especificar, entre otras cosas, gráficos o relaciones de regresión. Por ejemplo, en el siguiente código primero se crean las variables **Y** y **X**, posteriormente se genera un diagrama de dispersión de **Y** contra **X** y finalmente se ajusta el correspondiente modelo de regresión lineal simple con pendiente $3.01$ e intersección $2.00$.
+
+```{r, 94, echo = T, eval = T, message = F, warning = F}
+# crear las variables
+x <- seq(from = 0, to = 10, by = 0.5)
+y <- 2 + 3 * x + rnorm(21)
+```
+
+```{r, 95, eval = T, message = F, warning = F, fig.align='center'}
+# diagrama de dispersión simple de Y vs. X
+plot(y ~ x)
+
+# modelo de regresión
+lm(y ~ x)
+```
+
+Para especificar modelos de regresión, el lenguaje de fórmulas es mucho más rico que el descrito anteriormente y se basa en una notación simbólica sugerida por Wilkinson y Rogers (1973) en la literatura estadística. Por ejemplo, al usar **lm()**, **log(y) ~ x1 + x2** especifica una regresión lineal de **log(y)** con dos regresores, **x1** y **x2**. y una constante implícitamente definida. 
+
+## Gestión de datos en R {#GDR}
+
+En **R**, un marco de datos corresponde a lo que otros paquetes estadísticos llaman una matriz de datos o un conjunto de datos. Por lo general, es una matriz que consta de una lista de vectores y/o factores de idéntica longitud, lo que produce un formato rectangular donde las columnas corresponden a variables y las filas a observaciones. 
+
+### Creación desde cero {-}
+
+Se puede crear un conjunto de datos simple artificialmente, con tres variables llamadas "uno", "dos" y "tres", mediante el uso de:
+
+```{r, 96, echo = T, eval = T, message = F, warning = F}
+mis_datos <- data.frame(uno = 1:10, dos = 11:20, tres = 21:30)
+```
+
+Alternativamente, **mis_datos** se puede crear usando:
+
+```{r, 97, echo = T, eval = T, message = F, warning = F}
+mis_datos <- as.data.frame(matrix(1:30, ncol = 3))
+names(mis_datos) <- c("uno", "dos", "tres")
+```
+
+El código primero crea una matriz de tamaño $10 \times 3$ que posteriormente se coacciona en un marco de datos y cuyos nombres de variable se cambian finalmente a "uno", "dos" y "tres".
+
+Se debe tener en cuenta que se puede utilizar la misma sintaxis tanto para consultar como para modificar los nombres en un marco de datos. Además, vale la pena reiterar que aunque un marco de datos se puede coaccionar a partir de una matriz como se indicó anteriormente, se representa internamente como una lista.
+
+### Selección de subconjuntos {-}
+
+Es posible acceder a un subconjunto de variables (es decir, columnas) a través de **[** o **$**, donde este último solo puede extraer una sola variable. Por tanto, la segunda variable (**dos**) se puede seleccionar a través de:
+
+```{r, 98, echo = T, eval = T, message = F, warning = F}
+mis_datos$dos
+mis_datos[, "dos"]
+mis_datos[, 2]
+```
+
+En todos los casos, el objeto devuelto es un vector simple; es decir, los atributos del marco de datos se eliminan (por defecto). 
+
+Para simplificar el acceso a las variables en un determinado conjunto de datos, se pueden adjuntar los nombres mediante la función **attach()**. Técnicamente, esto significa que el conjunto de datos adjunto se agrega a la ruta de **search()** y, por ende, las variables contenidas en este conjunto de datos se pueden encontrar cuando su nombre se usa en un comando. Se puede poner en práctica lo anterior mediante:
+
+```{r, 99, echo = T, eval = T, message = F, warning = F}
+# mean(dos) por sí solo muestra un error. En consecuencia,
+attach(mis_datos)
+mean(dos)
+detach(mis_datos)
+```
+
+Los marcos de datos deben adjuntarse con cuidado; en particular, se debe prestar atención a no adjuntar varios marcos de datos con los mismos nombres de columna o tener una variable con el mismo nombre en el entorno global, ya que es probable que esto genere confusión. Para evitar adjuntar y desadjuntar un conjunto de datos para un solo comando, la función **with()** puede ser útil, como en:
+
+```{r, 100, echo = T, eval = T, message = F, warning = F}
+with(mis_datos, mean(dos))
+```
+
+A menudo es necesario trabajar con subconjuntos de un marco de datos; es decir, utilizar solo observaciones seleccionadas (*= filas*) y/o variables (*= columnas*). Esto se puede hacer nuevamente a través de **[** o, más convenientemente, usando el comando **subset()**, cuyos principales argumentos son un marco de datos del que se tomará el subconjunto y una declaración lógica que define los elementos a seleccionar. Por ejemplo:
+
+```{r, 101, echo = T, eval = T, message = F, warning = F}
+mis_datos.sub <- subset(mis_datos, dos <= 16, select = -dos)
+```
+
+El código anterior toma todas las observaciones cuyo valor de la segunda variable (**dos**) no excedan de $16$ (se sabe que existen seis observaciones con esta propiedad) y, además, todas las variables a excepción de **dos** están seleccionadas.
+
+### Importar y exportar {-}
+
+Para exportar marcos de datos en formato de texto sin formato, la función **write.table()** se puede emplear:
+
+```{r, 102, echo = T, eval = F, message = F, warning = F}
+write.table(mis_datos, file = "mis_datos.txt", col.names = TRUE)
+```
+
+Crea un archivo de texto **mis_datos.txt** en el directorio de trabajo actual. Si este conjunto de datos se va a utilizar de nuevo, en otra sesión, se puede importar utilizando:
+
+```{r, 103, echo = T, eval = F, message = F, warning = F}
+nuevos_datos <- read.table("mis_datos.txt", header = TRUE)
+```
+
+La función **read.table()** devuelve un objeto de la clase "marco de datos" (**data.frame**), que luego se asigna al nuevo objeto **nuevos_datos**. Configurando **col.names = TRUE**, los nombres de las columnas están escritos en la primera línea de **mis_datos.txt** y, por lo cual, se establece **header = TRUE** al leer el archivo de nuevo. La función **write.table()** es bastante flexible y permite especificar el símbolo de separación y el separador decimal, entre otras propiedades del archivo a escribir, de modo que se pueden producir varios formatos basados en texto, incluidos valores separados por tabuladores o comas. 
+
+Dado que este último es un formato popular para intercambiar datos (ya que puede ser leído y escrito por muchos programas de hojas de cálculo, incluido *Microsoft Excel*), las interfaces de conveniencia **read.csv()** y **write.csv()** están disponibles. De manera similar, **read.csv2()** y **write.csv2()** proporcionar exportación e importación de valores separados por punto y coma, un formato que se usa típicamente en sistemas que emplean la coma (y no el punto) como separador decimal. Además, existe una función más elemental, denominada **scan()**, para datos que no se ajustan al diseño matricial requerido por **read.table()**.^[Un ejemplo son las respectivas páginas del manual de **R** y el manual "R Data Import/Export” (R Development Core Team 2021c para más detalles).
+
+También es posible guardar los datos en el formato binario interno de **R**, por convención con extensión *.RData* o *.rda*. El siguiente comando guarda los datos en formato binario en **R**. 
+
+```{r, 104, echo = T, eval = F, message = F, warning = F}
+save(mis_datos, file = "mis_datos.rda")
+```
+
+Los archivos binarios se pueden cargar usando:
+
+```{r, 105, echo = T, eval = F, message = F, warning = F}
+load("mis_datos.rda")
+```
+
+En contraste con **read.table()**, esto no devuelve un solo objeto. En su lugar, hace que todos los objetos almacenados en **mis_datos.rda** estén directamente disponible en el entorno actual. La ventaja de usar archivos *.rda* es que varios objetos de **R** se pueden almacenar (en realidad varios objetos arbitrarios de **R** se pueden almacenar, incluidas funciones o modelos ajustados), sin pérdida de información.
+
+Todos los conjuntos de datos del paquete **AER** se suministran en este formato binario (vaya a la carpeta `~/AER/data`en la biblioteca de **R** para comprobarlo). Dado que son parte de un paquete, su acceso se hace mucho más fácil usando **data()** (que en este caso establece la correspondiente llamada **load()**). Por tanto, el siguiente código carga el marco de datos *Journals* del paquete **AER** (almacenado en el archivo **~/AER/data/Journals.rda**).^[El conjunto de datos utilizado en el Ejemplo 1 de los *Ejemplos introductorios a sesiones típicas en **R***. 
+
+```{r, 106, echo = T, eval = T, message = F, warning = F}
+data("Journals", package = "AER")
+```
+
+Si el argumento **package** se omite, todos los paquetes que se encuentran actualmente en la ruta de búsqueda son verificados para proporcionar el conjunto de datos *Journals*.
+
+### Leer y escribir formatos binarios extranjeros {-}
+
+**R** también puede leer y escribir una serie de formatos binarios de otros propietarios, en particular archivos *S-PLUS*, *SPSS*, *SAS*, *Stata*, *Minitab*, *Systat* y *dBase*, usando la función que proporciona el paquete **foreign** ( parte de un estándar de instalación de **R**). La mayoría de los comandos están diseñados para ser similares a **read.table()** y **write.table()**. Por ejemplo, para los archivos de *Stata*, ambos **read.dta()** y **write.dta()** están disponibles y se pueden utilizar para crear un archivo **Stata** que contenga **mis_datos**.
+
+```{r, 107, echo = T, eval = F, message = F, warning = F}
+library("foreign")
+write.dta(mis_datos, file = "mis_datos.dta")
+```
+
+Los archivos se pueden leer en **R** a través de:
+
+```{r, 108, echo = T, eval = F, message = F, warning = F}
+mis_datos <- read.dta("mis_datos.dta")
+```
+
+Consulte la documentación del paquete **foreign** para mayor información.
+
+### Interacción con el sistema de archivos y manipulaciones de cadenas {-}
+
+En los párrafos anteriores fue necesaria cierta interacción con el sistema de archivos para leer y escribir archivos de datos. **R** posee una rica funcionalidad para interactuar con archivos externos y comunicarse con el sistema operativo. Esto esta más allá del alcance de este curso, pero me gustaría proporcionar al lector interesado algunos consejos que pueden servir como base para lecturas adicionales.
+
+Los archivos disponibles en un directorio o carpeta se pueden consultar a través de la función **dir()** y también copiar (usando **file.copy()**) o eliminar (usando **file.remove()**) independiente del sistema operativo. Por ejemplo, el archivo *Stata* creado anteriormente se puede eliminar de nuevo desde **R** vía:
+
+```{r, 109, echo = T, eval = F, message = F, warning = F}
+file.remove("mis_datos.dta")
+```
+
+Otros comandos (potencialmente dependientes del sistema) se pueden enviar como cadenas al sistema operativo usando **system()**. Consulte las respectivas páginas del manual para obtener más información y ejemplos resueltos.
+
+Anteriormente, se discutió cómo los objetos de datos (especialmente los marcos de datos) se pueden escribir como archivos en varios formatos. Más allá de eso, a menudo se desean guardar comandos o salida en archivos de texto. Una posibilidad para lograr esto es usar **sink()**, que puede dirigir la salida a una conexión **file()** en la que se podrán escribir las cadenas con **cat()**. En algunas situaciones **writeLines()** es más conveniente para esto. Además, **dump()** puede crear representaciones de texto de objetos en **R** y escribirlos en una conexión **file()**.
+
+A veces, es necesario manipular las cadenas antes de crear una salida. **R** también proporciona una funcionalidad rica y flexible para esto. Las tareas típicas incluyen dividir cadenas (**strsplit()**) y/o pegarlas juntas (**paste()**). Para combinar y reemplazar patrones, **grep()** y **gsub()** están disponibles, que también admiten expresiones regulares. Para combinar texto y valores variables, **sprintf()** es útil.
+
+### Factores {-}
+
+Los factores son una extensión de los vectores diseñados para almacenar información categórica. Los ejemplos econométricos típicos de variables categóricas incluyen género, afiliación sindical o etnia. En muchos paquetes de software, estos se crean utilizando una codificación numérica (por ejemplo, $0$ para los hombres y $1$ para mujeres); a veces, especialmente en entornos de regresión, una sola variable categórica se almacena en varias de estas variables ficticias (o dummy) si existen más de dos categorías.
+
+En **R**, las variables categóricas deben especificarse como factores. Por ejemplo, primero se crea un vector codificado ficticio con un cierto patrón y luego se transforma en un factor usando **factor()**:
+
+```{r, 110, echo = T, eval = T, message = F, warning = F}
+g <- rep(0:1, c(2, 4))
+g <- factor(g, levels = 0:1, labels = c("masculino", "femenino"))
+g
+```
+
+La terminología es que un factor tiene un conjunto de niveles, digamos *k* niveles. Internamente, un factor de *k-niveles* consta de dos elementos: 
+
+1. Un vector de enteros entre $1$ y *k*.
+2. Un vector de caracteres, de longitud *k*, que contiene cadenas con las etiquetas correspondientes.
+
+Arriba, se creó el factor a partir de un vector entero; alternativamente, podría haberse construido a partir de otros vectores numéricos, de caracteres o lógicos. La información ordinal también se puede almacenar en un factor estableciendo el argumento **ordered = TRUE** al llamar a la función **factor()**.
+
+La ventaja de este enfoque es que **R** sabe cuándo una determinada variable es categórica y puede elegir los métodos apropiados automáticamente. Por ejemplo, las etiquetas se pueden usar en la salida impresa, se pueden elegir diferentes métodos de resumen y trazado, así como se pueden calcular codificaciones de contraste (por ejemplo, variables ficticias) en regresiones lineales. Tenga en cuenta que para estas acciones el orden de los niveles puede ser importante.
+
+### Valores faltantes {-}
+
+Muchos conjuntos de datos contienen observaciones para las cuales ciertas variables no están disponibles. El software econométrico necesita formas de lidiar con esto. En **R**, tales valores perdidos se codifican como **N/A** ( para "no disponible" o **n**ot **a**vailable). Todos los cálculos estándar en **N/A** se vuelven **N/A**.
+
+Es necesario tener especial cuidado al leer datos que utilizan una codificación diferente. Por ejemplo, al preparar el paquete **AER**, se pueden encontrar varios conjuntos de datos que empleaban $999$ para los valores perdidos. Si un archivo **mis_datos.txt** contiene valores perdidos codificados de esta manera, se pueden convertir a **N/A** usando el argumento **na.strings** al leer el archivo:
+
+```{r, 111, echo = T, eval = F, message = F, warning = F}
+newdata <- read.table("mis_datos.txt", na.strings = "-999")
+```
+
+Para consultar si ciertas observaciones son **N/A** o no, se debe usar la función **is.na()**.
+
+## Orientación a objetos {#OO}
+
+De manera un tanto vaga, la *Programación Orientada a Objetos (POO)* se refiere a un paradigma de programación en el que los usuarios/desarrolladores pueden crear objetos de una determinada "clase" (que deben tener una determinada estructura) y luego aplicar "métodos" para determinadas "funciones genéricas" a dichos objetos. Un simple ejemplo en **R** es la función **summary()**, que es una función genérica que elige, dependiendo de la clase de su argumento, el método de resumen definido para dicha clase. Por ejemplo, para el vector numérico **x** y el factor **g** usado arriba:
+
+```{r, 112, echo = T, eval = T, message = F, warning = F}
+x <- c(1.8, 3.14, 4, 88.169, 13)
+g <- factor(rep(c(0, 1), c(2, 4)), levels = c(0, 1), labels = c("male", "female"))
+```
+
+La llamada a la función summary() produce diferentes tipos de resultados:
+
+```{r, 113, echo = T, eval = T, message = F, warning = F}
+summary(x)
+summary(g)
+```
+
+Para el vector numérico **x**, se informa un resumen de cinco números (es decir, el mínimo, el máximo, la mediana, el primer y tercer cuartil) junto con la media, mientras que para el factor **g** devuelve una tabla de frecuencias simple. Esto muestra que **R** tiene diferente métodos disponibles para **summary()** dependiendo de los tipos de clases (en particular, sabe que un resumen de cinco números no es sensato para las variables categóricas). En **R**, cada objeto tiene una clase que se puede consultar usando la función **class()**:
+
+```{r, 114, echo = T, eval = T, message = F, warning = F}
+class(x)
+class(g)
+```
+
+La clase se utiliza internamente para llamar al método apropiado para una función genérica. De echo, **R** ofrece varios paradigmas de orientación a objetos. La instalación básica viene con dos sistemas POO diferentes, generalmente llamados *S3* (Chambers y Hastie 1992) y *S4* (Chambers 1998). La *S3* es mucho más simple, utilizando un mecanismo de distribución basado en una convención de nomenclatura para los métodos. La *S4* es más sofisticada y más cercana a otros conceptos de programación orientada a objetos utilizados en informática, pero también requiere más disciplina y experiencia. Para la mayoría de las tareas, *S3* es suficiente y, por tanto, es el único sistema *POO* (brevemente) discutido aquí.
+
+En *S3*, una función genérica se define como una función con una determinada lista de argumentos y luego una llamada **UseMethod()** con el nombre de la función genérica. Por ejemplo, imprimir la función **summary()** revela su definición:
+
+```{r, 115, echo = T, eval = T, message = F, warning = F}
+summary
+```
+
+Se necesita un primer **objeto**, como argumento obligatorio, más un número arbitrario de argumentos adicionales pasados **...** a sus métodos. ¿Qué sucede si esta función se aplica a un objeto de la clase "**foo**"? En este contexto, **R** intenta aplicar la función **summary.foo()** si existiera. Si no, llamará **summary.default()** si existe tal método predeterminado (que es el caso de **summary()**). 
+
+Además, los objetos en **R** pueden tener un vector de clases (por ejemplo, **c("foo", "bar")**, lo que implica que esos objetos son de clase "**foo**" heredado de "**bar**”). En este caso, **R** hace los primeros intentos de aplicar **summary.foo()**, entonces (si esto no existe) **summary.bar()**, y luego (si ambos no existen) **summary.default()**. Todos los métodos que son actualmente definidos para una función genérica se pueden consultar usando **methods()**; por ejemplo, **methods(summary)** devolverá una lista (larga) de métodos para todo tipo de clases diferentes. 
+
+Entre los métodos disponibles a partir de las clases, existe un método **summary.factor()**, que se usa cuando se llama a **summary(g)**. Sin embargo, no existe **summary.numeric()**; por ende, **summary(x)** es manejado por **summary.default()**. Como no se recomienda llamar a métodos directamente, algunos métodos están marcados como no visibles para el usuario y no se pueden llamar directamente (fácilmente). Sin embargo, incluso para los métodos visibles, se hace hincapié en que en la mayoría de las situaciones es claramente preferible su uso; por ejemplo, **summary(g)** en vez de **summary.factor(g)**.
+
+Para ilustrar lo fácil que es definir una clase y algunos métodos para ella, se considera un ejemplo simple. Se creará un objeto de clase "**normsample**”, que contiene una muestra de una distribución normal y luego se define el método **summary()** que informa la media empírica y la desviación estándar para dicha muestra. Primero, se codifica un creador de clases simple. En principio, podría tener cualquier nombre, pero a menudo se llaman como la propia clase:
+
+```{r, 116, echo = T, eval = T, message = F, warning = F}
+normsample <- function(n, ...) {
+    rval <- rnorm(n, ...)
+    class(rval) <- "normsample"
+    return(rval)
+    }
+```
+
+Esta función toma un argumento requerido **n** ( el tamaño de la muestra) y otros argumentos **...**, que se transmiten a **rnorm()**, la función para generar números aleatorios normales. Además del tamaño de la muestra, se necesitan más argumentos (la media y desviación estándar). Se recomienda consultar **?rnorm**. Después de la generación del vector de números aleatorios normales, se le asigna la clase "normsample" Y luego se prueba:
+
+```{r, 117, echo = T, eval = T, message = F, warning = F}
+set.seed(123)
+x <- normsample(10, mean = 5)
+class(x)
+```
+
+Para definir un método **summary()**, se crea una función **summary.normsample()** que se ajusta a la lista de argumentos del genérico (aunque **...** no se usa aquí) y calcula el tamaño de la muestra, la media empírica y la desviación estándar.
+
+```{r, 118, echo = T, eval = T, message = F, warning = F}
+summary.normsample <- function(object, ...) {
+    rval <- c(length(object), mean(object), sd(object))
+    names(rval) <- c("sample size","mean","standard deviation")
+    return(rval)
+    }
+```
+
+En consecuencia, llamando a **summary(x)** se puede obtener automáticamente el nuevo método **summary()** y se produce el resultado deseado:
+
+```{r, 119, echo = T, eval = T, message = F, warning = F}
+summary(x)
+```
+
+Otras funciones genéricas con métodos para la mayoría de clases estándar en **R** son **print()**, **plot()** y **str()**, que imprimen, trazan y resumen la estructura de un objeto, respectivamente.
+
+## Gráficos en **R** {#GR}
+
+No es casualidad que las primeras publicaciones sobre *S* y **R**, como Becker y Chambers (1984) e Ihaka y Gentleman (1996), se titulan “S: Un entorno interactivo para análisis de datos y gráficos” y “R: Un lenguaje para análisis de datos y gráficos”, respectivamente. **R** de hecho tiene gráficos poderosos.
+
+Aquí, se presentan brevemente los gráficos "convencionales" implementados en la base de **R**. **R** también viene con un motor gráfico nuevo e incluso más flexible, llamado *grid* (Murrell 2005), que proporciona la base para una implementación de gráficos en **R** del tipo "trellis" (Cleveland 1993) en el paquete **lattice** (Sarkar 2002), pero estos están más allá del alcance de este curso. Una excelente descripción de los gráficos en **R** se da en Murrell(2005).
+
+### La función plot() {-}
+
+La función básica es el método predeterminado **plot()**. Es una función genérica y tiene métodos para muchos objetos, incluidos marcos de datos, series de tiempo y modelos lineales ajustados. A continuación, se describe el valor predeterminado del método **plot()**, que puede crear varios tipos de diagramas de dispersión, pero muchas otras explicaciones se extienden a diversos métodos, así como a otras funciones de trazado de alto nivel.
+
+El diagrama de dispersión (*scatterplot*) es probablemente la representación gráfica más común en estadística. Un diagrama de dispersión de **Y** vs. **X** está disponible haciendo uso de la función **plot(x, y)**. A modo de ilustración, se vuelve a utilizar el conjunto de datos *Journals* del paquete **AER**, tomado de Stock y Watson (2007). Como se señaló antes, los datos brindan alguna información sobre las suscripciones a revistas de economía en bibliotecas estadounidenses para el año 2000. El archivo contiene $180$ observaciones (las revistas) sobre $10$ variables, entre ellas el número de suscripciones a bibliotecas (**subs**), el precio de suscripción a la biblioteca (**price**),
+y el número total de citas de la revista (**citations**). 
+
+Aquí, interesa la relación entre el número de suscripciones y el precio por cita. El siguiente fragmento de código deriva la variable requerida **citeprice** y grafica el número de suscripciones a la biblioteca en logaritmos:
+
+```{r, 120, eval = T, message = F, warning = F, fig.align='center'} 
+# cargar los datos
+data("Journals", package = "AER")
+
+# crear la variable "citeprice"
+Journals$citeprice <- Journals$price/Journals$citations
+
+# crear el gráfico
+attach(Journals)
+plot(log(subs), log(citeprice))
+rug(log(subs))
+rug(log(citeprice), side = 2)
+detach(Journals)
+```
+La función **rug()** agrega pequeñas barras, visualizando así las distribuciones marginales de las variables, a lo largo de uno o ambos ejes de una gráfica existente. La gráfica resultante tiene marcas en los ejes horizontal y vertical. Una forma alternativa de especificar **plot(x, y)** es utilizar el método de fórmula de **plot()**; es decir, **plot(y ~ x)**. Esto conduce al mismo diagrama de dispersión, pero tiene la ventaja de que se puede especificar el argumento **data**. Por lo tanto, se puede evitar adjuntar y desadjuntar el marco de datos:
+
+```{r, 121, eval = T, message = F, warning = F, fig.align='center'} 
+plot(log(subs) ~ log(citeprice), data = Journals)
+```
+
+### Parámetros gráficos {-}
+
+Todo esto parece engañosamente simple, pero el resultado puede modificarse de muchas formas. Por ejemplo, **plot()** toma un argumento **type** que controla los puntos o **p**oints (**type = "p"**, de manera predeterminada), las líneas o **l**ines (**type = "l"**), ambas cosas o **b**oth (**type = "b"**) y los escalones de la escalera o **s**teps (**type = "s"**), con lo que se pueden generan más tipos de gráficos. La anotación se puede modificar cambiando las etiquetas del título principal (**main**), el eje **x** (**xlab**) o el eje **y** (**ylab**). Se recomienda ver **?plot** para más detalles.
+
+Además, existen varias docenas de parámetros gráficos (ver **?par** para ver la lista completa) que se pueden modificar configurándolos con **par()** o sustituyéndolos a la función **plot()**. Una lista selectiva de argumentos para **par()**:
+
+| Argumento        | Descripción                                                    |
+|:-----------------|:---------------------------------------------------------------|
+| axes             | ¿Deberían dibujarse los ejes?                                  |
+| bg               | Color de fondo                                                 |
+| cex              | Tamaño de un punto o símbolo                                   |
+| col              | Color                                                          |
+| las              | Orientación de las etiquetas de los ejes                       |
+| lty, lwd         | Tipo de línea y ancho de línea                                 |
+| main, sub        | Título y subtítulo                                             |
+| mar              | Tamaño de los márgenes                                         |
+| mfcol, mfrow     | Matriz que define el diseño para varios gráficos en un gráfico |
+| pch              | Símbolo de trazado                                             |
+| type             | Tipos (ver texto)                                              |
+| xlab, ylab       | Etiquetas de eje                                               |
+| xlim, ylim       | Rangos de ejes                                                 |
+| xlog, ylog, log  | Escalas logarítmicas                                           |
+
+Table: (\#tab:argumentos) Parámetros gráficos
+
+No se puede explicar todos estos aquí, pero se deben destacar algunos parámetros importantes: 
+
+- **col** establece el (los) color (es).
+- **ylim** Y **xlim** ajustaN los rangos de trazado. 
+- Si se trazan puntos, **pch** puede modificar el carácter de la trama y **cex** la extensión del carácter. 
+- Si se trazan líneas, **lty** y **lwd** especifican el tipo de línea y el ancho, respectivamente. 
+- El tamaño de las etiquetas, marcas de eje, entre otros, se puede cambiar escribiendo el argumentos **cex** como **cex.lab** y **cex.axis**.
+
+Una breve lista de argumentos para **par()** se proporciona en la Tabla 1.1. Esto es solo la punta del iceberg, por ende, se introducirán más parámetros gráficos a medida que se avance en el curso.
+
+Como ejemplo simple, se puede probar:
+
+```{r, 122, eval = T, message = F, warning = F, fig.align='center'} 
+plot(log(subs) ~ log(citeprice), 
+    data = Journals, 
+    pch = 20,
+    col = "blue", 
+    ylim = c(0, 8), 
+    xlim = c(-7, 4),
+    main = "Suscripciones a bibliotecas")
+```
+
+Esto produce círculos sólidos (**pch = 20**) en lugar de los abiertos predeterminados, dibujados en azul, y existen rangos más amplios en las direcciones de **X** y **Y**. Igualmente, se agregó un título principal.
+
+También es posible agregar más capas a un gráfico. Por lo tanto, se pueden agregar más características con **lines()**, **points()**, **text()** y **legend()**, que aportan a una trama existente lo que sugieren sus nombres. Por ejemplo, **, text(-3.798, 5.846, "Econometrica", pos = 2)**, coloca una cadena de caracteres en la ubicación indicada (es decir, a la izquierda del punto). En los análisis de regresión, a menudo se desea agregar una línea de regresión a un diagrama de dispersión. Como se vio antes, esto se logra usando **abline(a, b)**, dónde **a** es la intersección y **b** es la pendiente.
+
+En este punto, no parece haber una gran necesidad de todo esto; sin embargo, la mayoría de los usuarios requieren un control preciso de las presentaciones visuales en algún momento, especialmente cuando se necesitan gráficos con calidad de publicación. Me abstengo de presentar ejemplos artificiales jugando con las opciones gráficas; en su lugar, se introducen variaciones de las pantallas estándar a medida que se vaya avanzando.
+
+Por supuesto, existen muchas más funciones de trazado además del método predeterminado **plot()**. Por ejemplo, las visualizaciones estadísticas estándar como gráficos de barras, gráficos circulares, gráficos de caja, gráficos QQ o histogramas están disponibles en las funciones **barplot()**, **pie()**, **boxplot()**, **qqplot()** e **hist()**, respectivamente. Resulta instructivo correr el código **demo("graphics")** para obtener una descripción general de las impresionantes comodidades gráficas de **R**.
+
+### Exportación de gráficos {-}
+
+En el uso interactivo, los gráficos generalmente se escriben en una ventana de gráficos para que puedan inspeccionarse directamente. Sin embargo, después de completar un análisis, normalmente se quieren guardar los gráficos resultantes (por ejemplo, para su publicación en
+un informe, artículo de revista o tesis). Para los usuarios de *Microsoft Windows* y *Microsoft Word*, una opción simple consiste en "copiarlos y pegarlos" en el documento de *Microsoft Word*.
+
+Para otros programas, como LATEX, es preferible exportar el gráfico a un archivo externo. Para ello, existen varios dispositivos gráficos en los que se puede escribir los gráficos. Los dispositivos que están disponibles en todas las plataformas incluyen los formatos vectoriales *PostScript* y *PDF*; otros dispositivos, como los formatos de mapa de bits *PNG* y *JPEG* y el formato vectorial *WMF*, solo están disponibles si el sistema los admite (consulte **?Devices** para mas detalles). 
+
+Todos funcionan de la misma manera: 
+
+1. Se abre el dispositivo; por ejemplo, la función **pdf()** abre el dispositivo *PDF*.
+2. Se ejecutan los comandos que crean el gráfico.
+3. El dispositivo se cierra mediante **dev.off()**. 
+
+Un ejemplo simple de creación de un gráfico en un dispositivo *PDF* es:
+
+```{r, 123, echo = T, eval = F, message = F, warning = F, fig.align='center'} 
+pdf("mi_archivo.pdf", height = 5, width = 6)
+plot(1:20, pch = 1:20, col = 1:20, cex = 2)
+dev.off()
+```
+
+```{r, 124, echo = F, eval = T, message = F, warning = F, fig.align='center'} 
+plot(1:20, pch = 1:20, col = 1:20, cex = 2)
+```
+
+Esto crea el archivo *PDF* **mi_archivo.pdf** en el directorio de trabajo actual, que contiene el gráfico generado al llamar a la función **plot()**. Por cierto, el gráfico ilustra algunos de los parámetros discutidos anteriormente: 
+
+- Muestra los primeros 20 símbolos de trazado.
+- Todos los símbolos de trazado se encuentran en tamaño doble. 
+- **R** enumera un conjunto de colores con los que se puede trabajar. Los primeros ocho colores son negro, rojo, verde, azul, turquesa, violeta, amarillo y gris. Desde el color nueve en adelante, este vector simplemente se recicla.
+
+Alternativamente para abrir, imprimir y cerrar un dispositivo, también es posible imprimir un trazado existente en la ventana gráfica en un dispositivo usando **dev.copy()** y **dev.print()** (se recomienda consultar las páginas de los manuales correspondiente para obtener más información).
+
+### Anotación matemática de parcelas {-}
+
+Una característica que se suma particularmente a las fortalezas **R** cuando se trata de gráficos con calidad de publicación es su capacidad para agregar anotaciones matemáticas a los gráficos (Murrell e Ihaka 2000). Una comando **S** que contiene una expresión matemática puede pasar como una función de trazado sin ser evaluada; es decir, se procesa como una anotación del gráfico creado. Los lectores familiarizados con LATEX no tendrán dificultades para adaptarse a la sintaxis empleada (para obtener más detalles, consulte **?plotmath** y **demo("plotmath")**). Como ejemplo, el siguiente gráfico proporciona la densidad de una distribución normal estándar (proporcionada por la funcióon **dnorm()** en **R**), incluyendo su definición matemática:
+
+$$
+f(x)=\frac{1}{\sigma \sqrt{2 \pi}} e^{-\frac{(x-\mu)^{2}}{2 \sigma^{2}}}
+$$
+
+Se obtiene a través de:
+
+```{r, 125, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfico de la densidad de la distribución normal estándar
+curve(dnorm, 
+    from = -5, 
+    to = 5, 
+    col = "slategray", 
+    lwd = 3,
+    main = "Densidad de la distribución normal estándar")
+
+# expresión matemática
+text(-5, 
+    0.3, 
+    expression(f(x) == frac(1, sigma ~~sqrt(2*pi)) ~~ e^{-frac((x - mu)^2, 2*sigma^2)}), 
+    adj = 0)
+```
+
+La función **curve()** traza la función de densidad **dnorm()**, mientras que la función **text()** se usa para agregar **expression()** que contiene la fórmula de la trama. Este ejemplo concluye la breve introducción a los gráficos en **R**.
+
+## Análisis exploratorio de datos con **R** {#AEDR}
+
+En esta sección, se ilustrarán brevemente algunas técnicas estándar de análisis exploratorio de datos. Para los lectores que buscan una introducción más detallada a las estadísticas básicas utilizando **R** se recomienda consultar a Dalgaard (2002). Reconsiderando los datos **CPS1985** tomados de Berndt (1991). Después de hacer que los datos estén disponibles a través de **data()**, alguna información básica puede ser consultada mediante la función estructura **str()**:
+
+```{r, 126, echo = T, eval = T, message = F, warning = F}
+data("CPS1985", package = "AER")
+str(CPS1985)
+```
+
+Esto revela que el objeto "marco de datos" (**data.frame**) comprende 533 observaciones sobre 11 variables, incluida la variable numérica sueldo (**wage**), las variables enteras experiencia (**experience**), educación (**education**) y edad (**age**), así como siete factores, cada uno de los cuales comprende de dos a seis niveles.
+
+En lugar de utilizar la vista de tipo lista que proporciona **str()**, a menudo es útil inspeccionar la parte superior (o la parte inferior) de un marco de datos en su representación rectangular. Para ello, existen las funciones de conveniencia **head()** y **tail()**, devolviendo (por defecto) la primera y las últimas seis filas, respectivamente. Por lo tanto:
+
+```{r, 127, echo = T, eval = T, message = F, warning = F}
+head(CPS1985)
+tail(CPS1985)
+```
+
+Otra forma útil de obtener una descripción general rápida de un conjunto de datos es utilizar el método para marcos de datos (**data.frame**) de la función **summary()**, que proporciona un resumen para cada una de las variables. Como el tipo de resumen depende de la clase de la variable respectiva, más adelante se inspeccionarán los métodos **summary()** por separado para varios tipos de variables en **CPS1985**. Por tanto, la salida de **summary(CPS1985)** se omite aquí.
+
+Como los datos de **CPS1985** se emplean repetidamente en lo siguiente, se evitan comandos largos como **CPS1985$education** adjuntando el conjunto de datos. Además, para compactar la producción posterior, se abrevian dos niveles de ocupación de "**technical**" a "**techn**" y de "**management**" a "**mgmt**".
+
+```{r, 128, echo = T, eval = T, message = F, warning = F}
+levels(CPS1985$occupation)[c(2, 6)] <- c("techn", "mgmt")
+attach(CPS1985)
+```
+
+Ahora se puede acceder a las variables por sus nombres. Se procede a ilustrar el análisis exploratorio de variables únicas y pares de variables, distinguiendo entre variables numéricas, factores y combinaciones de los mismos. Comenzamos con el tipo más simple, una sola variable numérica.
+
+### Una variable numérica {-}
+
+Primero se vera la distribución de salarios en la muestra:
+
+```{r, 129, echo = T, eval = T, message = F, warning = F}
+summary(wage)
+```
+
+Esto proporciona el resumen de los *cinco números de Tukey* más el salario medio. La media y la mediana también se podrían haber obtenido utilizando:
+
+```{r, 130, echo = T, eval = T, message = F, warning = F}
+mean(wage)
+median(wage)
+```
+
+Asimismo, **fivenum()** calcula el resumen de cinco números. Similarmente, **min()** y **max()** habrían dado el mínimo y el máximo. Las cantidades arbitrarias se pueden calcular mediante la función **quantile()**.
+
+Para las medidas de propagación o disperción, existen las funciones:
+
+```{r, 131, echo = T, eval = T, message = F, warning = F}
+var(wage)
+sd(wage)
+```
+
+Las funciones devuelven la varianza y la desviación estándar, respectivamente.
+
+Los resúmenes gráficos también son útiles. Para variables numéricas como **wage**, las visualizaciones de densidad (a través de histogramas o suavizado de kernel) y los diagramas de caja son adecuados. Los diagramas de caja se considerarán a continuación en relación con los paneles de dos variables obtenidas a través de:
+
+```{r, 132, eval = T, message = F, warning = F, fig.align='center'} 
+# histogramas de salarios
+hist(wage, freq = FALSE)
+```
+
+```{r, 133, eval = T, message = F, warning = F, fig.align='center'} 
+# logaritmos con densidad superpuesta
+hist(log(wage), freq = FALSE)
+lines(density(log(wage)), col = 4)
+```
+
+El código anterior muestra las densidades de sueldo y su logaritmo (es decir, áreas bajo curvas iguales a $1$, resultante de **freq = FALSE**; de lo contrario, se habrían representado frecuencias absolutas). Otros argumentos permiten un ajuste fino de la selección de las rupturas en el histograma. Por ejemplo, en el histograma del panel derecho se agregó una estimación de la densidad del kernel obtenida usando **density()**. Claramente, la distribución de los logaritmos está menos sesgada que la de los datos brutos. Se debe tener en cuenta que **density()** solo calcula las coordenadas de densidad y no proporciona una gráfica; por lo tanto, la estimación se agrega a través de **lines()**
+
+### Una variable categórica {-}
+
+Para datos categóricos, no tiene sentido calcular medias y varianzas; en su lugar, se necesita una tabla que indique las frecuencias con las que ocurren las categorías. Si **R** dice que una determinada variable es categórica (al convertirla en un "**factor**”), elige automáticamente un resumen apropiado:
+
+```{r, 134, echo = T, eval = T, message = F, warning = F}
+summary(occupation)
+```
+
+Esto también podría haber sido calculado por **table(occupation)**. Si se desean frecuencias relativas (porcentajes) en lugar de absolutas (números), existe la función **prop.table()**:
+
+```{r, 135, echo = T, eval = T, message = F, warning = F}
+tab <- table(occupation)
+prop.table(tab)
+```
+
+Las variables categóricas generalmente se visualizan mejor mediante gráficos de barras. Si se van a destacar las mayorías, los gráficos circulares también pueden ser útiles. Por lo tanto:
+
+```{r, 136, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfico de barras de ocupación 
+barplot(tab)
+```
+
+```{r, 137, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfico circular de ocupación
+pie(tab)
+```
+
+El código anterior proporciona el gráfico de barras y gráfico circular de **occupation**. Se debe tener en cuenta que ambas funciones esperan las frecuencias tabuladas como entrada. Además, llamando **occupation** es equivalente a **barplot(table(occupation))**, dado que es una variable categórica.
+
+### Dos variables categóricas {-}
+
+La relación entre dos variables categóricas generalmente se resume en una tabla de contingencia. Esto puede ser creado por **xtabs()**, una función con una interfaz de fórmula, o por **table()**, una función que toma un número arbitrario de variables para la tabulación cruzada (y no solo una como se muestra arriba).
+
+Se consideran los factores ocupación (**occupation**) y género (**gender**) para ilustrar el punto anterior:
+
+```{r, 138, echo = T, eval = T, message = F, warning = F}
+xtabs(~ gender + occupation, data = CPS1985)
+```
+
+La tabla anterior puede ser creada de forma equivalente por **table(gender, occupation)**. Una visualización simple es un diagrama de mosaico (Hartigan y Kleiner 1981; Friendly 1994), que puede verse como una generalización de diagramas de barras apilados. El gráfico que se muestra a continuación (también conocido como "gráfico de columna vertebral", es una variante de la pantalla de mosaico estándar), obtenido a través de:
+
+```{r, 139, eval = T, message = F, warning = F, fig.align='center'} 
+# gráfico de mosaico (gráfico de columna vertebral) de género versus ocupación.
+plot(gender ~ occupation, data = CPS1985)
+```
+
+El gráfico muestra que la proporción de hombres y mujeres cambia considerablemente a lo largo de los niveles de ocupación. Además del sombreado que resalta la distribución condicional de género dada la ocupación, los anchos de las barras visualizan la distribución marginal de ocupación, lo que indica que hay comparativamente muchos trabajadores y pocos vendedores.
+
+### Dos variables numéricas {-}
+
+Se ejemplifica el análisis exploratorio de la relación entre dos variables numéricas utilizando sueldo (**wage**) y educación (**education**). Una medida de resumen para dos variables numéricas es el coeficiente de correlación, implementado mediante la función **cor()**. Sin embargo, el coeficiente de correlación estándar (Pearson) no es necesariamente significativo para variables positivas y muy sesgadas como sueldo (**wage**). Por lo tanto, también se calcula una variante no paramétrica, la correlación de Spearman, que está disponible en **cor()** como una opción mediante los métodos:
+
+```{r, 140, echo = T, eval = T, message = F, warning = F}
+cor(log(wage), education)
+cor(log(wage), education, method = "spearman")
+```
+
+Ambas medidas son virtualmente idénticas e indican solo una pequeña cantidad de correlación aquí, vea también el diagrama de dispersión correspondiente:
+
+```{r, 141, eval = T, message = F, warning = F, fig.align='center'} 
+# diagrama de dispersión de salarios (en logaritmos) versus educación
+plot(log(wage) ~ education)
+```
+
+### Una variable numérica y una categórica {-}
+
+Es común tener variables tanto numéricas como categóricas en un marco de datos. Por ejemplo, aquí se tiene sueldo (**wage**) y género (**gender**), y puede haber cierto interés en la distribución de sueldo por género. Una función adecuada para resúmenes numéricos es **tapply()**. Se aplica, para una variable numérica como su primer argumento y una (lista de) variable(s) categórica(s) como su segundo argumento, la función especificada como el tercer argumento. Por lo tanto, los salarios medios condicionados al género están disponibles utilizando:
+
+```{r, 142, echo = T, eval = T, message = F, warning = F}
+tapply(log(wage), gender, mean)
+```
+
+Usando comandos similares, se pueden obtener medidas descriptivas o incluso resúmenes completos (simplemente reemplace **mean** por **summary**) se pueden calcular. 
+
+Las presentaciones gráficas adecuadas son diagramas de caja paralelos y diagramas de cuantiles-cuantiles (QQ), se muestran a continuación. Recuerde que una gráfica de caja (o “gráfica de caja y bigotes”) es un resumen gráfico burdo de una distribución empírica. El cuadro indica "bisagras" (aproximadamente los cuartiles superior e inferior) y la mediana. 
+
+Los “bigotes” (líneas) indican las observaciones más grandes y más pequeñas que se encuentran a una distancia de $1.5$ veces el tamaño de la caja desde la bisagra más cercana ($1.5$ desviaciones estandar). Cualquier observación que caiga fuera de este rango se muestra por separado y puede ser considerada extrema o atípica (en una muestra aproximadamente normal). Se debe tener en cuenta que existen varias variantes de diagramas de caja en la literatura.
+
+Los comandos **plot(y ~ x)** y **boxplot(y ~ x)** producen la misma gráfica paralela de boxplot si **X** es un "**factor**”; por lo tanto:
+
+```{r, 143, eval = T, message = F, warning = F, fig.align='center'} 
+# diagrama de caja de salarios estratificados por género.
+plot(log(wage) ~ gender)
+```
+
+El gráfico muestra que las formas generales de ambas distribuciones son bastante similares y que los hombres disfrutan de una ventaja sustancial, especialmente en el rango medio. La última característica también se destaca por el gráfico QQ resultante de:
+
+```{r, 144, eval = T, message = F, warning = F, fig.align='center'} 
+# diagrama QQ de salarios estratificados por género
+mwage <- subset(CPS1985, gender == "male")$wage
+fwage <- subset(CPS1985, gender == "female")$wage
+
+qqplot(mwage, 
+    fwage, 
+    xlim = range(wage), 
+    ylim = range(wage),
+    xaxs = "i", 
+    yaxs = "i", 
+    xlab = "male", 
+    ylab = "female")
+
+abline(0, 1)
+```
+
+En el gráfico casi todos los puntos están por debajo de la diagonal (correspondientes a distribuciones idénticas en ambas muestras). Esto indica que, para la mayoría de los cuantiles, los salarios de los hombres suelen ser más altos que los de las mujeres.
+
+Se termina esta sección separando los datos:
+
+```{r, 145, eval = T, message = F, warning = F, fig.align='center'} 
+detach(CPS1985)
+```
+
+### Ejercicios {-}
+
+1. Cree una matriz cuadrada, digamos $A$, con entradas $a_{ii} = 2$, $i = 2$, $. . .$ , $n - 1$, $a_{11} = a_{nn} = 1$, $a_{i,i+1} = a_{i,i-1} = 1$ y $a_{ij} = 0$. (¿Dónde ocurre esta matriz en econometría?)
+
+2. "**PARADE**" es la revista dominical que complementa la edición de los domingos o fines de semana de unos $500$ diarios de los Estados Unidos de América (se encuentra en el paquete **AER**). Una característica anual importante es un artículo que proporciona información sobre unos $120$-$150$ ciudadanos estadounidenses seleccionados “al azar”, indicando su profesión, ciudad natal y estado, así como sus ingresos anuales. 
+El conjunto de datos **Parade2005** contienen la versión de 2005, modificada por una variable que indica el estatus de celebridad (motivada por un sobremuestreo sustancial de celebridades en estos datos). Para el conjunto de datos **Parade2005**:
+
+(a) Determine las ganancias medias en California. Explique el resultado.
+(b) Determine el número de personas que residen en Idaho (¿Qué dice esto sobre el conjunto de datos?).
+(c) Determine la media y la mediana de los ingresos de las celebridades. Explique el resultado. 
+(d) Obtenga un diagrama de caja de **log(earnings)** estratificado por **celebrity**. Explique el resultado.
+
+3. Para el conjunto de datos **Parade2005** del ejercicio anterior, obtenga una densidad estimada de kernel de las ganancias para el conjunto de datos completo. Será necesario transformar los datos a logaritmos (¿por qué?). Comente el resultado. Asegúrese de probar algunos argumentos para **density()**, en particular, el complemento ancho de banda (**bw**).
+
+4. Considere el conjunto de datos **CPS1988**, tomados de Bierens y Ginther (2001) (estos datos se utilizarán para estimar una ecuación de ganancias en próximos capítulos).
+
+(a) Obtenga diagramas de dispersión del logaritmo del salario real (**wage**) versus experiencia (**experience**) y versus educación (**education**). 
+(b) De hecho, **education** corresponde a años de escolaridad y, por ende, toma solo un número limitado de valores. Transformar educación en un factor y obtener diagramas de caja paralelos de la variable **wage** estratificada por los niveles de **education**. Repetir para **experience**.
+(c) El conjunto de datos contiene cuatro factores adicionales: **ethnicity**, **smsa**, **region** y **parttime**. Obtenga visualizaciones gráficas adecuadas de **log(wage)** versus cada uno de estos factores.

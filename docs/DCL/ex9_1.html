@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+     <body>
+     <div data-datacamp-exercise data-lang="r" height = "800">
+     <code data-type="pre-exercise-code">      
+     </code>
+           
+     <code data-type="sample-code">
+     # sembrar la semilla para la reproducibilidad
+     set.seed(3)
+           
+     # establecer el número de iteraciones de muestreo
+     N <-
+           
+     # inicializar vector `beta_hats`
+     beta_hats <-
+           
+     # realizar la simulación usando 'for()'
+     for(i in 1:N) {
+     }
+           
+     # comparar la media de las estimaciones con el parámetro verdadero
+           
+     </code>
+           
+     <code data-type="solution">
+     # sembrar la semilla para la reproducibilidad
+     set.seed(3)
+           
+     # establecer el número de iteraciones de muestreo
+     N <- 1000
+           
+     # inicializar vector `beta_hats`
+     beta_hats <- c()
+           
+     # estimación de bucle
+     for (i in 1:N) {
+           
+     # simular el conjunto de datos
+     X <- runif(100, -5, 5)
+     Y <- X^2 + rnorm(100)
+           
+     # estimar la función de regresión lineal
+     ms_mod <- lm(Y ~ X)
+     
+     # guardar el presupuesto
+     beta_hats[i] <- ms_mod$coefficients[1]
+     }
+           
+     # comparar la media de las estimaciones y el parámetro verdadero
+     mean(beta_hats) == 0
+     </code>
+     
+     <code data-type="sct">
+     test_object("beta_hats")
+     test_student_typed("==")
+     </code>      
+     </div>
+     </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<script async='async' src='https://cdn.datacamp.com/dcl-react-dev.js.gz'>
+</script>
+<style>
+.DCexercise .datacamp-exercise {
+     border: 2px solid #03193b;
+     border-radius: 10px 10px 10px 10px !important;
+     }
+
+     *[class*="lm_"], .ace_gutter, textarea[class*="ace_"], .ace_scroller {
+     background-color: #F0EFF0 !important;
+     }
+
+     div[class*="Editor-module__editor"], div[class*="dcl__Footer"] {
+     background-color: #03193b !important; 
+     } 
+
+     *[class*="lm_"] {
+     border-radius: 10px 10px 0px 0px !important;
+     }
+
+     div[class*="dcl__Footer"] {
+     border-radius: 0px 0px 10px 10px !important;
+     }
+
+     .lm_content {
+     border-radius: 0px !important;
+     }
+
+     .lm_splitter {
+     background-color: #03193b !important; 
+     width: 3px !important;
+     }
+
+     .lm_drag_handle {
+     background: transparent !important;
+     }
+
+     div[class*="dcl__index-module"] {
+     outline-color: transparent !important;
+     border-radius: 10px !important;
+     }
+
+     button[class*="secondary-light"] {
+     background-color: #FF0000;
+     }
+</style>
+</head>
+     <body>
+     <div data-datacamp-exercise data-lang="r" data-height="auto">
+     <code data-type="pre-exercise-code">
+     </code>
+           
+     <code data-type="sample-code">
+     # adjuntar el conjunto de datos `Titanic`
+           
+     # obtener una descripción general de los datos
+           
+     # graficar un mosaico
+           
+     </code>
+           
+     <code data-type="solution">
+     # adjuntar el conjunto de datos `Titanic`
+     Titanic_1 <- Titanic
+           
+     # obtener una descripción general de los datos
+     summary(Titanic_1)
+     
+     # o
+     str(Titanic_1)
+     
+     # o
+     head(Titanic_1)
+           
+     # imprimir los datos de la consola
+     Titanic_1
+           
+     # graficar un mosaico
+     mosaicplot(Titanic_1, main = "Survival on the Titanic")
+     </code>
+
+     <code data-type="sct">
+     test_object("Titanic_1")
+     test_or({
+     test_function("summary", args = "object")
+     },{
+     test_function("head", args = "x")
+     },{
+     test_function("str", args = "object")
+     })
+     test_output_contains("Titanic_1")
+     test_function("mosaicplot", args = "x")
+     success_msg("¡Estupendo! Esta primera impresión muestra, por ejemplo, que las tasas de supervivencia son más altas para las personas en clases de viaje más altas. El siguiente ejercicio considera un conjunto de datos menos agregado para modelar la probabilidad de supervivencia.")
+     </code>
+     </div>
+     </body>
+</html>
