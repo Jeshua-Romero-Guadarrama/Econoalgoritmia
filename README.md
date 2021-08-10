@@ -1,9 +1,9 @@
-<p align="center"><img align="center" src="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/blob/main/images/Econoalgoritmia.png" width="30%" height="30%"></p>
-
-<br/>
-<br/>
-
 # Econoalgoritmia
+
+<br/>
+<br/>
+
+<p align="center"><img align="center" src="https://github.com/Jeshua-Romero-Guadarrama/Econoalgoritmia/blob/main/images/Econoalgoritmia.png" width="30%" height="30%"></p>
 
 <br/>
 <br/>
