@@ -19,6 +19,7 @@ El curso se puede consultar aquí: [Econoalgoritmia: Econometría avanzada y cie
 <br/>
 
 ## ✍🏻 Referencia bibliográfica
+
 Romero, G. J. (2021). *Econoalgoritmia: Econometría avanzada y ciencia de datos con R*. JeshuaNomics.
 
 <br/>
